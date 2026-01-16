@@ -6,5 +6,24 @@
 body {
   margin: 0;
   min-height: 100vh;
-  @apply bg-gray-900 text-white; /* Dark mode default as requested */
+  background: transparent;
+  @apply text-white; /* Texte blanc par défaut pour contraste avec caméra */
+}
+
+/* Styles glassmorphism pour éléments HUD */
+.glassmorphism {
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Assurer que les éléments sont transparents par défaut */
+* {
+  box-sizing: border-box;
+}
+
+/* Styles pour les éléments flottants */
+.floating-element {
+  pointer-events: auto;
 }

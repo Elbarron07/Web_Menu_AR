@@ -7,7 +7,7 @@ function App() {
   return (
     <CartProvider>
       <BrowserRouter>
-        <div className="min-h-screen bg-gray-900 text-white font-sans selection:bg-amber-500 selection:text-black">
+        <div className="min-h-screen text-white font-sans selection:bg-amber-500 selection:text-black" style={{ background: 'transparent' }}>
           <Routes>
             <Route path="/" element={<DirectARView />} />
             <Route path="/ar/:id" element={<DirectARView />} />

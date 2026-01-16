@@ -4,8 +4,15 @@
     "description": "Expérience de menu en réalité augmentée",
     "start_url": "/",
     "display": "standalone",
-    "background_color": "#111827",
+    "background_color": "transparent",
     "theme_color": "#111827",
+    "permissions": [
+        "camera"
+    ],
+    "features": [
+        "camera",
+        "webxr"
+    ],
     "icons": [
         {
             "src": "https://placehold.co/192x192/png?text=AR",
