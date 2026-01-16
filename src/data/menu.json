@@ -1,0 +1,117 @@
+[
+    {
+        "id": 1,
+        "name": "Pizza Margherita Supreme",
+        "category": "Plats",
+        "shortDesc": "La classique revisitée.",
+        "fullDesc": "Tomates San Marzano, Mozzarella di Bufala, Basilic frais, Huile d'olive vierge. Une pâte fermentée 72h pour un croustillant incomparable.",
+        "price": 14.50,
+        "image2D": "https://placehold.co/600x400/png?text=Pizza+Margherita",
+        "model3D": "/assets/models/pizza.glb",
+        "dimensions": "Diamètre 30cm",
+        "variants": [
+            {
+                "size": "M",
+                "label": "M (30cm)",
+                "priceModifier": 0,
+                "scale": "1 1 1"
+            },
+            {
+                "size": "L",
+                "label": "L (40cm)",
+                "priceModifier": 5.00,
+                "scale": "1.33 1.33 1.33"
+            }
+        ],
+        "hotspots": [
+            {
+                "name": "Mozzarella",
+                "position": "0.1m 0.05m 0.1m",
+                "detail": "Bufala fraîchement importée."
+            },
+            {
+                "name": "Basilic",
+                "position": "-0.1m 0.05m 0.0m",
+                "detail": "Bio, du jardin."
+            }
+        ],
+        "nutrition": {
+            "calories": 800,
+            "allergenes": [
+                "Gluten",
+                "Lactose"
+            ],
+            "temps": "12 min"
+        }
+    },
+    {
+        "id": 2,
+        "name": "Burger Signature",
+        "category": "Plats",
+        "shortDesc": "Le burger définitif.",
+        "fullDesc": "Steak haché Charolais, Cheddar affiné 12 mois, Sauce secrète, Oignons caramélisés.",
+        "price": 16.00,
+        "image2D": "https://placehold.co/600x400/png?text=Burger+Signature",
+        "model3D": "/assets/models/burger.glb",
+        "dimensions": "Hauteur 15cm",
+        "variants": [
+            {
+                "size": "Simple",
+                "label": "Simple",
+                "priceModifier": 0,
+                "scale": "1 1 1"
+            },
+            {
+                "size": "Double",
+                "label": "Double Steak",
+                "priceModifier": 4.00,
+                "scale": "1 1.2 1"
+            }
+        ],
+        "hotspots": [
+            {
+                "name": "Cheddar",
+                "position": "0m 0.1m 0m",
+                "detail": "Cheddar Somerset affiné."
+            }
+        ],
+        "nutrition": {
+            "calories": 950,
+            "allergenes": [
+                "Gluten",
+                "Lactose",
+                "Moutarde"
+            ],
+            "temps": "15 min"
+        }
+    },
+    {
+        "id": 3,
+        "name": "Tiramisu della Nonna",
+        "category": "Desserts",
+        "shortDesc": "Recette traditionnelle.",
+        "fullDesc": "Mascarpone onctueux, Savoiardi imbibés de café espresso, Cacao amer.",
+        "price": 8.50,
+        "image2D": "https://placehold.co/600x400/png?text=Tiramisu",
+        "model3D": "/assets/models/dessert.glb",
+        "dimensions": "Part généreuse",
+        "variants": [
+            {
+                "size": "Classique",
+                "label": "Part",
+                "priceModifier": 0,
+                "scale": "1 1 1"
+            }
+        ],
+        "hotspots": [],
+        "nutrition": {
+            "calories": 450,
+            "allergenes": [
+                "Gluten",
+                "Lactose",
+                "Œuf"
+            ],
+            "temps": "Prêt"
+        }
+    }
+]
