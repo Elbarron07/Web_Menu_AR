@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import menuData from '../data/menu.json';
 import { useCart } from './CartContext';
-import { WebXRViewer } from './WebXRViewer';
+
+// Lazy load du composant WebXR lourd
+const WebXRViewer = lazy(() => import('./WebXRViewer').then(module => ({ default: module.WebXRViewer })));
 
 const DirectARView = () => {
     const { id } = useParams();
@@ -61,13 +63,19 @@ const DirectARView = () => {
     return (
         <div className="relative w-screen h-screen overflow-hidden" style={{ background: 'transparent' }}>
             {/* WebXR Viewer avec caméra en fond et menu/3D */}
-            <WebXRViewer
-                modelPath={product?.model3D}
-                selectedDishId={selectedDishId || undefined}
-                onDishSelect={handleDishSelect}
-                hotspots={product?.hotspots || []}
-                scale={scale}
-            />
+            <Suspense fallback={
+                <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50">
+                    <div className="text-white text-lg">Chargement de l'expérience AR...</div>
+                </div>
+            }>
+                <WebXRViewer
+                    modelPath={product?.model3D}
+                    selectedDishId={selectedDishId || undefined}
+                    onDishSelect={handleDishSelect}
+                    hotspots={product?.hotspots || []}
+                    scale={scale}
+                />
+            </Suspense>
 
             {/* GLASSMORPHISM HUD OVERLAY - Zero Navigation */}
             {product && (
