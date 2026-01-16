@@ -113,5 +113,30 @@
             ],
             "temps": "Prêt"
         }
+    },
+    {
+        "id": 4,
+        "name": "Plat du Chef",
+        "category": "Plats",
+        "shortDesc": "Création exclusive du chef.",
+        "fullDesc": "Une création unique qui allie saveurs et présentation exceptionnelle.",
+        "price": 22.00,
+        "image2D": "https://placehold.co/600x400/png?text=Plat+du+Chef",
+        "model3D": "/assets/models/menu-item.glb",
+        "dimensions": "Portion généreuse",
+        "variants": [
+            {
+                "size": "Standard",
+                "label": "Standard",
+                "priceModifier": 0,
+                "scale": "1 1 1"
+            }
+        ],
+        "hotspots": [],
+        "nutrition": {
+            "calories": 750,
+            "allergenes": [],
+            "temps": "20 min"
+        }
     }
 ]
