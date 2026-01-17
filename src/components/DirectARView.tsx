@@ -74,6 +74,7 @@ const DirectARView = () => {
                     onDishSelect={handleDishSelect}
                     hotspots={product?.hotspots || []}
                     scale={scale}
+                    dimensions={product?.dimensions}
                 />
             </Suspense>
 

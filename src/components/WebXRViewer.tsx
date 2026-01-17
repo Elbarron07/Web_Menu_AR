@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, Suspense } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { useGLTF } from '@react-three/drei';
+import { Canvas } from '@react-three/fiber';
+import { useGLTF, OrbitControls, PresentationControls } from '@react-three/drei';
 import { useCameraStream } from '../hooks/useCameraStream';
 import { useWebXR } from '../hooks/useWebXR';
 import { PlaneDetector } from './PlaneDetector';
@@ -13,6 +13,7 @@ interface WebXRViewerProps {
   onDishSelect?: (dishId: number) => void;
   hotspots?: Array<{ position: string; name: string; detail?: string }>;
   scale?: string;
+  dimensions?: string; // Ex: "Diamètre 30cm", "Hauteur 15cm"
 }
 
 interface ModelRendererProps {
@@ -20,9 +21,10 @@ interface ModelRendererProps {
   position: THREE.Vector3;
   scale: THREE.Vector3;
   hotspots?: Array<{ position: string; name: string; detail?: string }>;
+  realWorldSize?: number; // Taille réelle en mètres (ex: 0.30 pour 30cm)
 }
 
-const ModelRenderer = ({ modelPath, position, scale }: ModelRendererProps) => {
+const ModelRenderer = ({ modelPath, position, scale, realWorldSize }: ModelRendererProps) => {
   const modelRef = useRef<THREE.Group>(null);
   
   // Charger le modèle GLTF (useGLTF gère automatiquement le cache)
@@ -41,34 +43,68 @@ const ModelRenderer = ({ modelPath, position, scale }: ModelRendererProps) => {
       
       console.log('📦 Bounding box:', { center, size, min: box.min, max: box.max });
       
+      // Calculer l'échelle pour taille réelle (1:1)
+      let finalScale = scale.clone();
+      
+      if (realWorldSize) {
+        // Pour une taille réelle, on utilise généralement la dimension horizontale (X ou Z)
+        // Pour une pizza : diamètre = max(size.x, size.z)
+        // Pour un burger : hauteur = size.y
+        // On prend la dimension horizontale la plus grande (X ou Z) pour les plats plats
+        // ou la hauteur (Y) pour les objets verticaux
+        const horizontalSize = Math.max(size.x, size.z);
+        const verticalSize = size.y;
+        
+        // Utiliser la dimension appropriée selon le type d'objet
+        // Si la hauteur est significativement plus grande, c'est probablement un objet vertical
+        const isVertical = verticalSize > horizontalSize * 1.5;
+        const modelDimension = isVertical ? verticalSize : horizontalSize;
+        
+        // Calculer le facteur d'échelle pour que la dimension corresponde à la taille réelle
+        const scaleFactor = realWorldSize / modelDimension;
+        
+        // Appliquer le facteur d'échelle uniformément pour maintenir les proportions
+        finalScale.multiplyScalar(scaleFactor);
+        
+        console.log('📏 Échelle taille réelle calculée:', {
+          realWorldSize,
+          modelDimension: isVertical ? `hauteur: ${verticalSize}` : `diamètre: ${horizontalSize}`,
+          scaleFactor,
+          finalScale,
+          isVertical
+        });
+      }
+      
       // Positionner le modèle : centré sur la position détectée
       // Ajuster Y pour placer le bas du modèle sur la surface
-      const adjustedY = position.y + (size.y / 2) * scale.y;
+      const adjustedY = position.y + (size.y / 2) * finalScale.y;
       
       modelRef.current.position.set(
-        position.x - center.x * scale.x,
+        position.x - center.x * finalScale.x,
         adjustedY,
-        position.z - center.z * scale.z
+        position.z - center.z * finalScale.z
       );
       
-      // Appliquer l'échelle
-      modelRef.current.scale.copy(scale);
+      // Appliquer l'échelle finale (taille réelle + variant)
+      modelRef.current.scale.copy(finalScale);
       
-      console.log('📍 Modèle positionné:', {
+      console.log('📍 Modèle positionné à taille réelle:', {
         modelPath,
         position: modelRef.current.position,
         scale: modelRef.current.scale,
-        originalPosition: position
+        originalPosition: position,
+        realWorldSize
       });
     }
-  }, [position, scale, scene, modelPath]);
+  }, [position, scale, scene, modelPath, realWorldSize]);
 
-  useFrame(() => {
-    if (modelRef.current) {
-      // Animation subtile de rotation
-      modelRef.current.rotation.y += 0.005;
-    }
-  });
+  // Ne pas faire de rotation automatique - laisser l'utilisateur contrôler
+  // useFrame(() => {
+  //   if (modelRef.current) {
+  //     // Animation subtile de rotation
+  //     modelRef.current.rotation.y += 0.005;
+  //   }
+  // });
 
   return (
     <primitive 
@@ -83,7 +119,8 @@ export const WebXRViewer = ({
   selectedDishId,
   onDishSelect,
   hotspots = [],
-  scale = "1 1 1"
+  scale = "1 1 1",
+  dimensions
 }: WebXRViewerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -168,7 +205,23 @@ export const WebXRViewer = ({
     return new THREE.Vector3(parts[0] || 1, parts[1] || 1, parts[2] || 1);
   };
 
+  // Extraire la taille réelle en mètres depuis les dimensions
+  const extractRealWorldSize = (dimensionsStr?: string): number | undefined => {
+    if (!dimensionsStr) return undefined;
+    
+    // Extraire les nombres suivis de "cm" ou "m"
+    const match = dimensionsStr.match(/(\d+(?:\.\d+)?)\s*(cm|m)/i);
+    if (match) {
+      const value = parseFloat(match[1]);
+      const unit = match[2].toLowerCase();
+      // Convertir en mètres
+      return unit === 'cm' ? value / 100 : value;
+    }
+    return undefined;
+  };
+
   const modelScale = parseScale(scale);
+  const realWorldSize = extractRealWorldSize(dimensions);
 
   return (
     <div 
@@ -243,13 +296,50 @@ export const WebXRViewer = ({
               <meshBasicMaterial color="#ffaa00" transparent opacity={0.5} />
             </mesh>
           }>
-            <ModelRenderer
-              modelPath={modelPath}
-              position={detectedPlane || new THREE.Vector3(0, 0, -1)}
-              scale={modelScale}
-              hotspots={hotspots}
-            />
+            {/* Contrôles de rotation - seulement si WebXR n'est pas actif */}
+            {!session && (
+              <PresentationControls
+                global
+                zoom={0.8}
+                rotation={[0, 0, 0]}
+                polar={[-Math.PI / 3, Math.PI / 3]}
+                azimuth={[-Math.PI / 1.4, Math.PI / 2]}
+              >
+                <ModelRenderer
+                  modelPath={modelPath}
+                  position={detectedPlane || new THREE.Vector3(0, 0, -1)}
+                  scale={modelScale}
+                  hotspots={hotspots}
+                  realWorldSize={realWorldSize}
+                />
+              </PresentationControls>
+            )}
+            
+            {/* En mode WebXR, afficher sans contrôles (l'utilisateur bouge son appareil) */}
+            {session && (
+              <ModelRenderer
+                modelPath={modelPath}
+                position={detectedPlane || new THREE.Vector3(0, 0, -1)}
+                scale={modelScale}
+                hotspots={hotspots}
+              />
+            )}
           </Suspense>
+        )}
+        
+        {/* Contrôles Orbit pour rotation libre (fallback si PresentationControls ne fonctionne pas) */}
+        {modelPath && (detectedPlane || testMode) && !session && (
+          <OrbitControls
+            enablePan={false}
+            enableZoom={true}
+            enableRotate={true}
+            minDistance={1}
+            maxDistance={5}
+            minPolarAngle={Math.PI / 6}
+            maxPolarAngle={Math.PI - Math.PI / 6}
+            autoRotate={false}
+            rotateSpeed={0.5}
+          />
         )}
       </Canvas>
 
@@ -295,6 +385,30 @@ export const WebXRViewer = ({
         <div className="absolute top-20 left-1/2 -translate-x-1/2 z-50 bg-blue-500/90 backdrop-blur-xl text-white px-6 py-3 rounded-full border border-white/20">
           <p className="text-center font-medium">
             🧪 Mode test actif - Modèle affiché à position fixe
+          </p>
+        </div>
+      )}
+
+      {/* Instructions de rotation */}
+      {modelPath && (detectedPlane || testMode) && !session && (
+        <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-50 bg-black/30 backdrop-blur-xl text-white px-6 py-4 rounded-2xl border border-white/20 max-w-sm">
+          <p className="text-center font-medium mb-2">
+            👆 Faites glisser pour tourner
+          </p>
+          <p className="text-center text-sm text-gray-300">
+            Pincez pour zoomer • Voyez le plat sous tous les angles
+          </p>
+        </div>
+      )}
+
+      {/* Instructions WebXR */}
+      {modelPath && detectedPlane && session && (
+        <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-50 bg-black/30 backdrop-blur-xl text-white px-6 py-4 rounded-2xl border border-white/20 max-w-sm">
+          <p className="text-center font-medium mb-2">
+            📱 Bougez votre appareil
+          </p>
+          <p className="text-center text-sm text-gray-300">
+            Tournez autour du plat pour le voir sous tous les angles
           </p>
         </div>
       )}
