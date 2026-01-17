@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, Suspense } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import { useCameraStream } from '../hooks/useCameraStream';
@@ -23,15 +23,30 @@ interface ModelRendererProps {
 }
 
 const ModelRenderer = ({ modelPath, position, scale }: ModelRendererProps) => {
-  const { scene } = useGLTF(modelPath);
   const modelRef = useRef<THREE.Group>(null);
+  
+  // Charger le modèle GLTF (useGLTF gère automatiquement le cache)
+  const { scene } = useGLTF(modelPath);
 
   useEffect(() => {
-    if (modelRef.current) {
-      modelRef.current.position.copy(position);
+    if (modelRef.current && scene) {
+      // Calculer la bounding box pour centrer le modèle
+      const box = new THREE.Box3().setFromObject(scene);
+      const center = box.getCenter(new THREE.Vector3());
+      
+      // Positionner le modèle : centré sur la position détectée
+      modelRef.current.position.set(
+        position.x - center.x * scale.x,
+        position.y, // Position Y de la surface détectée
+        position.z - center.z * scale.z
+      );
+      
+      // Appliquer l'échelle
       modelRef.current.scale.copy(scale);
+      
+      console.log('Modèle chargé:', modelPath, 'Position:', position, 'Scale:', scale, 'Center:', center);
     }
-  }, [position, scale]);
+  }, [position, scale, scene, modelPath]);
 
   useFrame(() => {
     if (modelRef.current) {
@@ -40,13 +55,10 @@ const ModelRenderer = ({ modelPath, position, scale }: ModelRendererProps) => {
     }
   });
 
-  // Cloner la scène pour éviter les problèmes de référence
-  const clonedScene = scene.clone();
-
   return (
     <primitive 
       ref={modelRef} 
-      object={clonedScene}
+      object={scene.clone()}
     />
   );
 };
@@ -193,12 +205,19 @@ export const WebXRViewer = ({
 
         {/* Modèle 3D sur la table détectée */}
         {modelPath && detectedPlane && (
-          <ModelRenderer
-            modelPath={modelPath}
-            position={detectedPlane}
-            scale={modelScale}
-            hotspots={hotspots}
-          />
+          <Suspense fallback={
+            <mesh position={detectedPlane}>
+              <boxGeometry args={[0.3, 0.3, 0.3]} />
+              <meshBasicMaterial color="#ffaa00" transparent opacity={0.5} />
+            </mesh>
+          }>
+            <ModelRenderer
+              modelPath={modelPath}
+              position={detectedPlane}
+              scale={modelScale}
+              hotspots={hotspots}
+            />
+          </Suspense>
         )}
       </Canvas>
 
