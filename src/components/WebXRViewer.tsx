@@ -27,24 +27,39 @@ const ModelRenderer = ({ modelPath, position, scale }: ModelRendererProps) => {
   
   // Charger le modèle GLTF (useGLTF gère automatiquement le cache)
   const { scene } = useGLTF(modelPath);
+  
+  useEffect(() => {
+    console.log('✅ Modèle GLTF chargé avec succès:', modelPath, 'Scene:', scene);
+  }, [modelPath, scene]);
 
   useEffect(() => {
     if (modelRef.current && scene) {
       // Calculer la bounding box pour centrer le modèle
       const box = new THREE.Box3().setFromObject(scene);
       const center = box.getCenter(new THREE.Vector3());
+      const size = box.getSize(new THREE.Vector3());
+      
+      console.log('📦 Bounding box:', { center, size, min: box.min, max: box.max });
       
       // Positionner le modèle : centré sur la position détectée
+      // Ajuster Y pour placer le bas du modèle sur la surface
+      const adjustedY = position.y + (size.y / 2) * scale.y;
+      
       modelRef.current.position.set(
         position.x - center.x * scale.x,
-        position.y, // Position Y de la surface détectée
+        adjustedY,
         position.z - center.z * scale.z
       );
       
       // Appliquer l'échelle
       modelRef.current.scale.copy(scale);
       
-      console.log('Modèle chargé:', modelPath, 'Position:', position, 'Scale:', scale, 'Center:', center);
+      console.log('📍 Modèle positionné:', {
+        modelPath,
+        position: modelRef.current.position,
+        scale: modelRef.current.scale,
+        originalPosition: position
+      });
     }
   }, [position, scale, scene, modelPath]);
 
@@ -87,6 +102,7 @@ export const WebXRViewer = ({
   const [detectedPlane, setDetectedPlane] = useState<THREE.Vector3 | null>(null);
   const [showMenu, setShowMenu] = useState(!selectedDishId || !modelPath);
   const [glContext, setGlContext] = useState<WebGLRenderingContext | WebGL2RenderingContext | null>(null);
+  const [testMode, setTestMode] = useState(false); // Mode test pour afficher le modèle sans détection
 
   // Activer la caméra au montage
   useEffect(() => {
@@ -127,8 +143,24 @@ export const WebXRViewer = ({
 
   // Gérer la détection de plan
   const handlePlaneDetected = (position: THREE.Vector3, _normal: THREE.Vector3) => {
+    console.log('Plan détecté à la position:', position);
     setDetectedPlane(position);
   };
+
+  // Mode test : afficher le modèle à une position fixe pour tester
+  useEffect(() => {
+    if (modelPath && !detectedPlane && !showMenu) {
+      // Après 3 secondes, activer le mode test si aucune surface n'est détectée
+      const timer = setTimeout(() => {
+        console.log('Mode test activé - affichage du modèle à position fixe');
+        setTestMode(true);
+        setDetectedPlane(new THREE.Vector3(0, 0, -1)); // Position fixe devant la caméra
+      }, 3000);
+      return () => clearTimeout(timer);
+    } else {
+      setTestMode(false);
+    }
+  }, [modelPath, detectedPlane, showMenu]);
 
   // Parser l'échelle
   const parseScale = (scaleStr: string): THREE.Vector3 => {
@@ -203,17 +235,17 @@ export const WebXRViewer = ({
           />
         )}
 
-        {/* Modèle 3D sur la table détectée */}
-        {modelPath && detectedPlane && (
+        {/* Modèle 3D sur la table détectée ou en mode test */}
+        {modelPath && (detectedPlane || testMode) && (
           <Suspense fallback={
-            <mesh position={detectedPlane}>
+            <mesh position={detectedPlane || new THREE.Vector3(0, 0, -1)}>
               <boxGeometry args={[0.3, 0.3, 0.3]} />
               <meshBasicMaterial color="#ffaa00" transparent opacity={0.5} />
             </mesh>
           }>
             <ModelRenderer
               modelPath={modelPath}
-              position={detectedPlane}
+              position={detectedPlane || new THREE.Vector3(0, 0, -1)}
               scale={modelScale}
               hotspots={hotspots}
             />
@@ -247,10 +279,22 @@ export const WebXRViewer = ({
       )}
 
       {/* Instructions pour la détection de table */}
-      {!detectedPlane && modelPath && !showMenu && (
+      {!detectedPlane && !testMode && modelPath && !showMenu && (
         <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-50 bg-black/20 backdrop-blur-xl text-white px-6 py-4 rounded-2xl border border-white/20">
           <p className="text-center font-medium">
             Pointez votre appareil vers une surface plane (table)
+          </p>
+          <p className="text-center text-sm mt-2 text-gray-300">
+            Mode test activé dans 3 secondes si aucune surface n'est détectée
+          </p>
+        </div>
+      )}
+
+      {/* Indicateur mode test */}
+      {testMode && (
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-50 bg-blue-500/90 backdrop-blur-xl text-white px-6 py-3 rounded-full border border-white/20">
+          <p className="text-center font-medium">
+            🧪 Mode test actif - Modèle affiché à position fixe
           </p>
         </div>
       )}
