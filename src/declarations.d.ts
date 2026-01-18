@@ -15,6 +15,8 @@ declare namespace JSX {
             'ar-modes'?: string;
             'ar-scale'?: string;
             'interaction-policy'?: string;
+            'interaction-prompt'?: string;
+            'touch-action'?: string;
             reveal?: string;
             scale?: string;
             slot?: string;

@@ -27,12 +27,17 @@
             {
                 "name": "Mozzarella",
                 "position": "0.1m 0.05m 0.1m",
-                "detail": "Bufala fraîchement importée."
+                "detail": "Mozzarella Di Bufala - Provenance : Italie, fraîchement importée."
             },
             {
                 "name": "Basilic",
                 "position": "-0.1m 0.05m 0.0m",
-                "detail": "Bio, du jardin."
+                "detail": "Basilic bio, cultivé dans notre jardin local."
+            },
+            {
+                "name": "Tomates San Marzano",
+                "position": "0m 0.02m 0m",
+                "detail": "Tomates San Marzano DOP, récoltées à maturité en Campanie."
             }
         ],
         "nutrition": {
@@ -72,7 +77,17 @@
             {
                 "name": "Cheddar",
                 "position": "0m 0.1m 0m",
-                "detail": "Cheddar Somerset affiné."
+                "detail": "Cheddar Somerset affiné 12 mois - Angleterre."
+            },
+            {
+                "name": "Steak Charolais",
+                "position": "0m 0.05m 0m",
+                "detail": "Steak haché Charolais, viande française de qualité supérieure."
+            },
+            {
+                "name": "Oignons caramélisés",
+                "position": "0.05m 0.08m 0m",
+                "detail": "Oignons caramélisés au beurre, mijotés 30 minutes."
             }
         ],
         "nutrition": {
@@ -103,7 +118,23 @@
                 "scale": "1 1 1"
             }
         ],
-        "hotspots": [],
+        "hotspots": [
+            {
+                "name": "Mascarpone",
+                "position": "0m 0.05m 0m",
+                "detail": "Mascarpone onctueux - Fromage frais italien de Lombardie."
+            },
+            {
+                "name": "Café espresso",
+                "position": "0m 0.08m 0m",
+                "detail": "Savoiardi imbibés de café espresso italien, torréfaction moyenne."
+            },
+            {
+                "name": "Cacao",
+                "position": "0m 0.1m 0m",
+                "detail": "Cacao amer de qualité supérieure, saupoudré à la main."
+            }
+        ],
         "nutrition": {
             "calories": 450,
             "allergenes": [
@@ -132,7 +163,23 @@
                 "scale": "1 1 1"
             }
         ],
-        "hotspots": [],
+        "hotspots": [
+            {
+                "name": "Mascarpone",
+                "position": "0m 0.05m 0m",
+                "detail": "Mascarpone onctueux - Fromage frais italien de Lombardie."
+            },
+            {
+                "name": "Café espresso",
+                "position": "0m 0.08m 0m",
+                "detail": "Savoiardi imbibés de café espresso italien, torréfaction moyenne."
+            },
+            {
+                "name": "Cacao",
+                "position": "0m 0.1m 0m",
+                "detail": "Cacao amer de qualité supérieure, saupoudré à la main."
+            }
+        ],
         "nutrition": {
             "calories": 750,
             "allergenes": [],

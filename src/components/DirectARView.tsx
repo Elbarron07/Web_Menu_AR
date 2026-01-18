@@ -5,6 +5,7 @@ import menuData from '../data/menu.json';
 import { useCart } from './CartContext';
 import { useCameraStream } from '../hooks/useCameraStream';
 import { SimpleMenu } from './SimpleMenu';
+import { HotspotInfo } from './HotspotInfo';
 import '@google/model-viewer';
 
 const DirectARView = () => {
@@ -136,6 +137,8 @@ const DirectARView = () => {
                     ar-modes="webxr scene-viewer quick-look"
                     ar-scale="fixed"
                     interaction-policy="allow-when-focused"
+                    interaction-prompt="auto"
+                    touch-action="none"
                     reveal="interaction"
                     shadow-intensity="1"
                     scale={modelScaleValue}
@@ -146,25 +149,20 @@ const DirectARView = () => {
                         position: 'absolute',
                         top: 0,
                         left: 0,
-                        zIndex: 10
+                        zIndex: 10,
+                        touchAction: 'none'
                     } as any}
-                    className="absolute inset-0"
+                    className="absolute inset-0 model-viewer-container"
                 >
-                    {/* Hotspots interactifs */}
+                    {/* Hotspots interactifs améliorés */}
                     {product.hotspots?.map((hotspot: any, idx: number) => (
-                        <button
+                        <HotspotInfo
                             key={idx}
-                            className="hotspot"
-                            slot={`hotspot-${idx}`}
-                            data-position={hotspot.position}
-                            data-normal="0m 1m 0m"
-                        >
-                            <div className="relative">
-                                <div className="w-5 h-5 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full shadow-[0_0_20px_rgba(251,191,36,0.8)] relative">
-                                    <div className="absolute inset-0 bg-amber-300 rounded-full opacity-60 animate-ping"></div>
-                                </div>
-                            </div>
-                        </button>
+                            name={hotspot.name}
+                            detail={hotspot.detail}
+                            position={hotspot.position}
+                            index={idx}
+                        />
                     ))}
                 </model-viewer>
             )}
