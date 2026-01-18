@@ -1,11 +1,11 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import menuData from '../data/menu.json';
 import { useCart } from './CartContext';
-
-// Lazy load du composant WebXR lourd
-const WebXRViewer = lazy(() => import('./WebXRViewer').then(module => ({ default: module.WebXRViewer })));
+import { useCameraStream } from '../hooks/useCameraStream';
+import { SimpleMenu } from './SimpleMenu';
+import '@google/model-viewer';
 
 const DirectARView = () => {
     const { id } = useParams();
@@ -19,6 +19,11 @@ const DirectARView = () => {
     const [currentPrice, setCurrentPrice] = useState<number>(0);
     const [scale, setScale] = useState<string>("1 1 1");
     const [selectedDishId, setSelectedDishId] = useState<number | null>(dishId || null);
+    const [showMenu, setShowMenu] = useState(!dishId);
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const modelViewerRef = useRef<any>(null);
+    
+    const { stream, error: cameraError, startCamera, stopCamera } = useCameraStream();
 
     useEffect(() => {
         if (product && product.variants.length > 0) {
@@ -38,7 +43,15 @@ const DirectARView = () => {
         if (!product) return;
         setSelectedVariant(variant);
         setCurrentPrice(product.price + variant.priceModifier);
-        setScale(variant.scale || "1 1 1");
+        const newScale = variant.scale || "1 1 1";
+        setScale(newScale);
+        
+        // Mettre à jour l'échelle dans model-viewer
+        if (modelViewerRef.current) {
+            const scaleParts = newScale.split(' ').map(Number);
+            const scaleValue = `${scaleParts[0] || 1} ${scaleParts[1] || 1} ${scaleParts[2] || 1}`;
+            (modelViewerRef.current as any).scale = scaleValue;
+        }
     };
 
     const handleAddToCart = () => {
@@ -55,28 +68,113 @@ const DirectARView = () => {
         }
     };
 
+    // Activer la caméra au montage
+    useEffect(() => {
+        startCamera();
+        return () => {
+            stopCamera();
+        };
+    }, [startCamera, stopCamera]);
+
+    // Connecter le flux vidéo à l'élément video
+    useEffect(() => {
+        if (stream && videoRef.current) {
+            videoRef.current.srcObject = stream;
+            videoRef.current.play().catch(console.error);
+        }
+    }, [stream]);
+
     const handleDishSelect = (dishId: number) => {
+        setShowMenu(false);
         setSelectedDishId(dishId);
         navigate(`/ar/${dishId}`);
     };
 
+    // Afficher le menu si aucun plat n'est sélectionné
+    useEffect(() => {
+        if (!selectedDishId || !product) {
+            setShowMenu(true);
+        } else {
+            setShowMenu(false);
+        }
+    }, [selectedDishId, product]);
+
+    // Calculer l'échelle pour model-viewer (format "X Y Z" en string)
+    const scaleParts = scale.split(' ').map(Number);
+    const modelScaleValue = `${scaleParts[0] || 1} ${scaleParts[1] || 1} ${scaleParts[2] || 1}`;
+    
+    // Note: model-viewer avec ar-scale="fixed" garde la taille du modèle original
+    // Le scale est utilisé pour les variants (M, L, etc.)
+    // Pour une taille réelle 1:1, le modèle GLTF doit être modélisé à la bonne échelle
+
     return (
         <div className="relative w-screen h-screen overflow-hidden" style={{ background: 'transparent' }}>
-            {/* WebXR Viewer avec caméra en fond et menu/3D */}
-            <Suspense fallback={
-                <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50">
-                    <div className="text-white text-lg">Chargement de l'expérience AR...</div>
+            {/* Flux vidéo de la caméra en arrière-plan */}
+            <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="absolute inset-0 w-full h-full object-cover z-0"
+                style={{ transform: 'scaleX(-1)' }} // Miroir pour une expérience naturelle
+            />
+
+            {/* Menu simple - affiché quand aucun plat n'est sélectionné */}
+            {showMenu && !product && (
+                <SimpleMenu onSelectDish={handleDishSelect} />
+            )}
+
+            {/* Model Viewer pour afficher le plat en 3D avec AR */}
+            {product && product.model3D && (
+                <model-viewer
+                    ref={modelViewerRef}
+                    src={product.model3D}
+                    alt={product.name}
+                    camera-controls
+                    auto-rotate
+                    ar
+                    ar-modes="webxr scene-viewer quick-look"
+                    ar-scale="fixed"
+                    interaction-policy="allow-when-focused"
+                    reveal="interaction"
+                    shadow-intensity="1"
+                    scale={modelScaleValue}
+                    style={{
+                        width: '100%',
+                        height: '100%',
+                        backgroundColor: 'transparent',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        zIndex: 10
+                    } as any}
+                    className="absolute inset-0"
+                >
+                    {/* Hotspots interactifs */}
+                    {product.hotspots?.map((hotspot: any, idx: number) => (
+                        <button
+                            key={idx}
+                            className="hotspot"
+                            slot={`hotspot-${idx}`}
+                            data-position={hotspot.position}
+                            data-normal="0m 1m 0m"
+                        >
+                            <div className="relative">
+                                <div className="w-5 h-5 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full shadow-[0_0_20px_rgba(251,191,36,0.8)] relative">
+                                    <div className="absolute inset-0 bg-amber-300 rounded-full opacity-60 animate-ping"></div>
+                                </div>
+                            </div>
+                        </button>
+                    ))}
+                </model-viewer>
+            )}
+
+            {/* Messages d'erreur caméra */}
+            {cameraError && (
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-red-500/90 backdrop-blur-md text-white px-6 py-3 rounded-full">
+                    Erreur caméra: {cameraError}
                 </div>
-            }>
-                <WebXRViewer
-                    modelPath={product?.model3D}
-                    selectedDishId={selectedDishId || undefined}
-                    onDishSelect={handleDishSelect}
-                    hotspots={product?.hotspots || []}
-                    scale={scale}
-                    dimensions={product?.dimensions}
-                />
-            </Suspense>
+            )}
 
             {/* GLASSMORPHISM HUD OVERLAY - Zero Navigation */}
             {product && (

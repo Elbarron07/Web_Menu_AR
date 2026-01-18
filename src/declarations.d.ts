@@ -14,6 +14,9 @@ declare namespace JSX {
             ar?: boolean;
             'ar-modes'?: string;
             'ar-scale'?: string;
+            'interaction-policy'?: string;
+            reveal?: string;
+            scale?: string;
             slot?: string;
         }, HTMLElement>;
     }
