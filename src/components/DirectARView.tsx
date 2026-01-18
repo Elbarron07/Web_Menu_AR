@@ -23,6 +23,8 @@ const DirectARView = () => {
     const [showMenu, setShowMenu] = useState(!dishId);
     const videoRef = useRef<HTMLVideoElement>(null);
     const modelViewerRef = useRef<any>(null);
+    const isPlayingRef = useRef<boolean>(false);
+    const playPromiseRef = useRef<Promise<void> | null>(null);
     
     const { stream, error: cameraError, startCamera, stopCamera } = useCameraStream();
 
@@ -79,10 +81,119 @@ const DirectARView = () => {
 
     // Connecter le flux vidéo à l'élément video
     useEffect(() => {
-        if (stream && videoRef.current) {
-            videoRef.current.srcObject = stream;
-            videoRef.current.play().catch(console.error);
-        }
+        const video = videoRef.current;
+        if (!video || !stream) return;
+
+        let isMounted = true;
+        let cleanupListener: (() => void) | null = null;
+
+        const setupVideo = async () => {
+            try {
+                // Nettoyer l'ancien flux si présent et différent du nouveau
+                if (video.srcObject && video.srcObject !== stream) {
+                    const oldStream = video.srcObject as MediaStream;
+                    oldStream.getTracks().forEach(track => track.stop());
+                    video.srcObject = null;
+                    
+                    // Attendre un peu pour que le nettoyage soit terminé
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+
+                // Vérifier que le composant est toujours monté
+                if (!isMounted) return;
+
+                // Assigner le nouveau flux
+                video.srcObject = stream;
+                isPlayingRef.current = false;
+
+                // Fonction pour démarrer la lecture
+                const startPlayback = async () => {
+                    // Vérifier que tout est encore valide
+                    if (!isMounted || !video || video.srcObject !== stream || isPlayingRef.current) {
+                        return;
+                    }
+
+                    let currentPlayPromise: Promise<void> | null = null;
+
+                    try {
+                        // Annuler la promesse précédente si elle existe
+                        if (playPromiseRef.current) {
+                            try {
+                                await playPromiseRef.current;
+                            } catch {
+                                // Ignorer les erreurs d'annulation (AbortError est normal)
+                            }
+                        }
+
+                        // Vérifier à nouveau avant de jouer
+                        if (!isMounted || !video || video.srcObject !== stream) {
+                            return;
+                        }
+
+                        isPlayingRef.current = true;
+                        currentPlayPromise = video.play();
+                        playPromiseRef.current = currentPlayPromise;
+                        await currentPlayPromise;
+                    } catch (error: any) {
+                        // Ignorer les AbortError et NotAllowedError (normaux lors des changements)
+                        if (error.name !== 'AbortError' && error.name !== 'NotAllowedError') {
+                            console.warn('Erreur lors de la lecture de la vidéo:', error);
+                        }
+                        isPlayingRef.current = false;
+                    } finally {
+                        if (playPromiseRef.current === currentPlayPromise) {
+                            playPromiseRef.current = null;
+                        }
+                    }
+                };
+
+                // Écouter l'événement canplay pour s'assurer que la vidéo est prête
+                const handleCanPlay = () => {
+                    if (isMounted && video && video.srcObject === stream) {
+                        startPlayback();
+                    }
+                };
+
+                video.addEventListener('canplay', handleCanPlay, { once: true });
+                cleanupListener = () => {
+                    video.removeEventListener('canplay', handleCanPlay);
+                };
+
+                // Si la vidéo est déjà prête, démarrer la lecture immédiatement
+                if (video.readyState >= 3) {
+                    startPlayback();
+                }
+            } catch (error) {
+                console.error('Erreur lors de la configuration de la vidéo:', error);
+            }
+        };
+
+        setupVideo();
+
+        // Nettoyage au démontage ou changement de flux
+        return () => {
+            isMounted = false;
+            
+            // Nettoyer l'écouteur
+            if (cleanupListener) {
+                cleanupListener();
+            }
+            
+            // Ne pas arrêter les tracks si c'est le stream actuel (géré par useCameraStream)
+            if (video && video.srcObject && video.srcObject !== stream) {
+                const currentStream = video.srcObject as MediaStream;
+                currentStream.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+            }
+            
+            isPlayingRef.current = false;
+            if (playPromiseRef.current) {
+                playPromiseRef.current.catch(() => {
+                    // Ignorer les erreurs d'annulation
+                });
+                playPromiseRef.current = null;
+            }
+        };
     }, [stream]);
 
     const handleDishSelect = (dishId: number) => {
