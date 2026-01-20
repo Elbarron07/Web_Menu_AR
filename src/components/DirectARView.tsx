@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import menuData from '../data/menu.json';
 import { useCart } from './CartContext';
 import { SimpleMenu } from './SimpleMenu';
-import { ARViewer } from './ARViewer';
+import { ARViewer, ARViewerRef } from './ARViewer';
 import { HUDOverlay } from './HUDOverlay';
 import { HotspotAnnotation } from './HotspotAnnotation';
 
@@ -13,6 +13,7 @@ const DirectARView = () => {
     const product = id ? menuData.find((p: any) => p.id === id) : null;
 
     const { addToCart } = useCart();
+    const arViewerRef = useRef<ARViewerRef>(null);
 
     const [selectedVariant, setSelectedVariant] = useState<any>(null);
     const [currentPrice, setCurrentPrice] = useState<number>(0);
@@ -58,6 +59,12 @@ const DirectARView = () => {
         setSelectedHotspot(null);
     };
 
+    const handleActivateAR = async () => {
+        if (arViewerRef.current) {
+            await arViewerRef.current.activateAR();
+        }
+    };
+
     // Afficher le menu si aucun plat n'est sélectionné
     useEffect(() => {
         if (!id || !product) {
@@ -89,6 +96,7 @@ const DirectARView = () => {
             {/* AR Viewer avec model-viewer fullscreen */}
             {product && product.modelUrl && (
                 <ARViewer
+                    ref={arViewerRef}
                     modelUrl={product.modelUrl}
                     alt={product.name}
                     hotspots={convertHotspots(product.hotspots || [])}
@@ -116,6 +124,7 @@ const DirectARView = () => {
                     onAddToCart={handleAddToCart}
                     calories={product.nutrition?.calories}
                     showCartFeedback={showCartFeedback}
+                    onActivateAR={handleActivateAR}
                 />
             )}
 

@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useState } from 'react';
 
 interface Variant {
     size: string;
@@ -16,6 +17,7 @@ interface HUDOverlayProps {
     onAddToCart: () => void;
     calories?: number;
     showCartFeedback?: boolean;
+    onActivateAR?: () => Promise<void>;
 }
 
 export const HUDOverlay = ({
@@ -27,8 +29,28 @@ export const HUDOverlay = ({
     onVariantChange,
     onAddToCart,
     calories,
-    showCartFeedback = false
+    showCartFeedback = false,
+    onActivateAR
 }: HUDOverlayProps) => {
+    const [isARLoading, setIsARLoading] = useState(false);
+    const [arError, setArError] = useState<string | null>(null);
+
+    const handleActivateAR = async () => {
+        if (!onActivateAR) return;
+        
+        setIsARLoading(true);
+        setArError(null);
+        
+        try {
+            await onActivateAR();
+        } catch (error: any) {
+            console.error('Erreur activation AR:', error);
+            setArError('AR non disponible');
+            setTimeout(() => setArError(null), 3000);
+        } finally {
+            setIsARLoading(false);
+        }
+    };
     return (
         <div className="hud-overlay pointer-events-none fixed inset-0 z-50 flex flex-col">
             {/* Top Bar - Product Info Badge */}
@@ -61,6 +83,51 @@ export const HUDOverlay = ({
                         </div>
                     </div>
                 </motion.div>
+                
+                {/* Bouton Immersion Totale */}
+                {onActivateAR && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="mt-3 sm:mt-4 flex justify-center"
+                    >
+                        <motion.button
+                            onClick={handleActivateAR}
+                            disabled={isARLoading}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className={`glassmorphism-button w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl border-2 border-white/30 backdrop-blur-xl shadow-xl font-black text-sm sm:text-base flex items-center justify-center gap-2 sm:gap-3 transition-all ${
+                                isARLoading
+                                    ? 'bg-blue-500/70 text-white cursor-wait'
+                                    : arError
+                                    ? 'bg-red-500/70 text-white'
+                                    : 'bg-gradient-to-r from-blue-500/90 to-purple-600/90 text-white hover:from-blue-600 hover:to-purple-700'
+                            }`}
+                        >
+                            {isARLoading ? (
+                                <>
+                                    <motion.div
+                                        animate={{ rotate: 360 }}
+                                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                        className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
+                                    />
+                                    <span>Activation...</span>
+                                </>
+                            ) : arError ? (
+                                <>
+                                    <span className="text-lg sm:text-xl">⚠️</span>
+                                    <span>{arError}</span>
+                                </>
+                            ) : (
+                                <>
+                                    <span className="text-lg sm:text-xl">🥽</span>
+                                    <span>Immersion Totale</span>
+                                </>
+                            )}
+                        </motion.button>
+                    </motion.div>
+                )}
             </div>
 
             {/* Middle Section - Side Controls */}

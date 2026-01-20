@@ -67,11 +67,40 @@ body {
   left: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
-  touch-action: none !important;
+  touch-action: pan-x pan-y pinch-zoom !important;
   -webkit-touch-callout: none !important;
   -webkit-user-select: none !important;
   user-select: none !important;
-  z-index: 0 !important;
+  z-index: 1 !important;
+  pointer-events: auto !important;
+  cursor: grab !important;
+}
+
+.ar-viewer-fullscreen:active {
+  cursor: grabbing !important;
+}
+
+/* S'assurer que model-viewer peut recevoir les événements tactiles */
+model-viewer {
+  pointer-events: auto !important;
+  touch-action: pan-x pan-y pinch-zoom !important;
+  -webkit-touch-callout: none !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
+}
+
+/* Zone interactive pour la rotation */
+model-viewer::part(default-ar-button) {
+  pointer-events: auto !important;
+}
+
+/* Conteneur principal - ne pas bloquer les interactions */
+.ar-viewer-container {
+  pointer-events: none !important;
+}
+
+.ar-viewer-container > model-viewer {
+  pointer-events: auto !important;
 }
 
 /* Styles pour les hotspots */
@@ -134,6 +163,30 @@ body {
 /* HUD Overlay */
 .hud-overlay {
   pointer-events: none;
+}
+
+/* S'assurer que les éléments HUD ne bloquent pas les interactions avec model-viewer */
+.hud-overlay > * {
+  pointer-events: auto;
+}
+
+/* Les éléments avec pointer-events-auto peuvent interagir */
+.pointer-events-auto {
+  pointer-events: auto !important;
+}
+
+/* Optimisations pour la rotation tactile */
+@media (hover: none) and (pointer: coarse) {
+  /* Mobile - optimiser pour les gestes tactiles */
+  model-viewer {
+    touch-action: pan-x pan-y pinch-zoom !important;
+    -webkit-touch-action: pan-x pan-y pinch-zoom !important;
+  }
+  
+  .ar-viewer-fullscreen {
+    touch-action: pan-x pan-y pinch-zoom !important;
+    -webkit-touch-action: pan-x pan-y pinch-zoom !important;
+  }
 }
 
 /* Animation pour la main de guidage (interaction-prompt) */

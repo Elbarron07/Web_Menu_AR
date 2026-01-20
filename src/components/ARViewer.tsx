@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useImperativeHandle, forwardRef } from 'react';
 import '@google/model-viewer';
 
 interface Hotspot {
@@ -16,14 +16,33 @@ interface ARViewerProps {
     onHotspotClick?: (hotspot: Hotspot) => void;
 }
 
-export const ARViewer = ({ 
+export interface ARViewerRef {
+    activateAR: () => Promise<void>;
+}
+
+export const ARViewer = forwardRef<ARViewerRef, ARViewerProps>(({ 
     modelUrl, 
     alt, 
     hotspots = [], 
     scale = "1 1 1",
     onHotspotClick 
-}: ARViewerProps) => {
+}, ref) => {
     const modelViewerRef = useRef<any>(null);
+
+    // Exposer la méthode activateAR via la ref
+    useImperativeHandle(ref, () => ({
+        activateAR: async () => {
+            if (modelViewerRef.current) {
+                try {
+                    // Activer l'AR programmatiquement
+                    await (modelViewerRef.current as any).activateAR();
+                } catch (error) {
+                    console.error('Erreur lors de l\'activation AR:', error);
+                    throw error;
+                }
+            }
+        }
+    }));
 
     useEffect(() => {
         // Mettre à jour l'échelle si elle change
@@ -47,9 +66,10 @@ export const ARViewer = ({
             ar-modes="webxr"
             ar-scale="fixed"
             camera-controls
-            touch-action="none"
-            interaction-policy="allow-when-focused"
+            interaction-policy="always"
+            reveal="auto"
             shadow-intensity="1"
+            auto-rotate-delay="0"
             style={{
                 width: '100vw',
                 height: '100vh',
@@ -57,9 +77,10 @@ export const ARViewer = ({
                 top: 0,
                 left: 0,
                 backgroundColor: '#000000',
-                touchAction: 'none'
+                zIndex: 1
             } as any}
             className="ar-viewer-fullscreen"
+            tabIndex={0}
         >
             {/* Hotspots interactifs */}
             {hotspots.map((hotspot, index) => (
@@ -82,4 +103,6 @@ export const ARViewer = ({
             ))}
         </model-viewer>
     );
-};
+});
+
+ARViewer.displayName = 'ARViewer';
