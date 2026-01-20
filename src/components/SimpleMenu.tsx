@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import menuData from '../data/menu.json';
 
 interface SimpleMenuProps {
-  onSelectDish: (dishId: number) => void;
+  onSelectDish: (dishId: string | number) => void;
 }
 
 export const SimpleMenu = ({ onSelectDish }: SimpleMenuProps) => {

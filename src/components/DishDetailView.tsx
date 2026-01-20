@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import menuData from '../data/menu.json';
-import ARViewer from './ARViewer';
+import { ARViewer } from './ARViewer';
 import { useCart } from './CartContext';
 
 const DishDetailView = () => {
@@ -72,9 +72,14 @@ const DishDetailView = () => {
                     className="relative h-[50vh] lg:h-auto lg:min-h-[600px]"
                 >
                     <ARViewer
-                        src={product.model3D}
+                        modelUrl={(product as any).modelUrl || (product as any).model3D || ''}
                         alt={product.name}
-                        hotspots={product.hotspots}
+                        hotspots={(product.hotspots || []).map((h: any) => ({
+                            slot: h.slot || h.name?.toLowerCase().replace(/\s+/g, '-'),
+                            pos: h.pos || h.position || "0m 0m 0m",
+                            label: h.label || h.name || "Ingrédient",
+                            detail: h.detail
+                        }))}
                     />
                 </motion.div>
 

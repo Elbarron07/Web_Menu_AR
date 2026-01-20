@@ -1,13 +1,13 @@
 [
     {
-        "id": 1,
+        "id": "pizza-01",
         "name": "Pizza Margherita Supreme",
         "category": "Plats",
         "shortDesc": "La classique revisitée.",
         "fullDesc": "Tomates San Marzano, Mozzarella di Bufala, Basilic frais, Huile d'olive vierge. Une pâte fermentée 72h pour un croustillant incomparable.",
         "price": 14.50,
         "image2D": "https://placehold.co/600x400/png?text=Pizza+Margherita",
-        "model3D": "/assets/models/pizza.glb",
+        "modelUrl": "/assets/models/pizza.glb",
         "dimensions": "Diamètre 30cm",
         "variants": [
             {
@@ -25,18 +25,21 @@
         ],
         "hotspots": [
             {
-                "name": "Mozzarella",
-                "position": "0.1m 0.05m 0.1m",
+                "slot": "cheese",
+                "pos": "0.1m 0.05m 0.1m",
+                "label": "Mozzarella AOP",
                 "detail": "Mozzarella Di Bufala - Provenance : Italie, fraîchement importée."
             },
             {
-                "name": "Basilic",
-                "position": "-0.1m 0.05m 0.0m",
+                "slot": "basil",
+                "pos": "-0.1m 0.05m 0.0m",
+                "label": "Basilic Bio",
                 "detail": "Basilic bio, cultivé dans notre jardin local."
             },
             {
-                "name": "Tomates San Marzano",
-                "position": "0m 0.02m 0m",
+                "slot": "tomato",
+                "pos": "0m 0.02m 0m",
+                "label": "Tomates San Marzano",
                 "detail": "Tomates San Marzano DOP, récoltées à maturité en Campanie."
             }
         ],
@@ -50,14 +53,14 @@
         }
     },
     {
-        "id": 2,
+        "id": "burger-01",
         "name": "Burger Signature",
         "category": "Plats",
         "shortDesc": "Le burger définitif.",
         "fullDesc": "Steak haché Charolais, Cheddar affiné 12 mois, Sauce secrète, Oignons caramélisés.",
         "price": 16.00,
         "image2D": "https://placehold.co/600x400/png?text=Burger+Signature",
-        "model3D": "/assets/models/burger.glb",
+        "modelUrl": "/assets/models/burger.glb",
         "dimensions": "Hauteur 15cm",
         "variants": [
             {
@@ -75,18 +78,21 @@
         ],
         "hotspots": [
             {
-                "name": "Cheddar",
-                "position": "0m 0.1m 0m",
+                "slot": "cheddar",
+                "pos": "0m 0.1m 0m",
+                "label": "Cheddar Somerset",
                 "detail": "Cheddar Somerset affiné 12 mois - Angleterre."
             },
             {
-                "name": "Steak Charolais",
-                "position": "0m 0.05m 0m",
+                "slot": "steak",
+                "pos": "0m 0.05m 0m",
+                "label": "Steak Charolais",
                 "detail": "Steak haché Charolais, viande française de qualité supérieure."
             },
             {
-                "name": "Oignons caramélisés",
-                "position": "0.05m 0.08m 0m",
+                "slot": "onion",
+                "pos": "0.05m 0.08m 0m",
+                "label": "Oignons caramélisés",
                 "detail": "Oignons caramélisés au beurre, mijotés 30 minutes."
             }
         ],
@@ -101,14 +107,14 @@
         }
     },
     {
-        "id": 3,
+        "id": "dessert-01",
         "name": "Tiramisu della Nonna",
         "category": "Desserts",
         "shortDesc": "Recette traditionnelle.",
         "fullDesc": "Mascarpone onctueux, Savoiardi imbibés de café espresso, Cacao amer.",
         "price": 8.50,
         "image2D": "https://placehold.co/600x400/png?text=Tiramisu",
-        "model3D": "/assets/models/dessert.glb",
+        "modelUrl": "/assets/models/dessert.glb",
         "dimensions": "Part généreuse",
         "variants": [
             {
@@ -120,18 +126,21 @@
         ],
         "hotspots": [
             {
-                "name": "Mascarpone",
-                "position": "0m 0.05m 0m",
+                "slot": "mascarpone",
+                "pos": "0m 0.05m 0m",
+                "label": "Mascarpone",
                 "detail": "Mascarpone onctueux - Fromage frais italien de Lombardie."
             },
             {
-                "name": "Café espresso",
-                "position": "0m 0.08m 0m",
+                "slot": "coffee",
+                "pos": "0m 0.08m 0m",
+                "label": "Café espresso",
                 "detail": "Savoiardi imbibés de café espresso italien, torréfaction moyenne."
             },
             {
-                "name": "Cacao",
-                "position": "0m 0.1m 0m",
+                "slot": "cocoa",
+                "pos": "0m 0.1m 0m",
+                "label": "Cacao",
                 "detail": "Cacao amer de qualité supérieure, saupoudré à la main."
             }
         ],
@@ -146,14 +155,14 @@
         }
     },
     {
-        "id": 4,
+        "id": "chef-01",
         "name": "Plat du Chef",
         "category": "Plats",
         "shortDesc": "Création exclusive du chef.",
         "fullDesc": "Une création unique qui allie saveurs et présentation exceptionnelle.",
         "price": 22.00,
         "image2D": "https://placehold.co/600x400/png?text=Plat+du+Chef",
-        "model3D": "/assets/models/menu-item.glb",
+        "modelUrl": "/assets/models/menu-item.glb",
         "dimensions": "Portion généreuse",
         "variants": [
             {
@@ -163,23 +172,7 @@
                 "scale": "1 1 1"
             }
         ],
-        "hotspots": [
-            {
-                "name": "Mascarpone",
-                "position": "0m 0.05m 0m",
-                "detail": "Mascarpone onctueux - Fromage frais italien de Lombardie."
-            },
-            {
-                "name": "Café espresso",
-                "position": "0m 0.08m 0m",
-                "detail": "Savoiardi imbibés de café espresso italien, torréfaction moyenne."
-            },
-            {
-                "name": "Cacao",
-                "position": "0m 0.1m 0m",
-                "detail": "Cacao amer de qualité supérieure, saupoudré à la main."
-            }
-        ],
+        "hotspots": [],
         "nutrition": {
             "calories": 750,
             "allergenes": [],

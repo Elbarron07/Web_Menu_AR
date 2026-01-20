@@ -9,8 +9,8 @@ import * as THREE from 'three';
 
 interface WebXRViewerProps {
   modelPath?: string;
-  selectedDishId?: number;
-  onDishSelect?: (dishId: number) => void;
+  selectedDishId?: number | string;
+  onDishSelect?: (dishId: string | number) => void;
   hotspots?: Array<{ position: string; name: string; detail?: string }>;
   scale?: string;
   dimensions?: string; // Ex: "Diamètre 30cm", "Hauteur 15cm"
@@ -161,7 +161,7 @@ export const WebXRViewer = ({
   // Note: L'initialisation WebXR est maintenant gérée dans onCreated du Canvas
 
   // Gérer la sélection d'un plat
-  const handleDishSelect = (dishId: number) => {
+  const handleDishSelect = (dishId: string | number) => {
     setShowMenu(false);
     setDetectedPlane(null); // Réinitialiser la détection de plan
     if (onDishSelect) {

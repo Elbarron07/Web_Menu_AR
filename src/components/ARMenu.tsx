@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import menuData from '../data/menu.json';
 
 interface ARMenuProps {
-  onSelectDish: (dishId: number) => void;
+  onSelectDish: (dishId: string | number) => void;
   position?: [number, number, number];
 }
 
