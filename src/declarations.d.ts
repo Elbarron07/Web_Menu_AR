@@ -24,6 +24,12 @@ declare namespace JSX {
             'disable-pan'?: boolean;
             'disable-tap'?: boolean;
             'auto-rotate-delay'?: string;
+            'camera-orbit'?: string;
+            'min-camera-orbit'?: string;
+            'max-camera-orbit'?: string;
+            'min-field-of-view'?: string;
+            'max-field-of-view'?: string;
+            bounds?: string;
         }, HTMLElement>;
     }
 }

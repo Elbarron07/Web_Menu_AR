@@ -85,11 +85,28 @@ export const ARViewer = forwardRef<ARViewerRef, ARViewerProps>(({
             }
         };
 
+        const handleARStatus = (event: any) => {
+            const status = event.detail?.status;
+            if (status === 'not-presenting') {
+                console.log('📱 Mode AR terminé');
+            } else if (status === 'presenting') {
+                console.log('🥽 Mode AR actif - Modèle ancré sur la surface');
+            }
+        };
+
+        const handleARPlace = () => {
+            console.log('📍 Modèle placé sur la surface en mode AR');
+        };
+
         // Écouter les événements de chargement
         modelViewer.addEventListener('load', handleLoad);
         modelViewer.addEventListener('error', handleError);
         modelViewer.addEventListener('model-visibility', handleModelVisibility);
         modelViewer.addEventListener('progress', handleProgress);
+        
+        // Écouter les événements AR pour vérifier l'ancrage
+        modelViewer.addEventListener('ar-status', handleARStatus);
+        modelViewer.addEventListener('ar-place', handleARPlace);
 
         // Vérifier si le modèle est déjà chargé
         if ((modelViewer as any).loaded) {
@@ -104,6 +121,8 @@ export const ARViewer = forwardRef<ARViewerRef, ARViewerProps>(({
             modelViewer.removeEventListener('error', handleError);
             modelViewer.removeEventListener('model-visibility', handleModelVisibility);
             modelViewer.removeEventListener('progress', handleProgress);
+            modelViewer.removeEventListener('ar-status', handleARStatus);
+            modelViewer.removeEventListener('ar-place', handleARPlace);
         };
     }, [modelUrl]);
 
@@ -129,6 +148,12 @@ export const ARViewer = forwardRef<ARViewerRef, ARViewerProps>(({
             disable-zoom={false}
             disable-pan={false}
             disable-tap={false}
+            camera-orbit="0deg 75deg 105%"
+            min-camera-orbit="auto 0deg auto"
+            max-camera-orbit="auto 180deg auto"
+            min-field-of-view="10deg"
+            max-field-of-view="45deg"
+            bounds="tight"
             style={{
                 width: '100vw',
                 height: '100vh',
