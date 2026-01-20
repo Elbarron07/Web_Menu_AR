@@ -1,12 +1,12 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import menuData from '../data/menu.json';
 import { useCart } from './CartContext';
-import { useCameraStream } from '../hooks/useCameraStream';
 import { SimpleMenu } from './SimpleMenu';
-import { HotspotInfo } from './HotspotInfo';
-import '@google/model-viewer';
+
+// Lazy load du composant WebXR lourd
+const WebXRViewer = lazy(() => import('./WebXRViewer').then(module => ({ default: module.WebXRViewer })));
 
 const DirectARView = () => {
     const { id } = useParams();
@@ -21,12 +21,6 @@ const DirectARView = () => {
     const [scale, setScale] = useState<string>("1 1 1");
     const [selectedDishId, setSelectedDishId] = useState<number | null>(dishId || null);
     const [showMenu, setShowMenu] = useState(!dishId);
-    const videoRef = useRef<HTMLVideoElement>(null);
-    const modelViewerRef = useRef<any>(null);
-    const isPlayingRef = useRef<boolean>(false);
-    const playPromiseRef = useRef<Promise<void> | null>(null);
-    
-    const { stream, error: cameraError, startCamera, stopCamera } = useCameraStream();
 
     useEffect(() => {
         if (product && product.variants.length > 0) {
@@ -46,15 +40,7 @@ const DirectARView = () => {
         if (!product) return;
         setSelectedVariant(variant);
         setCurrentPrice(product.price + variant.priceModifier);
-        const newScale = variant.scale || "1 1 1";
-        setScale(newScale);
-        
-        // Mettre à jour l'échelle dans model-viewer
-        if (modelViewerRef.current) {
-            const scaleParts = newScale.split(' ').map(Number);
-            const scaleValue = `${scaleParts[0] || 1} ${scaleParts[1] || 1} ${scaleParts[2] || 1}`;
-            (modelViewerRef.current as any).scale = scaleValue;
-        }
+        setScale(variant.scale || "1 1 1");
     };
 
     const handleAddToCart = () => {
@@ -71,131 +57,6 @@ const DirectARView = () => {
         }
     };
 
-    // Activer la caméra au montage
-    useEffect(() => {
-        startCamera();
-        return () => {
-            stopCamera();
-        };
-    }, [startCamera, stopCamera]);
-
-    // Connecter le flux vidéo à l'élément video
-    useEffect(() => {
-        const video = videoRef.current;
-        if (!video || !stream) return;
-
-        let isMounted = true;
-        let cleanupListener: (() => void) | null = null;
-
-        const setupVideo = async () => {
-            try {
-                // Nettoyer l'ancien flux si présent et différent du nouveau
-                if (video.srcObject && video.srcObject !== stream) {
-                    const oldStream = video.srcObject as MediaStream;
-                    oldStream.getTracks().forEach(track => track.stop());
-                    video.srcObject = null;
-                    
-                    // Attendre un peu pour que le nettoyage soit terminé
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                }
-
-                // Vérifier que le composant est toujours monté
-                if (!isMounted) return;
-
-                // Assigner le nouveau flux
-                video.srcObject = stream;
-                isPlayingRef.current = false;
-
-                // Fonction pour démarrer la lecture
-                const startPlayback = async () => {
-                    // Vérifier que tout est encore valide
-                    if (!isMounted || !video || video.srcObject !== stream || isPlayingRef.current) {
-                        return;
-                    }
-
-                    let currentPlayPromise: Promise<void> | null = null;
-
-                    try {
-                        // Annuler la promesse précédente si elle existe
-                        if (playPromiseRef.current) {
-                            try {
-                                await playPromiseRef.current;
-                            } catch {
-                                // Ignorer les erreurs d'annulation (AbortError est normal)
-                            }
-                        }
-
-                        // Vérifier à nouveau avant de jouer
-                        if (!isMounted || !video || video.srcObject !== stream) {
-                            return;
-                        }
-
-                        isPlayingRef.current = true;
-                        currentPlayPromise = video.play();
-                        playPromiseRef.current = currentPlayPromise;
-                        await currentPlayPromise;
-                    } catch (error: any) {
-                        // Ignorer les AbortError et NotAllowedError (normaux lors des changements)
-                        if (error.name !== 'AbortError' && error.name !== 'NotAllowedError') {
-                            console.warn('Erreur lors de la lecture de la vidéo:', error);
-                        }
-                        isPlayingRef.current = false;
-                    } finally {
-                        if (playPromiseRef.current === currentPlayPromise) {
-                            playPromiseRef.current = null;
-                        }
-                    }
-                };
-
-                // Écouter l'événement canplay pour s'assurer que la vidéo est prête
-                const handleCanPlay = () => {
-                    if (isMounted && video && video.srcObject === stream) {
-                        startPlayback();
-                    }
-                };
-
-                video.addEventListener('canplay', handleCanPlay, { once: true });
-                cleanupListener = () => {
-                    video.removeEventListener('canplay', handleCanPlay);
-                };
-
-                // Si la vidéo est déjà prête, démarrer la lecture immédiatement
-                if (video.readyState >= 3) {
-                    startPlayback();
-                }
-            } catch (error) {
-                console.error('Erreur lors de la configuration de la vidéo:', error);
-            }
-        };
-
-        setupVideo();
-
-        // Nettoyage au démontage ou changement de flux
-        return () => {
-            isMounted = false;
-            
-            // Nettoyer l'écouteur
-            if (cleanupListener) {
-                cleanupListener();
-            }
-            
-            // Ne pas arrêter les tracks si c'est le stream actuel (géré par useCameraStream)
-            if (video && video.srcObject && video.srcObject !== stream) {
-                const currentStream = video.srcObject as MediaStream;
-                currentStream.getTracks().forEach(track => track.stop());
-                video.srcObject = null;
-            }
-            
-            isPlayingRef.current = false;
-            if (playPromiseRef.current) {
-                playPromiseRef.current.catch(() => {
-                    // Ignorer les erreurs d'annulation
-                });
-                playPromiseRef.current = null;
-            }
-        };
-    }, [stream]);
-
     const handleDishSelect = (dishId: number) => {
         setShowMenu(false);
         setSelectedDishId(dishId);
@@ -211,77 +72,28 @@ const DirectARView = () => {
         }
     }, [selectedDishId, product]);
 
-    // Calculer l'échelle pour model-viewer (format "X Y Z" en string)
-    const scaleParts = scale.split(' ').map(Number);
-    const modelScaleValue = `${scaleParts[0] || 1} ${scaleParts[1] || 1} ${scaleParts[2] || 1}`;
-    
-    // Note: model-viewer avec ar-scale="fixed" garde la taille du modèle original
-    // Le scale est utilisé pour les variants (M, L, etc.)
-    // Pour une taille réelle 1:1, le modèle GLTF doit être modélisé à la bonne échelle
-
     return (
         <div className="relative w-screen h-screen overflow-hidden" style={{ background: 'transparent' }}>
-            {/* Flux vidéo de la caméra en arrière-plan */}
-            <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                className="absolute inset-0 w-full h-full object-cover z-0"
-                style={{ transform: 'scaleX(-1)' }} // Miroir pour une expérience naturelle
-            />
+            {/* WebXR Viewer avec caméra en fond et menu/3D */}
+            <Suspense fallback={
+                <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50">
+                    <div className="text-white text-lg">Chargement de l'expérience AR...</div>
+                </div>
+            }>
+                <WebXRViewer
+                    modelPath={product?.model3D}
+                    selectedDishId={selectedDishId || undefined}
+                    onDishSelect={handleDishSelect}
+                    hotspots={product?.hotspots || []}
+                    scale={scale}
+                    dimensions={product?.dimensions}
+                />
+            </Suspense>
 
-            {/* Menu simple - affiché quand aucun plat n'est sélectionné */}
+            {/* Menu simple HTML - affiché par-dessus si nécessaire */}
             {showMenu && !product && (
-                <SimpleMenu onSelectDish={handleDishSelect} />
-            )}
-
-            {/* Model Viewer pour afficher le plat en 3D avec AR */}
-            {product && product.model3D && (
-                <model-viewer
-                    ref={modelViewerRef}
-                    src={product.model3D}
-                    alt={product.name}
-                    camera-controls
-                    auto-rotate
-                    ar
-                    ar-modes="webxr scene-viewer quick-look"
-                    ar-scale="fixed"
-                    interaction-policy="allow-when-focused"
-                    interaction-prompt="auto"
-                    touch-action="none"
-                    reveal="interaction"
-                    shadow-intensity="1"
-                    scale={modelScaleValue}
-                    style={{
-                        width: '100%',
-                        height: '100%',
-                        backgroundColor: 'transparent',
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        zIndex: 10,
-                        touchAction: 'none'
-                    } as any}
-                    className="absolute inset-0 model-viewer-container"
-                >
-                    {/* Hotspots interactifs améliorés */}
-                    {product.hotspots?.map((hotspot: any, idx: number) => (
-                        <HotspotInfo
-                            key={idx}
-                            name={hotspot.name}
-                            detail={hotspot.detail}
-                            position={hotspot.position}
-                            index={idx}
-                        />
-                    ))}
-                </model-viewer>
-            )}
-
-            {/* Messages d'erreur caméra */}
-            {cameraError && (
-                <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-red-500/90 backdrop-blur-md text-white px-6 py-3 rounded-full">
-                    Erreur caméra: {cameraError}
+                <div className="absolute inset-0 z-40">
+                    <SimpleMenu onSelectDish={handleDishSelect} />
                 </div>
             )}
 

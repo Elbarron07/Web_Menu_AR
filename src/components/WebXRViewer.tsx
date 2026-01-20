@@ -170,9 +170,10 @@ export const WebXRViewer = ({
   };
 
   // Afficher le menu si aucun plat n'est sélectionné
+  // Note: Le menu est géré par DirectARView, donc on ne montre pas ARMenu ici
   useEffect(() => {
     if (!selectedDishId || !modelPath) {
-      setShowMenu(true);
+      setShowMenu(false); // Ne pas afficher ARMenu, laisser DirectARView gérer SimpleMenu
     } else {
       setShowMenu(false);
     }
