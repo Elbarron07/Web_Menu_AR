@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import menuData from '../data/menu.json';
 import { useCart } from './CartContext';
 import { SimpleMenu } from './SimpleMenu';
-import { ARViewer, ARViewerRef } from './ARViewer';
+import { ARViewer } from './ARViewer';
+import type { ARViewerRef } from './ARViewer';
 import { HUDOverlay } from './HUDOverlay';
 import { HotspotAnnotation } from './HotspotAnnotation';
 
