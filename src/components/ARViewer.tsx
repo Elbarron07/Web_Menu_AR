@@ -58,30 +58,52 @@ export const ARViewer = forwardRef<ARViewerRef, ARViewerProps>(({
 
         const handleLoad = () => {
             // Le modèle est chargé, s'assurer que les contrôles caméra sont actifs
+            console.log('✅ Modèle chargé avec succès:', modelUrl);
             if (modelViewer.cameraControls) {
-                // Activer les contrôles si disponibles
-                console.log('Modèle chargé, contrôles caméra activés');
+                console.log('✅ Contrôles caméra activés');
             }
             // Donner le focus pour activer les interactions
             modelViewer.focus();
         };
 
         const handleError = (event: any) => {
-            console.error('Erreur de chargement du modèle:', event);
+            console.error('❌ Erreur de chargement du modèle:', {
+                modelUrl,
+                error: event.detail || event,
+                message: event.message || 'Erreur inconnue'
+            });
+        };
+
+        const handleModelVisibility = () => {
+            console.log('👁️ Modèle visible');
+        };
+
+        const handleProgress = (event: any) => {
+            const progress = event.detail?.totalProgress || 0;
+            if (progress > 0 && progress < 1) {
+                console.log(`📦 Chargement du modèle: ${Math.round(progress * 100)}%`);
+            }
         };
 
         // Écouter les événements de chargement
         modelViewer.addEventListener('load', handleLoad);
         modelViewer.addEventListener('error', handleError);
+        modelViewer.addEventListener('model-visibility', handleModelVisibility);
+        modelViewer.addEventListener('progress', handleProgress);
 
         // Vérifier si le modèle est déjà chargé
         if ((modelViewer as any).loaded) {
             handleLoad();
         }
 
+        // Log initial pour débogage
+        console.log('🔍 Initialisation ARViewer avec modèle:', modelUrl);
+
         return () => {
             modelViewer.removeEventListener('load', handleLoad);
             modelViewer.removeEventListener('error', handleError);
+            modelViewer.removeEventListener('model-visibility', handleModelVisibility);
+            modelViewer.removeEventListener('progress', handleProgress);
         };
     }, [modelUrl]);
 
@@ -101,7 +123,7 @@ export const ARViewer = forwardRef<ARViewerRef, ARViewerProps>(({
             ar-scale="fixed"
             camera-controls
             interaction-policy="always"
-            reveal="interaction"
+            reveal="auto"
             shadow-intensity="1"
             auto-rotate-delay="0"
             disable-zoom={false}
