@@ -173,7 +173,7 @@ export const WebXRViewer = ({
   // Note: Le menu est géré par DirectARView, donc on ne montre pas ARMenu ici
   useEffect(() => {
     if (!selectedDishId || !modelPath) {
-      setShowMenu(false); // Ne pas afficher ARMenu, laisser DirectARView gérer SimpleMenu
+      setShowMenu(false); // Ne pas afficher ARMenu, laisser DirectARView gérer SpinningTacticalMenu
     } else {
       setShowMenu(false);
     }

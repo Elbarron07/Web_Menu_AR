@@ -1,10 +1,8 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import menuData from '../data/menu.json';
 import { useCart } from './CartContext';
-import { SimpleMenu } from './SimpleMenu';
-import { FoodRadialMenu } from './FoodRadialMenu';
+import { SpinningTacticalMenu } from './SpinningTacticalMenu';
 import { ARViewer } from './ARViewer';
 import type { ARViewerRef } from './ARViewer';
 import { HUDOverlay } from './HUDOverlay';
@@ -22,7 +20,6 @@ const DirectARView = () => {
     const [currentPrice, setCurrentPrice] = useState<number>(0);
     const [scale, setScale] = useState<string>("1 1 1");
     const [showMenu, setShowMenu] = useState(!id);
-    const [showRadialMenu, setShowRadialMenu] = useState(false);
     const [selectedHotspot, setSelectedHotspot] = useState<any>(null);
     const [showCartFeedback, setShowCartFeedback] = useState(false);
 
@@ -45,14 +42,18 @@ const DirectARView = () => {
         if (!product || !selectedVariant) return;
         addToCart(product, selectedVariant.label, currentPrice);
         setShowCartFeedback(true);
-        setTimeout(() => {
+            setTimeout(() => {
             setShowCartFeedback(false);
-        }, 2000);
+            }, 2000);
     };
 
     const handleDishSelect = (dishId: string | number) => {
         setShowMenu(false);
         navigate(`/ar/${dishId}`);
+    };
+
+    const handleTacticalMenuSelect = (itemId: string) => {
+        handleDishSelect(itemId);
     };
 
     const handleHotspotClick = (hotspot: any) => {
@@ -95,44 +96,46 @@ const DirectARView = () => {
         });
     };
 
-    // Convertir menuData en format pour FoodRadialMenu (groupé par catégorie)
-    const radialMenuItems = useMemo(() => {
+    // Convertir menuData en format pour SpinningTacticalMenu
+    const tacticalMenuData = useMemo(() => {
         // Grouper les plats par catégorie
-        const categoriesMap = new Map<string, { category: string; icon: string; items: Array<{ name: string; id: string }> }>();
+        const categoriesMap = new Map<string, Array<{ id: string; label: string; icon?: string; price?: string }>>();
         
         menuData.forEach((dish: any) => {
             const category = dish.category || 'Plats';
-            const icon = getCategoryIcon(category);
             
             if (!categoriesMap.has(category)) {
-                categoriesMap.set(category, {
-                    category,
-                    icon,
-                    items: []
-                });
+                categoriesMap.set(category, []);
             }
             
-            categoriesMap.get(category)!.items.push({
-                name: dish.name,
-                id: dish.id
+            categoriesMap.get(category)!.push({
+                id: dish.id,
+                label: dish.name,
+                price: `${dish.price.toFixed(2)}€`
             });
         });
 
-        // Convertir en tableau et formater pour FoodRadialMenu
-        return Array.from(categoriesMap.values()).map(cat => ({
-            category: cat.category,
-            icon: cat.icon,
-            items: cat.items.map(item => item.name)
+        // Créer le format attendu par SpinningTacticalMenu
+        const rootCategories = Array.from(categoriesMap.keys()).map(category => ({
+            id: category.toLowerCase().replace(/\s+/g, '-'),
+            label: category,
+            icon: getCategoryIcon(category)
         }));
-    }, []);
 
-    // Mapping des IDs pour retrouver le plat sélectionné
-    const dishIdMap = useMemo(() => {
-        const map = new Map<string, string>();
-        menuData.forEach((dish: any) => {
-            map.set(dish.name, dish.id);
+        const menuStructure: {
+            root: Array<{ id: string; label: string; icon?: string; price?: string }>;
+            [key: string]: Array<{ id: string; label: string; icon?: string; price?: string }>;
+        } = {
+            root: rootCategories
+        };
+
+        // Ajouter les sous-menus pour chaque catégorie
+        categoriesMap.forEach((items, category) => {
+            const categoryKey = category.toLowerCase().replace(/\s+/g, '-');
+            menuStructure[categoryKey] = items;
         });
-        return map;
+
+        return menuStructure;
     }, []);
 
     // Fonction pour obtenir l'icône selon la catégorie
@@ -151,14 +154,6 @@ const DirectARView = () => {
         return iconMap[category] || '🍽️';
     }
 
-    // Gérer la sélection depuis le menu radial
-    const handleRadialMenuSelect = (_category: string, item: string) => {
-        const dishId = dishIdMap.get(item);
-        if (dishId) {
-            handleDishSelect(dishId);
-        }
-    };
-
     return (
         <div className="relative w-screen h-screen overflow-hidden" style={{ background: 'transparent' }}>
             {/* AR Viewer avec model-viewer fullscreen */}
@@ -173,39 +168,14 @@ const DirectARView = () => {
                 />
             )}
 
-            {/* Menu Radial Tactique - affiché quand aucun plat n'est sélectionné */}
+            {/* Menu Tactique Spinning - affiché quand aucun plat n'est sélectionné */}
             {showMenu && !product && (
-                <>
-                    {/* Bouton pour ouvrir le menu radial */}
-                    {!showRadialMenu && (
-                        <div className="absolute inset-0 z-40 flex items-center justify-center">
-                            <motion.button
-                                initial={{ opacity: 0, scale: 0.8 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                onClick={() => setShowRadialMenu(true)}
-                                className="px-8 py-4 bg-black/80 backdrop-blur-xl text-white font-black text-xl rounded-2xl shadow-2xl border-2 border-white/30 hover:border-amber-400/60 transition-all hover:scale-105"
-                            >
-                                🎯 Ouvrir le Menu
-                            </motion.button>
-                        </div>
-                    )}
-
-                    {/* Menu Radial */}
-                    <FoodRadialMenu
-                        menuItems={radialMenuItems}
-                        isOpen={showRadialMenu}
-                        onClose={() => setShowRadialMenu(false)}
-                        onSelectItem={handleRadialMenuSelect}
-                        onSelectCategory={(category) => console.log('Catégorie sélectionnée:', category)}
-                    />
-
-                    {/* Menu Simple (fallback optionnel) */}
-                    {!showRadialMenu && (
-                        <div className="absolute inset-0 z-30">
-                            <SimpleMenu onSelectDish={handleDishSelect} />
-                        </div>
-                    )}
-                </>
+                <SpinningTacticalMenu
+                    menuData={tacticalMenuData}
+                    isOpen={showMenu}
+                    onClose={() => setShowMenu(false)}
+                    onSelectItem={(itemId, _path) => handleTacticalMenuSelect(itemId)}
+                />
             )}
 
             {/* HUD Overlay avec glassmorphism */}
