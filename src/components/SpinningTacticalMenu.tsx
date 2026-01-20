@@ -108,6 +108,7 @@ export const SpinningTacticalMenu = ({
 
   const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
     e.stopPropagation();
+    // Ne pas appeler preventDefault sur les événements React (peuvent être passifs)
     setIsDragging(true);
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
     setLastY(clientY);
@@ -116,7 +117,7 @@ export const SpinningTacticalMenu = ({
 
   const handleDragMove = (e: React.MouseEvent | React.TouchEvent) => {
     if (!isDragging) return;
-    e.preventDefault();
+    // Ne pas appeler preventDefault ici car les événements SVG peuvent être passifs
     e.stopPropagation();
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
     const deltaY = clientY - lastY;
@@ -146,6 +147,7 @@ export const SpinningTacticalMenu = ({
     };
 
     const handleTouchMove = (e: TouchEvent) => {
+      // preventDefault est maintenant possible car l'event listener est non-passif
       e.preventDefault();
       const deltaY = e.touches[0].clientY - lastY;
       const rotationDelta = (deltaY / outerRadius) * (180 / Math.PI);
@@ -275,7 +277,6 @@ export const SpinningTacticalMenu = ({
                 onMouseUp={handleDragEnd}
                 onMouseLeave={handleDragEnd}
                 onTouchStart={handleDragStart}
-                onTouchMove={handleDragMove}
                 onTouchEnd={handleDragEnd}
               >
                 {/* Groupe rotatif avec tous les segments */}

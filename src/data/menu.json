@@ -2,7 +2,7 @@
     {
         "id": "pizza-01",
         "name": "Pizza Margherita Supreme",
-        "category": "Plats",
+        "category": "Pizza",
         "shortDesc": "La classique revisitée.",
         "fullDesc": "Tomates San Marzano, Mozzarella di Bufala, Basilic frais, Huile d'olive vierge. Une pâte fermentée 72h pour un croustillant incomparable.",
         "price": 14.50,
@@ -45,17 +45,107 @@
         ],
         "nutrition": {
             "calories": 800,
-            "allergenes": [
-                "Gluten",
-                "Lactose"
-            ],
+            "allergenes": ["Gluten", "Lactose"],
+            "temps": "12 min"
+        }
+    },
+    {
+        "id": "pizza-02",
+        "name": "Pizza Reine",
+        "category": "Pizza",
+        "shortDesc": "Champignons, jambon, fromage.",
+        "fullDesc": "Sauce tomate, mozzarella, jambon de qualité supérieure, champignons de Paris frais.",
+        "price": 16.00,
+        "image2D": "https://placehold.co/600x400/png?text=Pizza+Reine",
+        "modelUrl": "/assets/models/pizza.glb",
+        "dimensions": "Diamètre 30cm",
+        "variants": [
+            {
+                "size": "M",
+                "label": "M (30cm)",
+                "priceModifier": 0,
+                "scale": "1 1 1"
+            },
+            {
+                "size": "L",
+                "label": "L (40cm)",
+                "priceModifier": 5.00,
+                "scale": "1.33 1.33 1.33"
+            }
+        ],
+        "hotspots": [],
+        "nutrition": {
+            "calories": 950,
+            "allergenes": ["Gluten", "Lactose"],
+            "temps": "12 min"
+        }
+    },
+    {
+        "id": "pizza-03",
+        "name": "Pizza Pepperoni",
+        "category": "Pizza",
+        "shortDesc": "Saucisse épicée et fromage.",
+        "fullDesc": "Sauce tomate, mozzarella, pepperoni épicé, origan.",
+        "price": 17.50,
+        "image2D": "https://placehold.co/600x400/png?text=Pizza+Pepperoni",
+        "modelUrl": "/assets/models/pizza.glb",
+        "dimensions": "Diamètre 30cm",
+        "variants": [
+            {
+                "size": "M",
+                "label": "M (30cm)",
+                "priceModifier": 0,
+                "scale": "1 1 1"
+            },
+            {
+                "size": "L",
+                "label": "L (40cm)",
+                "priceModifier": 5.00,
+                "scale": "1.33 1.33 1.33"
+            }
+        ],
+        "hotspots": [],
+        "nutrition": {
+            "calories": 1000,
+            "allergenes": ["Gluten", "Lactose"],
+            "temps": "12 min"
+        }
+    },
+    {
+        "id": "pizza-04",
+        "name": "Pizza 4 Fromages",
+        "category": "Pizza",
+        "shortDesc": "Mozzarella, chèvre, bleu, parmesan.",
+        "fullDesc": "Mozzarella, fromage de chèvre, bleu d'Auvergne, parmesan reggiano.",
+        "price": 18.00,
+        "image2D": "https://placehold.co/600x400/png?text=Pizza+4+Fromages",
+        "modelUrl": "/assets/models/pizza.glb",
+        "dimensions": "Diamètre 30cm",
+        "variants": [
+            {
+                "size": "M",
+                "label": "M (30cm)",
+                "priceModifier": 0,
+                "scale": "1 1 1"
+            },
+            {
+                "size": "L",
+                "label": "L (40cm)",
+                "priceModifier": 5.00,
+                "scale": "1.33 1.33 1.33"
+            }
+        ],
+        "hotspots": [],
+        "nutrition": {
+            "calories": 1100,
+            "allergenes": ["Gluten", "Lactose"],
             "temps": "12 min"
         }
     },
     {
         "id": "burger-01",
         "name": "Burger Signature",
-        "category": "Plats",
+        "category": "Hamburger",
         "shortDesc": "Le burger définitif.",
         "fullDesc": "Steak haché Charolais, Cheddar affiné 12 mois, Sauce secrète, Oignons caramélisés.",
         "price": 16.00,
@@ -98,12 +188,350 @@
         ],
         "nutrition": {
             "calories": 950,
-            "allergenes": [
-                "Gluten",
-                "Lactose",
-                "Moutarde"
-            ],
+            "allergenes": ["Gluten", "Lactose", "Moutarde"],
             "temps": "15 min"
+        }
+    },
+    {
+        "id": "burger-02",
+        "name": "Burger Bacon",
+        "category": "Hamburger",
+        "shortDesc": "Bacon croustillant et fromage.",
+        "fullDesc": "Steak haché, bacon fumé, cheddar, salade, tomate, sauce barbecue.",
+        "price": 18.00,
+        "image2D": "https://placehold.co/600x400/png?text=Burger+Bacon",
+        "modelUrl": "/assets/models/burger.glb",
+        "dimensions": "Hauteur 15cm",
+        "variants": [
+            {
+                "size": "Simple",
+                "label": "Simple",
+                "priceModifier": 0,
+                "scale": "1 1 1"
+            },
+            {
+                "size": "Double",
+                "label": "Double Steak",
+                "priceModifier": 4.00,
+                "scale": "1 1.2 1"
+            }
+        ],
+        "hotspots": [],
+        "nutrition": {
+            "calories": 1100,
+            "allergenes": ["Gluten", "Lactose"],
+            "temps": "15 min"
+        }
+    },
+    {
+        "id": "burger-03",
+        "name": "Burger Végétarien",
+        "category": "Hamburger",
+        "shortDesc": "Steak végétal et légumes frais.",
+        "fullDesc": "Steak végétal aux légumes, avocat, tomate, salade, sauce au yaourt.",
+        "price": 15.00,
+        "image2D": "https://placehold.co/600x400/png?text=Burger+Veggie",
+        "modelUrl": "/assets/models/burger.glb",
+        "dimensions": "Hauteur 15cm",
+        "variants": [
+            {
+                "size": "Simple",
+                "label": "Simple",
+                "priceModifier": 0,
+                "scale": "1 1 1"
+            }
+        ],
+        "hotspots": [],
+        "nutrition": {
+            "calories": 650,
+            "allergenes": ["Gluten"],
+            "temps": "12 min"
+        }
+    },
+    {
+        "id": "chawarma-01",
+        "name": "Chawarma Poulet",
+        "category": "Chawarma",
+        "shortDesc": "Poulet mariné et légumes frais.",
+        "fullDesc": "Poulet mariné aux épices, salade, tomate, oignon, sauce blanche et harissa.",
+        "price": 12.00,
+        "image2D": "https://placehold.co/600x400/png?text=Chawarma+Poulet",
+        "modelUrl": "/assets/models/menu-item.glb",
+        "dimensions": "Portion généreuse",
+        "variants": [
+            {
+                "size": "Standard",
+                "label": "Standard",
+                "priceModifier": 0,
+                "scale": "1 1 1"
+            },
+            {
+                "size": "XL",
+                "label": "XL",
+                "priceModifier": 3.00,
+                "scale": "1.2 1.2 1.2"
+            }
+        ],
+        "hotspots": [],
+        "nutrition": {
+            "calories": 750,
+            "allergenes": ["Gluten"],
+            "temps": "10 min"
+        }
+    },
+    {
+        "id": "chawarma-02",
+        "name": "Chawarma Boeuf",
+        "category": "Chawarma",
+        "shortDesc": "Boeuf épicé et légumes croquants.",
+        "fullDesc": "Boeuf mariné aux épices orientales, salade, tomate, oignon, sauce au sésame.",
+        "price": 13.50,
+        "image2D": "https://placehold.co/600x400/png?text=Chawarma+Boeuf",
+        "modelUrl": "/assets/models/menu-item.glb",
+        "dimensions": "Portion généreuse",
+        "variants": [
+            {
+                "size": "Standard",
+                "label": "Standard",
+                "priceModifier": 0,
+                "scale": "1 1 1"
+            },
+            {
+                "size": "XL",
+                "label": "XL",
+                "priceModifier": 3.00,
+                "scale": "1.2 1.2 1.2"
+            }
+        ],
+        "hotspots": [],
+        "nutrition": {
+            "calories": 850,
+            "allergenes": ["Gluten"],
+            "temps": "10 min"
+        }
+    },
+    {
+        "id": "tacos-01",
+        "name": "Tacos Mixte",
+        "category": "Tacos",
+        "shortDesc": "Poulet, boeuf et frites.",
+        "fullDesc": "Poulet, boeuf, frites croustillantes, salade, tomate, sauce au choix.",
+        "price": 11.00,
+        "image2D": "https://placehold.co/600x400/png?text=Tacos+Mixte",
+        "modelUrl": "/assets/models/menu-item.glb",
+        "dimensions": "Portion généreuse",
+        "variants": [
+            {
+                "size": "Standard",
+                "label": "Standard",
+                "priceModifier": 0,
+                "scale": "1 1 1"
+            },
+            {
+                "size": "XL",
+                "label": "XL",
+                "priceModifier": 2.50,
+                "scale": "1.2 1.2 1.2"
+            }
+        ],
+        "hotspots": [],
+        "nutrition": {
+            "calories": 900,
+            "allergenes": ["Gluten"],
+            "temps": "8 min"
+        }
+    },
+    {
+        "id": "tacos-02",
+        "name": "Tacos Poulet",
+        "category": "Tacos",
+        "shortDesc": "Poulet grillé et frites.",
+        "fullDesc": "Poulet grillé, frites, salade, tomate, sauce blanche.",
+        "price": 10.00,
+        "image2D": "https://placehold.co/600x400/png?text=Tacos+Poulet",
+        "modelUrl": "/assets/models/menu-item.glb",
+        "dimensions": "Portion généreuse",
+        "variants": [
+            {
+                "size": "Standard",
+                "label": "Standard",
+                "priceModifier": 0,
+                "scale": "1 1 1"
+            },
+            {
+                "size": "XL",
+                "label": "XL",
+                "priceModifier": 2.50,
+                "scale": "1.2 1.2 1.2"
+            }
+        ],
+        "hotspots": [],
+        "nutrition": {
+            "calories": 800,
+            "allergenes": ["Gluten"],
+            "temps": "8 min"
+        }
+    },
+    {
+        "id": "sushi-01",
+        "name": "Assortiment Sushi",
+        "category": "Sushi",
+        "shortDesc": "12 pièces de sushi variés.",
+        "fullDesc": "6 nigiri saumon, 3 maki saumon, 3 maki avocat. Accompagné de gingembre et wasabi.",
+        "price": 22.00,
+        "image2D": "https://placehold.co/600x400/png?text=Assortiment+Sushi",
+        "modelUrl": "/assets/models/menu-item.glb",
+        "dimensions": "12 pièces",
+        "variants": [
+            {
+                "size": "Standard",
+                "label": "12 pièces",
+                "priceModifier": 0,
+                "scale": "1 1 1"
+            },
+            {
+                "size": "Grand",
+                "label": "18 pièces",
+                "priceModifier": 8.00,
+                "scale": "1.3 1.3 1.3"
+            }
+        ],
+        "hotspots": [],
+        "nutrition": {
+            "calories": 600,
+            "allergenes": ["Poisson", "Soja"],
+            "temps": "15 min"
+        }
+    },
+    {
+        "id": "sushi-02",
+        "name": "Sashimi Saumon",
+        "category": "Sushi",
+        "shortDesc": "8 tranches de saumon frais.",
+        "fullDesc": "Saumon sauvage d'Écosse, tranché à la main. Accompagné de riz, gingembre et wasabi.",
+        "price": 18.00,
+        "image2D": "https://placehold.co/600x400/png?text=Sashimi+Saumon",
+        "modelUrl": "/assets/models/menu-item.glb",
+        "dimensions": "8 tranches",
+        "variants": [
+            {
+                "size": "Standard",
+                "label": "8 tranches",
+                "priceModifier": 0,
+                "scale": "1 1 1"
+            }
+        ],
+        "hotspots": [],
+        "nutrition": {
+            "calories": 450,
+            "allergenes": ["Poisson", "Soja"],
+            "temps": "10 min"
+        }
+    },
+    {
+        "id": "pasta-01",
+        "name": "Spaghetti Carbonara",
+        "category": "Pâtes",
+        "shortDesc": "Pâtes crémeuses à l'italienne.",
+        "fullDesc": "Spaghetti, lardons fumés, crème fraîche, parmesan, œuf, poivre noir.",
+        "price": 15.00,
+        "image2D": "https://placehold.co/600x400/png?text=Spaghetti+Carbonara",
+        "modelUrl": "/assets/models/menu-item.glb",
+        "dimensions": "Portion généreuse",
+        "variants": [
+            {
+                "size": "Standard",
+                "label": "Standard",
+                "priceModifier": 0,
+                "scale": "1 1 1"
+            }
+        ],
+        "hotspots": [],
+        "nutrition": {
+            "calories": 850,
+            "allergenes": ["Gluten", "Lactose", "Œuf"],
+            "temps": "15 min"
+        }
+    },
+    {
+        "id": "pasta-02",
+        "name": "Penne Arrabbiata",
+        "category": "Pâtes",
+        "shortDesc": "Pâtes épicées à la tomate.",
+        "fullDesc": "Penne, sauce tomate épicée, ail, piment, basilic frais, parmesan.",
+        "price": 13.00,
+        "image2D": "https://placehold.co/600x400/png?text=Penne+Arrabbiata",
+        "modelUrl": "/assets/models/menu-item.glb",
+        "dimensions": "Portion généreuse",
+        "variants": [
+            {
+                "size": "Standard",
+                "label": "Standard",
+                "priceModifier": 0,
+                "scale": "1 1 1"
+            }
+        ],
+        "hotspots": [],
+        "nutrition": {
+            "calories": 700,
+            "allergenes": ["Gluten", "Lactose"],
+            "temps": "12 min"
+        }
+    },
+    {
+        "id": "salade-01",
+        "name": "Salade César",
+        "category": "Salade",
+        "shortDesc": "Salade fraîche et croquante.",
+        "fullDesc": "Laitue romaine, croûtons, parmesan, sauce césar maison, poulet grillé optionnel.",
+        "price": 11.00,
+        "image2D": "https://placehold.co/600x400/png?text=Salade+Cesar",
+        "modelUrl": "/assets/models/menu-item.glb",
+        "dimensions": "Portion généreuse",
+        "variants": [
+            {
+                "size": "Standard",
+                "label": "Standard",
+                "priceModifier": 0,
+                "scale": "1 1 1"
+            },
+            {
+                "size": "Avec Poulet",
+                "label": "Avec Poulet",
+                "priceModifier": 4.00,
+                "scale": "1 1 1"
+            }
+        ],
+        "hotspots": [],
+        "nutrition": {
+            "calories": 450,
+            "allergenes": ["Gluten", "Lactose", "Œuf"],
+            "temps": "8 min"
+        }
+    },
+    {
+        "id": "salade-02",
+        "name": "Salade Grecque",
+        "category": "Salade",
+        "shortDesc": "Légumes frais et feta.",
+        "fullDesc": "Tomates, concombres, olives, feta, oignon rouge, huile d'olive, origan.",
+        "price": 10.00,
+        "image2D": "https://placehold.co/600x400/png?text=Salade+Grece",
+        "modelUrl": "/assets/models/menu-item.glb",
+        "dimensions": "Portion généreuse",
+        "variants": [
+            {
+                "size": "Standard",
+                "label": "Standard",
+                "priceModifier": 0,
+                "scale": "1 1 1"
+            }
+        ],
+        "hotspots": [],
+        "nutrition": {
+            "calories": 350,
+            "allergenes": ["Lactose"],
+            "temps": "5 min"
         }
     },
     {
@@ -146,11 +574,144 @@
         ],
         "nutrition": {
             "calories": 450,
-            "allergenes": [
-                "Gluten",
-                "Lactose",
-                "Œuf"
-            ],
+            "allergenes": ["Gluten", "Lactose", "Œuf"],
+            "temps": "Prêt"
+        }
+    },
+    {
+        "id": "dessert-02",
+        "name": "Fondant au Chocolat",
+        "category": "Desserts",
+        "shortDesc": "Cœur coulant au chocolat.",
+        "fullDesc": "Gâteau au chocolat noir 70%, cœur coulant, glace vanille.",
+        "price": 9.00,
+        "image2D": "https://placehold.co/600x400/png?text=Fondant+Chocolat",
+        "modelUrl": "/assets/models/dessert.glb",
+        "dimensions": "Part généreuse",
+        "variants": [
+            {
+                "size": "Classique",
+                "label": "Part",
+                "priceModifier": 0,
+                "scale": "1 1 1"
+            }
+        ],
+        "hotspots": [],
+        "nutrition": {
+            "calories": 550,
+            "allergenes": ["Gluten", "Lactose", "Œuf"],
+            "temps": "12 min"
+        }
+    },
+    {
+        "id": "dessert-03",
+        "name": "Tarte aux Pommes",
+        "category": "Desserts",
+        "shortDesc": "Tarte maison aux pommes.",
+        "fullDesc": "Pâte brisée, pommes Golden, cannelle, sucre vanillé.",
+        "price": 7.50,
+        "image2D": "https://placehold.co/600x400/png?text=Tarte+Pommes",
+        "modelUrl": "/assets/models/dessert.glb",
+        "dimensions": "Part généreuse",
+        "variants": [
+            {
+                "size": "Classique",
+                "label": "Part",
+                "priceModifier": 0,
+                "scale": "1 1 1"
+            }
+        ],
+        "hotspots": [],
+        "nutrition": {
+            "calories": 400,
+            "allergenes": ["Gluten", "Lactose"],
+            "temps": "Prêt"
+        }
+    },
+    {
+        "id": "boisson-01",
+        "name": "Coca-Cola",
+        "category": "Boissons",
+        "shortDesc": "Boisson gazeuse rafraîchissante.",
+        "fullDesc": "Coca-Cola classique, 33cl.",
+        "price": 3.50,
+        "image2D": "https://placehold.co/600x400/png?text=Coca-Cola",
+        "modelUrl": "/assets/models/menu-item.glb",
+        "dimensions": "33cl",
+        "variants": [
+            {
+                "size": "33cl",
+                "label": "33cl",
+                "priceModifier": 0,
+                "scale": "1 1 1"
+            },
+            {
+                "size": "50cl",
+                "label": "50cl",
+                "priceModifier": 1.00,
+                "scale": "1.2 1.2 1.2"
+            }
+        ],
+        "hotspots": [],
+        "nutrition": {
+            "calories": 140,
+            "allergenes": [],
+            "temps": "Prêt"
+        }
+    },
+    {
+        "id": "boisson-02",
+        "name": "Jus d'Orange Frais",
+        "category": "Boissons",
+        "shortDesc": "Jus d'orange pressé.",
+        "fullDesc": "Jus d'orange fraîchement pressé, 25cl.",
+        "price": 4.50,
+        "image2D": "https://placehold.co/600x400/png?text=Jus+Orange",
+        "modelUrl": "/assets/models/menu-item.glb",
+        "dimensions": "25cl",
+        "variants": [
+            {
+                "size": "25cl",
+                "label": "25cl",
+                "priceModifier": 0,
+                "scale": "1 1 1"
+            },
+            {
+                "size": "50cl",
+                "label": "50cl",
+                "priceModifier": 2.00,
+                "scale": "1.5 1.5 1.5"
+            }
+        ],
+        "hotspots": [],
+        "nutrition": {
+            "calories": 110,
+            "allergenes": [],
+            "temps": "Prêt"
+        }
+    },
+    {
+        "id": "boisson-03",
+        "name": "Eau Minérale",
+        "category": "Boissons",
+        "shortDesc": "Eau minérale naturelle.",
+        "fullDesc": "Eau minérale naturelle, 50cl.",
+        "price": 2.50,
+        "image2D": "https://placehold.co/600x400/png?text=Eau+Minérale",
+        "modelUrl": "/assets/models/menu-item.glb",
+        "dimensions": "50cl",
+        "variants": [
+            {
+                "size": "50cl",
+                "label": "50cl",
+                "priceModifier": 0,
+                "scale": "1 1 1"
+            }
+        ],
+        "hotspots": [],
+        "nutrition": {
+            "calories": 0,
+            "allergenes": [],
             "temps": "Prêt"
         }
     },
