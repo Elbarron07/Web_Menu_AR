@@ -67,8 +67,30 @@ export const SpinningTacticalMenu = ({
   const innerRadius = 120;
   const outerRadius = 280;
   const centerX = 0; // Ancré à gauche
-  const centerY = typeof window !== 'undefined' ? window.innerHeight / 2 : 400;
+  
+  // Calculer centerY de manière adaptative pour mobile
+  const [centerY, setCenterY] = useState(400);
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const updateCenterY = () => {
+        setCenterY(window.innerHeight / 2);
+      };
+      updateCenterY();
+      window.addEventListener('resize', updateCenterY);
+      return () => window.removeEventListener('resize', updateCenterY);
+    }
+  }, []);
+  
   const svgSize = outerRadius * 2;
+  
+  // Calculer la largeur du conteneur pour mobile
+  const containerWidth = useMemo(() => {
+    if (typeof window !== 'undefined') {
+      // Utiliser au minimum outerRadius * 2 pour voir le cercle, mais pas plus de 60% de l'écran
+      return Math.min(outerRadius * 2, window.innerWidth * 0.6);
+    }
+    return outerRadius * 2;
+  }, [outerRadius]);
 
   // Obtenir les items du niveau actuel
   const currentItems = useMemo(() => {
@@ -117,8 +139,11 @@ export const SpinningTacticalMenu = ({
 
   const handleDragMove = (e: React.MouseEvent | React.TouchEvent) => {
     if (!isDragging) return;
-    // Ne pas appeler preventDefault ici car les événements SVG peuvent être passifs
     e.stopPropagation();
+    // Pour les événements touch, preventDefault peut être nécessaire
+    if ('touches' in e) {
+      e.preventDefault();
+    }
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
     const deltaY = clientY - lastY;
     // Conversion du mouvement vertical en rotation (plus le deltaY est grand, plus on tourne)
@@ -149,13 +174,20 @@ export const SpinningTacticalMenu = ({
     const handleTouchMove = (e: TouchEvent) => {
       // preventDefault est maintenant possible car l'event listener est non-passif
       e.preventDefault();
-      const deltaY = e.touches[0].clientY - lastY;
-      const rotationDelta = (deltaY / outerRadius) * (180 / Math.PI);
-      rotation.set(startRotation + rotationDelta);
-      setLastY(e.touches[0].clientY);
+      e.stopPropagation();
+      if (e.touches.length > 0) {
+        const deltaY = e.touches[0].clientY - lastY;
+        const rotationDelta = (deltaY / outerRadius) * (180 / Math.PI);
+        rotation.set(startRotation + rotationDelta);
+        setLastY(e.touches[0].clientY);
+      }
     };
 
     const handleTouchEnd = () => {
+      setIsDragging(false);
+    };
+
+    const handleTouchCancel = () => {
       setIsDragging(false);
     };
 
@@ -163,12 +195,14 @@ export const SpinningTacticalMenu = ({
     window.addEventListener('mouseup', handleMouseUp);
     window.addEventListener('touchmove', handleTouchMove, { passive: false });
     window.addEventListener('touchend', handleTouchEnd);
+    window.addEventListener('touchcancel', handleTouchCancel);
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener('touchcancel', handleTouchCancel);
     };
   }, [isDragging, lastY, outerRadius, rotation, startRotation]);
 
@@ -195,9 +229,8 @@ export const SpinningTacticalMenu = ({
       setNavigationPath(navigationPath.slice(0, -1));
       setCurrentLevel(previousLevel);
       rotation.set(0); // Réinitialiser la rotation
-    } else {
-      onClose();
     }
+    // Ne pas fermer le menu au niveau root - l'utilisateur doit cliquer sur l'overlay pour fermer
   };
 
   // Gérer la fermeture avec Escape
@@ -253,7 +286,10 @@ export const SpinningTacticalMenu = ({
           />
 
           {/* Conteneur du menu (masque la moitié gauche) */}
-          <div className="absolute left-0 top-0 bottom-0 w-1/2 overflow-hidden pointer-events-auto">
+          <div 
+            className="absolute left-0 top-0 bottom-0 overflow-hidden pointer-events-auto"
+            style={{ width: `${containerWidth}px` }}
+          >
             <motion.div
               className="relative h-full"
               initial={{ x: -outerRadius }}
@@ -271,13 +307,18 @@ export const SpinningTacticalMenu = ({
                   left: -outerRadius,
                   top: '50%',
                   transform: 'translateY(-50%)',
-                }}
+                  touchAction: 'none',
+                  WebkitTouchCallout: 'none',
+                  userSelect: 'none',
+                } as React.CSSProperties}
                 onMouseDown={handleDragStart}
                 onMouseMove={handleDragMove}
                 onMouseUp={handleDragEnd}
                 onMouseLeave={handleDragEnd}
                 onTouchStart={handleDragStart}
+                onTouchMove={handleDragMove}
                 onTouchEnd={handleDragEnd}
+                onTouchCancel={handleDragEnd}
               >
                 {/* Groupe rotatif avec tous les segments */}
                 <motion.g
