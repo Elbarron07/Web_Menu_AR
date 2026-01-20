@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, useMotionValue, useSpring, AnimatePresence } from 'framer-motion';
 
 interface MenuItem {
@@ -86,8 +86,14 @@ export const SpinningTacticalMenu = ({
   // Calculer la largeur du conteneur pour mobile
   const containerWidth = useMemo(() => {
     if (typeof window !== 'undefined') {
-      // Utiliser au minimum outerRadius * 2 pour voir le cercle, mais pas plus de 60% de l'écran
-      return Math.min(outerRadius * 2, window.innerWidth * 0.6);
+      // Sur mobile, utiliser au moins outerRadius * 2 pour voir le cercle complet
+      // Mais limiter à 80% de l'écran pour laisser de l'espace
+      const screenWidth = window.innerWidth;
+      const minWidth = outerRadius * 2; // 560px minimum pour voir le cercle complet
+      const maxWidth = screenWidth * 0.8; // Maximum 80% de l'écran
+      // Utiliser le minimum entre minWidth et maxWidth pour garantir la visibilité
+      // Si l'écran est petit, maxWidth sera utilisé, sinon minWidth
+      return Math.min(minWidth, maxWidth);
     }
     return outerRadius * 2;
   }, [outerRadius]);
@@ -127,23 +133,31 @@ export const SpinningTacticalMenu = ({
   const [isDragging, setIsDragging] = useState(false);
   const [lastY, setLastY] = useState(0);
   const [startRotation, setStartRotation] = useState(0);
+  const dragStartRef = useRef<{ x: number; y: number } | null>(null);
 
   const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
     e.stopPropagation();
-    // Ne pas appeler preventDefault sur les événements React (peuvent être passifs)
-    setIsDragging(true);
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    
+    // Vérifier si le clic est sur un élément interactif (segment ou bouton central)
+    const target = e.target as HTMLElement;
+    if (target.closest('path') || target.closest('circle') || target.closest('text')) {
+      // Ne pas démarrer le drag si c'est un clic sur un élément interactif
+      return;
+    }
+    
+    setIsDragging(true);
     setLastY(clientY);
     setStartRotation(rotation.get());
+    dragStartRef.current = { x: clientX, y: clientY };
   };
 
   const handleDragMove = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!isDragging) return;
+    if (!isDragging || !dragStartRef.current) return;
     e.stopPropagation();
-    // Pour les événements touch, preventDefault peut être nécessaire
-    if ('touches' in e) {
-      e.preventDefault();
-    }
+    // Ne pas appeler preventDefault sur les événements React (peuvent être passifs)
+    // La gestion sera faite dans le useEffect avec addEventListener
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
     const deltaY = clientY - lastY;
     // Conversion du mouvement vertical en rotation (plus le deltaY est grand, plus on tourne)
@@ -154,6 +168,7 @@ export const SpinningTacticalMenu = ({
 
   const handleDragEnd = () => {
     setIsDragging(false);
+    dragStartRef.current = null;
     // L'inertie est gérée automatiquement par useSpring
   };
 
@@ -172,14 +187,18 @@ export const SpinningTacticalMenu = ({
     };
 
     const handleTouchMove = (e: TouchEvent) => {
+      if (!isDragging || !dragStartRef.current) return;
       // preventDefault est maintenant possible car l'event listener est non-passif
       e.preventDefault();
       e.stopPropagation();
       if (e.touches.length > 0) {
         const deltaY = e.touches[0].clientY - lastY;
-        const rotationDelta = (deltaY / outerRadius) * (180 / Math.PI);
-        rotation.set(startRotation + rotationDelta);
-        setLastY(e.touches[0].clientY);
+        // Seuil minimum pour éviter les micro-mouvements
+        if (Math.abs(deltaY) > 2) {
+          const rotationDelta = (deltaY / outerRadius) * (180 / Math.PI);
+          rotation.set(startRotation + rotationDelta);
+          setLastY(e.touches[0].clientY);
+        }
       }
     };
 
@@ -289,6 +308,8 @@ export const SpinningTacticalMenu = ({
           <div 
             className="absolute left-0 top-0 bottom-0 overflow-hidden pointer-events-auto"
             style={{ width: `${containerWidth}px` }}
+            onClick={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
           >
             <motion.div
               className="relative h-full"
@@ -311,14 +332,25 @@ export const SpinningTacticalMenu = ({
                   WebkitTouchCallout: 'none',
                   userSelect: 'none',
                 } as React.CSSProperties}
-                onMouseDown={handleDragStart}
+                onMouseDown={(e) => {
+                  e.stopPropagation();
+                  handleDragStart(e);
+                }}
                 onMouseMove={handleDragMove}
                 onMouseUp={handleDragEnd}
                 onMouseLeave={handleDragEnd}
-                onTouchStart={handleDragStart}
-                onTouchMove={handleDragMove}
-                onTouchEnd={handleDragEnd}
-                onTouchCancel={handleDragEnd}
+                onTouchStart={(e) => {
+                  e.stopPropagation();
+                  handleDragStart(e);
+                }}
+                onTouchEnd={(e) => {
+                  e.stopPropagation();
+                  handleDragEnd();
+                }}
+                onTouchCancel={(e) => {
+                  e.stopPropagation();
+                  handleDragEnd();
+                }}
               >
                 {/* Groupe rotatif avec tous les segments */}
                 <motion.g
@@ -351,7 +383,13 @@ export const SpinningTacticalMenu = ({
                           stroke={isHovered ? '#E6A600' : 'rgba(255, 255, 255, 0.2)'}
                           strokeWidth={isHovered ? '2' : '1'}
                           className="cursor-pointer"
-                          onClick={() => handleItemClick(segment.item.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleItemClick(segment.item.id);
+                          }}
+                          onTouchStart={(e) => {
+                            e.stopPropagation();
+                          }}
                           onMouseEnter={() => setHoveredItem(segment.item.id)}
                           onMouseLeave={() => setHoveredItem(null)}
                           whileHover={{ opacity: 0.9 }}
@@ -360,7 +398,13 @@ export const SpinningTacticalMenu = ({
                         {/* Label avec compensation de rotation */}
                         <g
                           transform={`translate(${labelPos.x}, ${labelPos.y}) rotate(${segment.midAngle + 90})`}
-                          onClick={() => handleItemClick(segment.item.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleItemClick(segment.item.id);
+                          }}
+                          onTouchStart={(e) => {
+                            e.stopPropagation();
+                          }}
                           onMouseEnter={() => setHoveredItem(segment.item.id)}
                           onMouseLeave={() => setHoveredItem(null)}
                           className="cursor-pointer"
@@ -426,7 +470,13 @@ export const SpinningTacticalMenu = ({
                     strokeWidth="2"
                     clipPath="url(#halfCircleClip)"
                     className="cursor-pointer"
-                    onClick={handleBack}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleBack();
+                    }}
+                    onTouchStart={(e) => {
+                      e.stopPropagation();
+                    }}
                     whileHover={{ fill: 'rgba(0, 0, 0, 0.95)', stroke: 'rgba(230, 166, 0, 0.6)' }}
                     whileTap={{ scale: 0.95 }}
                   />
