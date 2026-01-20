@@ -51,6 +51,40 @@ export const ARViewer = forwardRef<ARViewerRef, ARViewerProps>(({
         }
     }, [scale]);
 
+    // Gérer le chargement du modèle et activer les interactions
+    useEffect(() => {
+        const modelViewer = modelViewerRef.current;
+        if (!modelViewer) return;
+
+        const handleLoad = () => {
+            // Le modèle est chargé, s'assurer que les contrôles caméra sont actifs
+            if (modelViewer.cameraControls) {
+                // Activer les contrôles si disponibles
+                console.log('Modèle chargé, contrôles caméra activés');
+            }
+            // Donner le focus pour activer les interactions
+            modelViewer.focus();
+        };
+
+        const handleError = (event: any) => {
+            console.error('Erreur de chargement du modèle:', event);
+        };
+
+        // Écouter les événements de chargement
+        modelViewer.addEventListener('load', handleLoad);
+        modelViewer.addEventListener('error', handleError);
+
+        // Vérifier si le modèle est déjà chargé
+        if ((modelViewer as any).loaded) {
+            handleLoad();
+        }
+
+        return () => {
+            modelViewer.removeEventListener('load', handleLoad);
+            modelViewer.removeEventListener('error', handleError);
+        };
+    }, [modelUrl]);
+
     const handleHotspotClick = (hotspot: Hotspot) => {
         if (onHotspotClick) {
             onHotspotClick(hotspot);
@@ -67,9 +101,12 @@ export const ARViewer = forwardRef<ARViewerRef, ARViewerProps>(({
             ar-scale="fixed"
             camera-controls
             interaction-policy="always"
-            reveal="auto"
+            reveal="interaction"
             shadow-intensity="1"
             auto-rotate-delay="0"
+            disable-zoom={false}
+            disable-pan={false}
+            disable-tap={false}
             style={{
                 width: '100vw',
                 height: '100vh',

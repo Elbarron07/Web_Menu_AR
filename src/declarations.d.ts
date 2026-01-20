@@ -20,6 +20,10 @@ declare namespace JSX {
             reveal?: string;
             scale?: string;
             slot?: string;
+            'disable-zoom'?: boolean;
+            'disable-pan'?: boolean;
+            'disable-tap'?: boolean;
+            'auto-rotate-delay'?: string;
         }, HTMLElement>;
     }
 }

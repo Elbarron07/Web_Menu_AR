@@ -131,9 +131,9 @@ export const HUDOverlay = ({
             </div>
 
             {/* Middle Section - Side Controls */}
-            <div className="flex-1 flex items-center justify-between px-4 sm:px-6 pointer-events-auto">
+            <div className="flex-1 flex items-center justify-between px-4 sm:px-6 pointer-events-none">
                 {/* Left: Size Selector */}
-                <div className="flex flex-col gap-3 sm:gap-4">
+                <div className="flex flex-col gap-3 sm:gap-4 pointer-events-auto">
                     {variants.map((variant) => (
                         <motion.button
                             key={variant.size}
@@ -156,13 +156,16 @@ export const HUDOverlay = ({
                     ))}
                 </div>
 
+                {/* Center: Zone libre pour interactions avec le modèle 3D */}
+                <div className="flex-1 pointer-events-none" />
+
                 {/* Right: Cart Feedback */}
                 {showCartFeedback && (
                     <motion.div
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.8 }}
-                        className="glassmorphism-badge bg-green-500/90 backdrop-blur-xl text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full border border-white/40 shadow-2xl"
+                        className="glassmorphism-badge bg-green-500/90 backdrop-blur-xl text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full border border-white/40 shadow-2xl pointer-events-auto"
                     >
                         <span className="font-bold flex items-center gap-2 text-sm sm:text-base">
                             <span className="text-lg sm:text-xl">✓</span>

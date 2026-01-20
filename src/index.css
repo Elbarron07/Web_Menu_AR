@@ -74,10 +74,15 @@ body {
   z-index: 1 !important;
   pointer-events: auto !important;
   cursor: grab !important;
+  outline: none !important;
 }
 
 .ar-viewer-fullscreen:active {
   cursor: grabbing !important;
+}
+
+.ar-viewer-fullscreen:focus {
+  outline: none !important;
 }
 
 /* S'assurer que model-viewer peut recevoir les événements tactiles */
@@ -87,6 +92,22 @@ model-viewer {
   -webkit-touch-callout: none !important;
   -webkit-user-select: none !important;
   user-select: none !important;
+  outline: none !important;
+  display: block !important;
+}
+
+model-viewer:focus {
+  outline: none !important;
+}
+
+/* Zone de contrôle caméra de model-viewer */
+model-viewer::part(default-ar-button) {
+  pointer-events: auto !important;
+}
+
+/* Contrôles caméra de model-viewer */
+model-viewer::part(interaction-prompt) {
+  pointer-events: none !important;
 }
 
 /* Zone interactive pour la rotation */
@@ -162,12 +183,17 @@ model-viewer::part(default-ar-button) {
 
 /* HUD Overlay */
 .hud-overlay {
+  pointer-events: none !important;
+}
+
+/* S'assurer que seuls les éléments interactifs du HUD bloquent les événements */
+.hud-overlay > * {
   pointer-events: none;
 }
 
-/* S'assurer que les éléments HUD ne bloquent pas les interactions avec model-viewer */
-.hud-overlay > * {
-  pointer-events: auto;
+/* Réactiver pointer-events uniquement sur les zones interactives */
+.hud-overlay .pointer-events-auto {
+  pointer-events: auto !important;
 }
 
 /* Les éléments avec pointer-events-auto peuvent interagir */
