@@ -1,15 +1,32 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { LogIn } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
 
 export const Login = () => {
+  const [searchParams] = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isInvite, setIsInvite] = useState(false);
   const { signIn } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Vérifier si c'est une invitation
+    const inviteParam = searchParams.get('invite');
+    const token = searchParams.get('token');
+    const type = searchParams.get('type');
+
+    if (inviteParam === 'true' || (token && type === 'invite')) {
+      setIsInvite(true);
+      // Essayer de récupérer l'email depuis le token si possible
+      // Note: L'email devrait être dans l'URL d'invitation originale
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,8 +34,34 @@ export const Login = () => {
     setLoading(true);
 
     try {
-      await signIn(email, password);
-      navigate('/admin');
+      if (isInvite) {
+        // Si c'est une invitation, créer le mot de passe
+        if (password !== confirmPassword) {
+          setError('Les mots de passe ne correspondent pas');
+          setLoading(false);
+          return;
+        }
+        if (password.length < 6) {
+          setError('Le mot de passe doit contenir au moins 6 caractères');
+          setLoading(false);
+          return;
+        }
+
+        // Mettre à jour le mot de passe via Supabase
+        const { error: updateError } = await supabase.auth.updateUser({
+          password: password,
+        });
+
+        if (updateError) throw updateError;
+
+        // Se connecter avec le nouveau mot de passe
+        await signIn(email, password);
+        navigate('/admin');
+      } else {
+        // Connexion normale
+        await signIn(email, password);
+        navigate('/admin');
+      }
     } catch (err: any) {
       setError(err.message || 'Erreur de connexion');
     } finally {
@@ -34,10 +77,12 @@ export const Login = () => {
             <LogIn className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Admin Panel
+            {isInvite ? 'Créer votre compte' : 'Admin Panel'}
           </h1>
           <p className="text-gray-600">
-            Connectez-vous pour gérer votre menu AR
+            {isInvite 
+              ? 'Créez votre mot de passe pour accéder au panneau d\'administration'
+              : 'Connectez-vous pour gérer votre menu AR'}
           </p>
         </div>
 
@@ -65,7 +110,7 @@ export const Login = () => {
 
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-              Mot de passe
+              {isInvite ? 'Nouveau mot de passe' : 'Mot de passe'}
             </label>
             <input
               id="password"
@@ -74,16 +119,35 @@ export const Login = () => {
               onChange={(e) => setPassword(e.target.value)}
               required
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all"
-              placeholder="••••••••"
+              placeholder={isInvite ? 'Minimum 6 caractères' : '••••••••'}
             />
           </div>
+
+          {isInvite && (
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                Confirmer le mot de passe
+              </label>
+              <input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all"
+                placeholder="Répétez le mot de passe"
+              />
+            </div>
+          )}
 
           <button
             type="submit"
             disabled={loading}
             className="w-full bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
           >
-            {loading ? 'Connexion...' : 'Se connecter'}
+            {loading 
+              ? (isInvite ? 'Création du compte...' : 'Connexion...') 
+              : (isInvite ? 'Créer le compte' : 'Se connecter')}
           </button>
         </form>
       </div>
