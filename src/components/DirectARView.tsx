@@ -7,6 +7,7 @@ import { ARViewer } from './ARViewer';
 import type { ARViewerRef } from './ARViewer';
 import { HUDOverlay } from './HUDOverlay';
 import { HotspotAnnotation } from './HotspotAnnotation';
+import { analytics } from '../lib/analytics';
 
 const DirectARView = () => {
     const { id } = useParams();
@@ -42,6 +43,10 @@ const DirectARView = () => {
     const handleAddToCart = () => {
         if (!product || !selectedVariant) return;
         addToCart(product, selectedVariant.label, currentPrice);
+        // Track add to cart event
+        if (product.id) {
+            analytics.trackAddToCart(product.id);
+        }
         setShowCartFeedback(true);
             setTimeout(() => {
             setShowCartFeedback(false);
@@ -59,6 +64,10 @@ const DirectARView = () => {
 
     const handleHotspotClick = (hotspot: any) => {
         setSelectedHotspot(hotspot);
+        // Track hotspot click event
+        if (product?.id && hotspot.slot) {
+            analytics.trackHotspotClick(product.id, hotspot.slot);
+        }
     };
 
     const handleCloseHotspot = () => {
@@ -66,10 +75,18 @@ const DirectARView = () => {
     };
 
     const handleActivateAR = async () => {
-        if (arViewerRef.current) {
+        if (arViewerRef.current && product?.id) {
+            analytics.trackARSessionStart(product.id);
             await arViewerRef.current.activateAR();
         }
     };
+
+    // Track view 3D when product is loaded
+    useEffect(() => {
+        if (product?.id && id) {
+            analytics.trackView3D(product.id);
+        }
+    }, [product?.id, id]);
 
     // Afficher le menu si aucun plat n'est sélectionné
     useEffect(() => {
@@ -177,6 +194,7 @@ const DirectARView = () => {
                     hotspots={convertHotspots(product.hotspots || [])}
                     scale={scale}
                     onHotspotClick={handleHotspotClick}
+                    menuItemId={product.id}
                 />
             )}
 

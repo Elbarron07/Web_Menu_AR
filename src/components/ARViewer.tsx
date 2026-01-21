@@ -1,5 +1,6 @@
 import { useRef, useEffect, useImperativeHandle, forwardRef } from 'react';
 import '@google/model-viewer';
+import { analytics } from '../lib/analytics';
 
 interface Hotspot {
     slot: string;
@@ -14,6 +15,7 @@ interface ARViewerProps {
     hotspots?: Hotspot[];
     scale?: string;
     onHotspotClick?: (hotspot: Hotspot) => void;
+    menuItemId?: string;
 }
 
 export interface ARViewerRef {
@@ -25,9 +27,11 @@ export const ARViewer = forwardRef<ARViewerRef, ARViewerProps>(({
     alt, 
     hotspots = [], 
     scale = "1 1 1",
-    onHotspotClick 
+    onHotspotClick,
+    menuItemId
 }, ref) => {
     const modelViewerRef = useRef<any>(null);
+    const arSessionStartTime = useRef<number | null>(null);
 
     // Exposer la méthode activateAR via la ref
     useImperativeHandle(ref, () => ({
@@ -89,8 +93,18 @@ export const ARViewer = forwardRef<ARViewerRef, ARViewerProps>(({
             const status = event.detail?.status;
             if (status === 'not-presenting') {
                 console.log('📱 Mode AR terminé');
+                // Track AR session end
+                if (menuItemId && arSessionStartTime.current) {
+                    const duration = Math.round((Date.now() - arSessionStartTime.current) / 1000);
+                    analytics.trackARSessionEnd(menuItemId, duration);
+                    arSessionStartTime.current = null;
+                }
             } else if (status === 'presenting') {
                 console.log('🥽 Mode AR actif - Modèle ancré sur la surface');
+                // Track AR session start
+                if (menuItemId) {
+                    arSessionStartTime.current = Date.now();
+                }
             }
         };
 
@@ -124,7 +138,7 @@ export const ARViewer = forwardRef<ARViewerRef, ARViewerProps>(({
             modelViewer.removeEventListener('ar-status', handleARStatus);
             modelViewer.removeEventListener('ar-place', handleARPlace);
         };
-    }, [modelUrl]);
+    }, [modelUrl, menuItemId]);
 
     const handleHotspotClick = (hotspot: Hotspot) => {
         if (onHotspotClick) {
