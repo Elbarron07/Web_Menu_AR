@@ -191,6 +191,8 @@ const DirectARView = () => {
                     calories={product.nutrition?.calories}
                     showCartFeedback={showCartFeedback}
                     onActivateAR={handleActivateAR}
+                    preparationTime={product.nutrition?.temps}
+                    popularity={(product as any).popularity || Math.floor(Math.random() * 50) + 10}
                 />
             )}
 

@@ -253,3 +253,115 @@ model-viewer::part(default-ar-button):hover {
     -webkit-overflow-scrolling: touch;
   }
 }
+
+/* Premium Glassmorphism Panel */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+/* Neon Glow Effects - Category Specific */
+.neon-glow-pizza {
+  box-shadow: 0 0 20px rgba(255, 107, 53, 0.6), 0 0 40px rgba(255, 107, 53, 0.4), 0 0 60px rgba(255, 107, 53, 0.2);
+}
+
+.neon-glow-hamburger {
+  box-shadow: 0 0 20px rgba(212, 165, 116, 0.6), 0 0 40px rgba(212, 165, 116, 0.4), 0 0 60px rgba(212, 165, 116, 0.2);
+}
+
+.neon-glow-chawarma {
+  box-shadow: 0 0 20px rgba(255, 140, 0, 0.6), 0 0 40px rgba(255, 140, 0, 0.4), 0 0 60px rgba(255, 140, 0, 0.2);
+}
+
+.neon-glow-tacos {
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.6), 0 0 40px rgba(255, 215, 0, 0.4), 0 0 60px rgba(255, 215, 0, 0.2);
+}
+
+.neon-glow-sushi {
+  box-shadow: 0 0 20px rgba(32, 178, 170, 0.6), 0 0 40px rgba(32, 178, 170, 0.4), 0 0 60px rgba(32, 178, 170, 0.2);
+}
+
+.neon-glow-pates {
+  box-shadow: 0 0 20px rgba(220, 20, 60, 0.6), 0 0 40px rgba(220, 20, 60, 0.4), 0 0 60px rgba(220, 20, 60, 0.2);
+}
+
+.neon-glow-salade {
+  box-shadow: 0 0 20px rgba(152, 251, 152, 0.6), 0 0 40px rgba(152, 251, 152, 0.4), 0 0 60px rgba(152, 251, 152, 0.2);
+}
+
+.neon-glow-desserts {
+  box-shadow: 0 0 20px rgba(218, 112, 214, 0.6), 0 0 40px rgba(218, 112, 214, 0.4), 0 0 60px rgba(218, 112, 214, 0.2);
+}
+
+.neon-glow-boissons {
+  box-shadow: 0 0 20px rgba(0, 206, 209, 0.6), 0 0 40px rgba(0, 206, 209, 0.4), 0 0 60px rgba(0, 206, 209, 0.2);
+}
+
+.neon-glow-plats {
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.6), 0 0 40px rgba(255, 215, 0, 0.4), 0 0 60px rgba(255, 215, 0, 0.2);
+}
+
+/* Breathing Animation for Neon Glows */
+@keyframes breathing-glow {
+  0%, 100% {
+    opacity: 0.6;
+    filter: blur(8px);
+  }
+  50% {
+    opacity: 1;
+    filter: blur(12px);
+  }
+}
+
+.breathing-glow {
+  animation: breathing-glow 3s ease-in-out infinite;
+}
+
+/* Ripple Effect */
+.ripple-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple-effect::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s, opacity 0.6s;
+}
+
+.ripple-effect.active::after {
+  width: 300px;
+  height: 300px;
+  opacity: 0;
+}
+
+/* Parallax Container */
+.parallax-container {
+  will-change: transform;
+  transition: transform 0.1s ease-out;
+}
+
+/* Accessibility - Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  .breathing-glow {
+    animation: none;
+  }
+}
