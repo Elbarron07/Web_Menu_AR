@@ -1,10 +1,20 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import menuData from '../data/menu.json';
+import { useMenu } from '../hooks/useMenu';
 
 const MenuGrid = () => {
+    const { menuItems, loading } = useMenu();
+    
     // Extract unique categories
-    const categories = Array.from(new Set(menuData.map((p: any) => p.category)));
+    const categories = Array.from(new Set(menuItems.map((p) => p.category)));
+
+    if (loading) {
+        return (
+            <div className="container mx-auto px-4 py-8 pb-24">
+                <div className="text-center py-20 text-2xl text-white">Chargement du menu...</div>
+            </div>
+        );
+    }
 
     return (
         <div className="container mx-auto px-4 py-8 pb-24">
@@ -23,7 +33,7 @@ const MenuGrid = () => {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {menuData.filter((p: any) => p.category === category).map((plat: any) => (
+                        {menuItems.filter((p) => p.category === category).map((plat) => (
                             <motion.div
                                 key={plat.id}
                                 initial={{ opacity: 0, y: 20 }}
@@ -50,10 +60,10 @@ const MenuGrid = () => {
 
                                     <div className="grid grid-cols-2 gap-4 text-xs text-gray-500 border-t border-gray-700/50 pt-4 mt-auto">
                                         <div className="flex items-center gap-2">
-                                            <span>🔥</span> {plat.nutrition?.calories} kcal
+                                            <span>🔥</span> {plat.nutrition.calories} kcal
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span>⏱️</span> {plat.nutrition?.temps}
+                                            <span>⏱️</span> {plat.nutrition.temps}
                                         </div>
                                     </div>
 

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Text, Float, MeshTransmissionMaterial } from '@react-three/drei';
 import * as THREE from 'three';
-import menuData from '../data/menu.json';
+import { useMenu } from '../hooks/useMenu';
 
 interface ARMenuProps {
   onSelectDish: (dishId: string | number) => void;
@@ -115,7 +115,21 @@ const DishCard = ({ dish, position, onSelect, index }: DishCardProps) => {
 };
 
 export const ARMenu = ({ onSelectDish, position = [0, 1.5, -1.5] }: ARMenuProps) => {
-  const dishes = menuData;
+  const { menuItems: dishes, loading } = useMenu();
+
+  if (loading) {
+    return (
+      <Text
+        position={[position[0], position[1], position[2]]}
+        fontSize={0.2}
+        color="#ffffff"
+        anchorX="center"
+        anchorY="middle"
+      >
+        Chargement...
+      </Text>
+    );
+  }
 
   // Disposition des cartes en grille
   const getCardPosition = (index: number): [number, number, number] => {

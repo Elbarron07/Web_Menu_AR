@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import menuData from '../data/menu.json';
+import { useMenu, useMenuItem } from '../hooks/useMenu';
 import { useCart } from './CartContext';
 import { SpinningTacticalMenu } from './SpinningTacticalMenu';
 import { ARViewer } from './ARViewer';
@@ -11,7 +11,8 @@ import { HotspotAnnotation } from './HotspotAnnotation';
 const DirectARView = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const product = id ? menuData.find((p: any) => p.id === id) : null;
+    const { menuItems, loading: menuLoading } = useMenu();
+    const { menuItem: product, loading: itemLoading } = useMenuItem(id);
 
     const { addToCart } = useCart();
     const arViewerRef = useRef<ARViewerRef>(null);
@@ -96,12 +97,14 @@ const DirectARView = () => {
         });
     };
 
-    // Convertir menuData en format pour SpinningTacticalMenu
+    // Convertir menuItems en format pour SpinningTacticalMenu
     const tacticalMenuData = useMemo(() => {
+        if (!menuItems.length) return { root: [] };
+        
         // Grouper les plats par catégorie
         const categoriesMap = new Map<string, Array<{ id: string; label: string; icon?: string; price?: string }>>();
         
-        menuData.forEach((dish: any) => {
+        menuItems.forEach((dish) => {
             const category = dish.category || 'Plats';
             
             if (!categoriesMap.has(category)) {
@@ -136,7 +139,7 @@ const DirectARView = () => {
         });
 
         return menuStructure;
-    }, []);
+    }, [menuItems]);
 
     // Fonction pour obtenir l'icône selon la catégorie
     function getCategoryIcon(category: string): string {
@@ -152,6 +155,15 @@ const DirectARView = () => {
             'Poulet': '🍗'
         };
         return iconMap[category] || '🍽️';
+    }
+
+    // Afficher un loader pendant le chargement
+    if ((id && itemLoading) || (!id && menuLoading)) {
+        return (
+            <div className="relative w-screen h-screen overflow-hidden flex items-center justify-center" style={{ background: 'transparent' }}>
+                <div className="text-white text-xl">Chargement du menu...</div>
+            </div>
+        );
     }
 
     return (

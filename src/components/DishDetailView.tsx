@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import menuData from '../data/menu.json';
+import { useMenuItem } from '../hooks/useMenu';
 import { ARViewer } from './ARViewer';
 import { useCart } from './CartContext';
 
@@ -9,9 +9,7 @@ const DishDetailView = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { addToCart } = useCart();
-
-    // Find the product (handling string/number conversion if needed)
-    const product = menuData.find((p: any) => p.id == id);
+    const { menuItem: product, loading } = useMenuItem(id);
 
     // State for variants
     const [selectedVariant, setSelectedVariant] = useState<any>(null);
@@ -24,7 +22,11 @@ const DishDetailView = () => {
         }
     }, [product]);
 
-    if (!product) return <div className="text-center py-20 text-2xl">Produit non trouvé 😢</div>;
+    if (loading) {
+        return <div className="text-center py-20 text-2xl text-white">Chargement...</div>;
+    }
+
+    if (!product) return <div className="text-center py-20 text-2xl text-white">Produit non trouvé 😢</div>;
 
     const handleVariantChange = (variant: any) => {
         setSelectedVariant(variant);
@@ -72,12 +74,12 @@ const DishDetailView = () => {
                     className="relative h-[50vh] lg:h-auto lg:min-h-[600px]"
                 >
                     <ARViewer
-                        modelUrl={(product as any).modelUrl || (product as any).model3D || ''}
+                        modelUrl={product.modelUrl}
                         alt={product.name}
-                        hotspots={(product.hotspots || []).map((h: any) => ({
-                            slot: h.slot || h.name?.toLowerCase().replace(/\s+/g, '-'),
-                            pos: h.pos || h.position || "0m 0m 0m",
-                            label: h.label || h.name || "Ingrédient",
+                        hotspots={product.hotspots.map((h) => ({
+                            slot: h.slot,
+                            pos: h.pos,
+                            label: h.label,
                             detail: h.detail
                         }))}
                     />
@@ -115,7 +117,7 @@ const DishDetailView = () => {
                             </div>
                             <div className="flex justify-between border-b border-gray-700/50 pb-2">
                                 <span className="text-gray-500">Calories</span>
-                                <span className="text-white font-medium">{product.nutrition?.calories} kcal</span>
+                                <span className="text-white font-medium">{product.nutrition.calories} kcal</span>
                             </div>
                         </div>
                     </div>
