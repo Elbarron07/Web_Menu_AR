@@ -3,6 +3,20 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
 /**
+ * Fonction pour extraire les paramètres du hash de l'URL (#access_token=...)
+ */
+const parseHashParams = (hash: string): Record<string, string> => {
+  const params: Record<string, string> = {};
+  if (hash && hash.length > 1) {
+    const hashParams = new URLSearchParams(hash.substring(1));
+    hashParams.forEach((value, key) => {
+      params[key] = value;
+    });
+  }
+  return params;
+};
+
+/**
  * Page de callback pour gérer les invitations Supabase Auth
  * Cette page intercepte les liens d'invitation et les redirige vers la bonne URL
  */
@@ -15,7 +29,50 @@ export const AuthCallback = () => {
   useEffect(() => {
     const handleInvitation = async () => {
       try {
-        // Récupérer les paramètres de l'URL
+        // Vérifier d'abord si on a des tokens dans le hash (#access_token=...)
+        const hashParams = parseHashParams(window.location.hash);
+        const hasHashTokens = hashParams.access_token && hashParams.refresh_token;
+
+        // Si on a des tokens dans le hash, établir la session directement
+        if (hasHashTokens) {
+          setMessage('Connexion en cours...');
+          
+          try {
+            const { data, error } = await supabase.auth.setSession({
+              access_token: hashParams.access_token,
+              refresh_token: hashParams.refresh_token,
+            });
+
+            if (error) throw error;
+
+            // Nettoyer le hash de l'URL
+            window.history.replaceState(null, '', window.location.pathname + window.location.search);
+
+            if (data.session) {
+              setStatus('success');
+              setMessage('Connexion réussie ! Redirection...');
+              
+              // Vérifier si c'est une invitation (première connexion)
+              const isInvite = hashParams.type === 'invite' || searchParams.get('type') === 'invite';
+              
+              setTimeout(() => {
+                if (isInvite) {
+                  // Pour une invitation, rediriger vers la page de création de mot de passe
+                  navigate('/admin/login?invite=true');
+                } else {
+                  // Sinon, rediriger vers le dashboard
+                  navigate('/admin/dashboard');
+                }
+              }, 2000);
+              return;
+            }
+          } catch (sessionError: any) {
+            console.error('Erreur lors de l\'établissement de la session:', sessionError);
+            // Continuer avec le traitement normal si l'établissement de session échoue
+          }
+        }
+
+        // Récupérer les paramètres de l'URL (query params)
         const token = searchParams.get('token');
         const type = searchParams.get('type');
         const tokenHash = searchParams.get('token_hash');
@@ -24,31 +81,48 @@ export const AuthCallback = () => {
         if (type === 'invite' && (token || tokenHash)) {
           setMessage('Vérification de l\'invitation...');
           
-          // Échanger le token d'invitation
-          // Note: Supabase gère automatiquement l'échange via l'URL
-          // On attend un peu pour que Supabase traite le token
-          await new Promise(resolve => setTimeout(resolve, 1000));
-
-          // Vérifier si l'utilisateur est maintenant connecté
-          const { data: { session } } = await supabase.auth.getSession();
+          // Vérifier d'abord si on a déjà une session
+          const { data: { session: existingSession } } = await supabase.auth.getSession();
           
-          if (session) {
+          if (existingSession) {
             setStatus('success');
             setMessage('Invitation acceptée avec succès ! Redirection...');
-            
-            // Rediriger vers la page admin après 2 secondes
             setTimeout(() => {
               navigate('/admin/dashboard');
             }, 2000);
-          } else {
-            // Si pas de session, rediriger vers la page de connexion
-            // avec un message indiquant qu'il faut créer un mot de passe
-            setStatus('success');
-            setMessage('Redirection vers la création de compte...');
-            setTimeout(() => {
-              navigate('/admin/login?invite=true');
-            }, 2000);
+            return;
           }
+
+          // Si on a un token_hash, essayer de l'échanger
+          if (tokenHash) {
+            try {
+              // Supabase devrait automatiquement traiter le token_hash dans l'URL
+              // On attend un peu pour que Supabase traite le token
+              await new Promise(resolve => setTimeout(resolve, 1500));
+
+              // Vérifier si l'utilisateur est maintenant connecté
+              const { data: { session } } = await supabase.auth.getSession();
+              
+              if (session) {
+                setStatus('success');
+                setMessage('Invitation acceptée avec succès ! Redirection...');
+                setTimeout(() => {
+                  navigate('/admin/dashboard');
+                }, 2000);
+                return;
+              }
+            } catch (tokenError: any) {
+              console.error('Erreur lors du traitement du token:', tokenError);
+            }
+          }
+
+          // Si pas de session, rediriger vers la page de connexion
+          // avec un message indiquant qu'il faut créer un mot de passe
+          setStatus('success');
+          setMessage('Redirection vers la création de compte...');
+          setTimeout(() => {
+            navigate('/admin/login?invite=true');
+          }, 2000);
         } 
         // Si c'est une réinitialisation de mot de passe ou autre type
         else if (token || tokenHash) {

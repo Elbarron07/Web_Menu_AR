@@ -3,13 +3,19 @@ import { CartProvider } from './components/CartContext';
 import DirectARView from './components/DirectARView';
 import { AdminRoutes } from './admin/routes';
 import { AuthCallback } from './pages/AuthCallback';
+import { LocalhostRedirect } from './pages/LocalhostRedirect';
+import { LocalhostChecker } from './components/LocalhostChecker';
 // Navbar and other components are intentionally omitted for the Zero-Friction experience
 
 function App() {
   return (
     <CartProvider>
       <BrowserRouter>
+        <LocalhostChecker />
         <Routes>
+          {/* Route de redirection pour localhost */}
+          <Route path="/localhost-redirect" element={<LocalhostRedirect />} />
+          
           {/* Route de callback pour les invitations Supabase */}
           <Route path="/auth/callback" element={<AuthCallback />} />
           

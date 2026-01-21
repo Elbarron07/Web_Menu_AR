@@ -11,4 +11,17 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// URL du site pour les redirections d'authentification
+export const siteUrl = import.meta.env.VITE_SITE_URL || 
+  (typeof window !== 'undefined' ? window.location.origin : 'https://web-menu-ar.vercel.app');
+
+// Créer le client Supabase
+// Note: redirectTo est spécifié lors des appels d'authentification, pas ici
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    flowType: 'pkce',
+    detectSessionInUrl: true,
+    autoRefreshToken: true,
+    persistSession: true,
+  }
+});
