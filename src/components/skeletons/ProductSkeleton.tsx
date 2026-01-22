@@ -1,5 +1,4 @@
-import { motion } from 'framer-motion';
-import { SkeletonBox, SkeletonText, SkeletonCircle } from '../Skeleton';
+import { SkeletonBox, SkeletonCircle } from '../Skeleton';
 
 export const ProductSkeleton = () => {
   return (

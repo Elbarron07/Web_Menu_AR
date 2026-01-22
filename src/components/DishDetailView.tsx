@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { useMenuItem } from '../hooks/useMenu';
 import { ARViewer } from './ARViewer';
 import { useCart } from './CartContext';
-import { SkeletonBox, SkeletonText, SkeletonCard } from './Skeleton';
+import { SkeletonBox, SkeletonText, SkeletonCard, SkeletonCircle } from './Skeleton';
 
 const DishDetailView = () => {
     const { id } = useParams();
