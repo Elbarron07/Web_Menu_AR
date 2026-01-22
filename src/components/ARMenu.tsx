@@ -118,16 +118,25 @@ export const ARMenu = ({ onSelectDish, position = [0, 1.5, -1.5] }: ARMenuProps)
   const { menuItems: dishes, loading } = useMenu();
 
   if (loading) {
+    // Note: Dans un contexte 3D, on ne peut pas utiliser les composants Skeleton HTML
+    // On utilise plutôt un texte animé ou un mesh simple
     return (
-      <Text
-        position={[position[0], position[1], position[2]]}
-        fontSize={0.2}
-        color="#ffffff"
-        anchorX="center"
-        anchorY="middle"
-      >
-        Chargement...
-      </Text>
+      <group position={position}>
+        <Text
+          position={[0, 0, 0]}
+          fontSize={0.2}
+          color="#ffffff"
+          anchorX="center"
+          anchorY="middle"
+        >
+          Chargement...
+        </Text>
+        {/* Cercle animé pour indiquer le chargement */}
+        <mesh position={[0, -0.5, 0]}>
+          <ringGeometry args={[0.2, 0.25, 32]} />
+          <meshBasicMaterial color="#ffffff" transparent opacity={0.6} />
+        </mesh>
+      </group>
     );
   }
 

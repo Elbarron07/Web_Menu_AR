@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useMenuItem } from '../hooks/useMenu';
 import { ARViewer } from './ARViewer';
 import { useCart } from './CartContext';
+import { SkeletonBox, SkeletonText, SkeletonCard } from './Skeleton';
 
 const DishDetailView = () => {
     const { id } = useParams();
@@ -23,7 +24,30 @@ const DishDetailView = () => {
     }, [product]);
 
     if (loading) {
-        return <div className="text-center py-20 text-2xl text-white">Chargement...</div>;
+        return (
+            <div className="container mx-auto px-4 py-6 lg:py-12">
+                <div className="mb-8">
+                    <SkeletonBox width="150px" height="40px" rounded="lg" />
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 min-h-[600px]">
+                    {/* Left: AR Viewer Skeleton */}
+                    <div className="relative h-[50vh] lg:h-auto lg:min-h-[600px]">
+                        <SkeletonBox width="100%" height="100%" rounded="xl" className="bg-black/50" />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <SkeletonCircle size="60px" />
+                        </div>
+                    </div>
+                    {/* Right: Details Skeleton */}
+                    <div className="space-y-6">
+                        <SkeletonCard />
+                        <div className="space-y-4">
+                            <SkeletonText lines={4} />
+                            <SkeletonBox width="120px" height="40px" rounded="lg" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
     }
 
     if (!product) return <div className="text-center py-20 text-2xl text-white">Produit non trouvé 😢</div>;

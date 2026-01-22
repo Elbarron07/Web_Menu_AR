@@ -8,6 +8,9 @@ import type { ARViewerRef } from './ARViewer';
 import { HUDOverlay } from './HUDOverlay';
 import { HotspotAnnotation } from './HotspotAnnotation';
 import { analytics } from '../lib/analytics';
+import { ARViewerSkeleton } from './skeletons/ARViewerSkeleton';
+import { MenuSkeleton } from './skeletons/MenuSkeleton';
+import { motion } from 'framer-motion';
 
 const DirectARView = () => {
     const { id } = useParams();
@@ -176,13 +179,13 @@ const DirectARView = () => {
         return iconMap[category] || '🍽️';
     }
 
-    // Afficher un loader pendant le chargement
-    if ((id && itemLoading) || (!id && menuLoading)) {
-        return (
-            <div className="relative w-screen h-screen overflow-hidden flex items-center justify-center" style={{ background: 'transparent' }}>
-                <div className="text-white text-xl">Chargement du menu...</div>
-            </div>
-        );
+    // Afficher un skeleton pendant le chargement
+    if (id && itemLoading) {
+        return <ARViewerSkeleton />;
+    }
+    
+    if (!id && menuLoading) {
+        return <MenuSkeleton />;
     }
 
     return (
@@ -198,6 +201,33 @@ const DirectARView = () => {
                     onHotspotClick={handleHotspotClick}
                     menuItemId={product.id}
                 />
+            )}
+
+            {/* Bouton retour au menu */}
+            {product && !showMenu && (
+                <motion.button
+                    onClick={() => {
+                        setShowMenu(true);
+                        navigate('/', { replace: true });
+                    }}
+                    className="fixed top-4 left-4 z-[60] glass-panel px-4 py-2 sm:px-6 sm:py-3 rounded-xl backdrop-blur-xl border border-white/20 text-white font-semibold shadow-xl hover:bg-white/20 transition-all pointer-events-auto"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    style={{
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        backdropFilter: 'blur(12px)',
+                        WebkitBackdropFilter: 'blur(12px)',
+                    }}
+                >
+                    <span className="flex items-center gap-2">
+                        <span>←</span>
+                        <span className="hidden sm:inline">Retour au menu</span>
+                        <span className="sm:hidden">Retour</span>
+                    </span>
+                </motion.button>
             )}
 
             {/* Menu Tactique Spinning - affiché quand aucun plat n'est sélectionné */}
