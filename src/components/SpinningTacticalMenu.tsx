@@ -130,10 +130,18 @@ export const SpinningTacticalMenu = ({
   const containerRef = useRef<HTMLDivElement>(null);
   
   // Obtenir la catégorie de l'item actuel pour les couleurs
+  // Pour les sous-menus, hériter la catégorie du menu principal
   const getItemCategory = (itemId: string): string => {
     if (currentLevel === 'root') {
       return menuData.root.find(item => item.id === itemId)?.label || 'Plats';
     }
+    // Pour les sous-menus, retourner la catégorie du parent (premier élément du navigationPath)
+    if (navigationPath.length > 0) {
+      const parentLevel = navigationPath[0];
+      const parentItem = menuData.root.find(item => item.id === parentLevel);
+      return parentItem?.label || currentLevel;
+    }
+    // Fallback : utiliser le currentLevel si pas de navigationPath
     return currentLevel;
   };
 
@@ -156,17 +164,6 @@ export const SpinningTacticalMenu = ({
   }, []);
   
   const svgSize = outerRadius * 2;
-  
-  // Calculer la largeur du conteneur pour mobile
-  const containerWidth = useMemo(() => {
-    if (typeof window !== 'undefined') {
-      const screenWidth = window.innerWidth;
-      const minWidth = outerRadius * 2;
-      const maxWidth = screenWidth * 0.8;
-      return Math.min(minWidth, maxWidth);
-    }
-    return outerRadius * 2;
-  }, [outerRadius]);
 
   // Obtenir les items du niveau actuel
   const currentItems = useMemo(() => {
@@ -194,9 +191,9 @@ export const SpinningTacticalMenu = ({
   // Motion value pour la rotation avec inertie
   const rotation = useMotionValue(0);
   const springRotation = useSpring(rotation, {
-    damping: 30,
-    stiffness: 300,
-    mass: 0.5,
+    damping: 25, // Réduit pour plus d'inertie
+    stiffness: 250, // Réduit pour une rotation plus fluide
+    mass: 0.4, // Réduit pour une réponse plus rapide
   });
   
   // Transform SVG pour la rotation autour du centre
@@ -224,7 +221,7 @@ export const SpinningTacticalMenu = ({
   const [isDragging, setIsDragging] = useState(false);
   const [lastY, setLastY] = useState(0);
   const [startRotation, setStartRotation] = useState(0);
-  const dragStartRef = useRef<{ x: number; y: number } | null>(null);
+  const dragStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
 
   const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
     e.stopPropagation();
@@ -236,10 +233,10 @@ export const SpinningTacticalMenu = ({
       return;
     }
     
-    setIsDragging(true);
+    setIsDragging(false); // Réinitialiser l'état de drag
     setLastY(clientY);
     setStartRotation(rotation.get());
-    dragStartRef.current = { x: clientX, y: clientY };
+    dragStartRef.current = { x: clientX, y: clientY, time: Date.now() };
   };
 
   const handleDragMove = (e: React.MouseEvent | React.TouchEvent) => {
@@ -253,7 +250,8 @@ export const SpinningTacticalMenu = ({
       const dy = Math.abs(clientY - dragStartRef.current.y);
       const distance = Math.sqrt(dx * dx + dy * dy);
       
-      if (distance > 10) {
+      // Réduire le seuil de 10px à 5px pour une détection plus rapide
+      if (distance > 5) {
         setIsDragging(true);
         setLastY(clientY);
         setStartRotation(rotation.get());
@@ -266,7 +264,8 @@ export const SpinningTacticalMenu = ({
     
     e.stopPropagation();
     const deltaY = clientY - lastY;
-    const rotationDelta = (deltaY / outerRadius) * (180 / Math.PI);
+    // Augmenter la sensibilité de la rotation (multiplicateur de 1.5)
+    const rotationDelta = (deltaY / outerRadius) * (180 / Math.PI) * 1.5;
     rotation.set(startRotation + rotationDelta);
     setLastY(clientY);
   };
@@ -377,11 +376,13 @@ export const SpinningTacticalMenu = ({
     setRipplePosition({ x: x - rect.left, y: y - rect.top });
     setSelectedItem(itemId);
     
+    // Animation visuelle (peut continuer en arrière-plan)
     setTimeout(() => {
       setRipplePosition(null);
       setSelectedItem(null);
     }, 600);
 
+    // Navigation immédiate (pas besoin d'attendre pour les clics rapides)
     if (menuData[itemId] && menuData[itemId].length > 0) {
       setNavigationPath([...navigationPath, currentLevel]);
       setCurrentLevel(itemId);
@@ -460,12 +461,13 @@ export const SpinningTacticalMenu = ({
             onClick={onClose}
           />
 
-          {/* Conteneur du menu avec parallax */}
+          {/* Conteneur du menu avec parallax - pleine surface */}
           <div 
             ref={containerRef}
-            className="absolute left-0 top-0 bottom-0 overflow-hidden pointer-events-auto parallax-container"
+            className="absolute inset-0 overflow-hidden pointer-events-auto parallax-container"
             style={{ 
-              width: `${containerWidth}px`,
+              width: '100vw',
+              height: '100vh',
               transform: `translate3d(${parallaxOffset.x}px, ${parallaxOffset.y}px, 0)`,
             }}
             onClick={(e) => e.stopPropagation()}
@@ -483,16 +485,16 @@ export const SpinningTacticalMenu = ({
                 opacity: { duration: 0.3 }
               }}
             >
-              {/* SVG avec le cercle complet */}
+              {/* SVG avec le cercle complet - centré horizontalement */}
               <svg
                 width={svgSize}
                 height={svgSize}
                 viewBox={`${-outerRadius} ${centerY - outerRadius} ${svgSize} ${svgSize}`}
                 className="absolute cursor-grab active:cursor-grabbing"
                 style={{
-                  left: -outerRadius,
+                  left: '50%',
                   top: '50%',
-                  transform: 'translateY(-50%)',
+                  transform: 'translate(-50%, -50%)',
                   touchAction: 'none',
                   WebkitTouchCallout: 'none',
                   userSelect: 'none',
@@ -585,10 +587,26 @@ export const SpinningTacticalMenu = ({
                           }}
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleItemClick(segment.item.id, e);
+                            // Vérifier que ce n'est pas un drag avant de cliquer
+                            if (!isDragging) {
+                              handleItemClick(segment.item.id, e);
+                            }
                           }}
                           onTouchStart={(e) => {
                             e.stopPropagation();
+                            // Initialiser le dragStartRef pour le touch
+                            const clientY = e.touches[0]?.clientY ?? 0;
+                            const clientX = e.touches[0]?.clientX ?? 0;
+                            dragStartRef.current = { x: clientX, y: clientY, time: Date.now() };
+                          }}
+                          onTouchEnd={(e) => {
+                            e.stopPropagation();
+                            // Si c'est un clic rapide (< 200ms et pas de drag), déclencher la navigation
+                            if (dragStartRef.current && Date.now() - dragStartRef.current.time < 200 && !isDragging) {
+                              handleItemClick(segment.item.id, e);
+                            }
+                            setIsDragging(false);
+                            dragStartRef.current = null;
                           }}
                           onMouseEnter={() => setHoveredItem(segment.item.id)}
                           onMouseLeave={() => setHoveredItem(null)}

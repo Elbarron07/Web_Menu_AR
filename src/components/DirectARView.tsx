@@ -55,7 +55,9 @@ const DirectARView = () => {
 
     const handleDishSelect = (dishId: string | number) => {
         setShowMenu(false);
-        navigate(`/ar/${dishId}`);
+        // Utiliser replace: true pour éviter d'ajouter une entrée dans l'historique
+        // Cela évite le rechargement complet lors du retour en arrière
+        navigate(`/ar/${dishId}`, { replace: true });
     };
 
     const handleTacticalMenuSelect = (itemId: string) => {
