@@ -5,14 +5,16 @@ import { AdminRoutes } from './admin/routes';
 import { AuthCallback } from './pages/AuthCallback';
 import { LocalhostRedirect } from './pages/LocalhostRedirect';
 import { LocalhostChecker } from './components/LocalhostChecker';
+import { ARLayout } from './components/ARLayout';
 // Navbar and other components are intentionally omitted for the Zero-Friction experience
 
 function App() {
   return (
     <CartProvider>
       <BrowserRouter>
-        <LocalhostChecker />
-        <Routes>
+        <ARLayout>
+          <LocalhostChecker />
+          <Routes>
           {/* Route de redirection pour localhost */}
           <Route path="/localhost-redirect" element={<LocalhostRedirect />} />
           
@@ -33,7 +35,8 @@ function App() {
           
           {/* Routes admin */}
           <Route path="/admin/*" element={<AdminRoutes />} />
-        </Routes>
+          </Routes>
+        </ARLayout>
       </BrowserRouter>
     </CartProvider>
   );

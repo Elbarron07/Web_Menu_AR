@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { LogIn } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { authService } from '../../lib/auth';
 
 export const Login = () => {
   const [searchParams] = useSearchParams();
@@ -55,16 +56,47 @@ export const Login = () => {
         if (updateError) throw updateError;
 
         // Se connecter avec le nouveau mot de passe
-        await signIn(email, password);
-        navigate('/admin');
+        const signInResult = await signIn(email, password);
+        
+        if (!signInResult || !signInResult.user) {
+          throw new Error('Erreur lors de la connexion');
+        }
+        
+        // Attendre un peu pour que la session soit bien établie
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // Vérifier que l'utilisateur est bien admin en utilisant authService
+        const isAdmin = await authService.isAdmin();
+        
+        if (!isAdmin) {
+          throw new Error('Vous n\'avez pas les droits d\'administration');
+        }
+        
+        // Rediriger vers le dashboard
+        navigate('/admin/dashboard', { replace: true });
       } else {
         // Connexion normale
-        await signIn(email, password);
-        navigate('/admin');
+        const signInResult = await signIn(email, password);
+        
+        if (!signInResult || !signInResult.user) {
+          throw new Error('Erreur lors de la connexion');
+        }
+        
+        // Attendre un peu pour que la session soit bien établie
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // Vérifier que l'utilisateur est bien admin en utilisant authService
+        const isAdmin = await authService.isAdmin();
+        
+        if (!isAdmin) {
+          throw new Error('Vous n\'avez pas les droits d\'administration');
+        }
+        
+        // Rediriger vers le dashboard
+        navigate('/admin/dashboard', { replace: true });
       }
     } catch (err: any) {
       setError(err.message || 'Erreur de connexion');
-    } finally {
       setLoading(false);
     }
   };

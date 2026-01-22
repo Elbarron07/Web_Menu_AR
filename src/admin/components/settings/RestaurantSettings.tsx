@@ -42,9 +42,12 @@ export const RestaurantSettings = () => {
           .from('restaurant_settings')
           .select('*')
           .limit(1)
-          .single();
+          .maybeSingle();
 
-        if (error && error.code !== 'PGRST116') throw error;
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error fetching settings:', error);
+          return;
+        }
 
         if (data) {
           setValue('name', data.name || '');

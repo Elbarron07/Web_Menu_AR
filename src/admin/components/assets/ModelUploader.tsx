@@ -37,7 +37,9 @@ export const ModelUploader = ({ onUploadComplete, currentUrl }: ModelUploaderPro
       setUploadedUrl(url);
       onUploadComplete(url);
     } catch (error: any) {
-      alert(`Erreur lors de l'upload: ${error.message}`);
+      const errorMessage = error.message || 'Erreur inconnue lors de l\'upload';
+      console.error('Erreur upload:', error);
+      alert(`Erreur lors de l'upload: ${errorMessage}`);
     } finally {
       setUploading(false);
       setProgress(0);

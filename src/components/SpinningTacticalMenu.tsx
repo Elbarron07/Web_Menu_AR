@@ -198,6 +198,27 @@ export const SpinningTacticalMenu = ({
     stiffness: 300,
     mass: 0.5,
   });
+  
+  // Transform SVG pour la rotation autour du centre
+  // Utiliser un state pour stocker le transform qui se met à jour dynamiquement
+  const [svgTransformValue, setSvgTransformValue] = useState('');
+  
+  // Mettre à jour le transform quand springRotation ou centerY change
+  useEffect(() => {
+    const updateTransform = () => {
+      const currentCenterY = typeof window !== 'undefined' ? window.innerHeight / 2 : centerY;
+      const rotationValue = springRotation.get();
+      setSvgTransformValue(`rotate(${rotationValue}, ${centerX}, ${currentCenterY})`);
+    };
+    
+    // Initialiser avec la valeur actuelle
+    updateTransform();
+    
+    // Écouter les changements de springRotation
+    const unsubscribe = springRotation.on('change', updateTransform);
+    
+    return () => unsubscribe();
+  }, [springRotation, centerY]);
 
   // Gérer le drag pour la rotation
   const [isDragging, setIsDragging] = useState(false);
@@ -497,11 +518,8 @@ export const SpinningTacticalMenu = ({
                 }}
               >
                 {/* Groupe rotatif avec tous les segments */}
-                <motion.g
-                  style={{
-                    transformOrigin: `${centerX}px ${centerY}px`,
-                    rotate: springRotation,
-                  }}
+                <g
+                  transform={svgTransformValue}
                 >
                   {/* Segments avec animations orbitales */}
                   {segments.map((segment) => {
@@ -678,7 +696,7 @@ export const SpinningTacticalMenu = ({
                       </motion.g>
                     );
                   })}
-                </motion.g>
+                </g>
 
                 {/* Bouton central fixe avec glassmorphism premium */}
                 <g>

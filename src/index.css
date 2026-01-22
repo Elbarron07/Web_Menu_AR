@@ -2,8 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom base styles - Camera-First Architecture */
-html, body {
+/* Assurer que les éléments sont transparents par défaut */
+* {
+  box-sizing: border-box;
+}
+
+/* Styles par défaut pour html et body (sans ar-mode) */
+html:not(.ar-mode),
+html:not(.ar-mode) body {
+  margin: 0;
+  padding: 0;
+  background: #ffffff;
+  overflow: auto;
+  position: relative;
+}
+
+/* Styles AR - appliqués uniquement quand .ar-mode est présent sur html */
+html.ar-mode,
+html.ar-mode body {
   margin: 0;
   padding: 0;
   width: 100vw;
@@ -17,11 +33,18 @@ html, body {
   background: #000000;
 }
 
-body {
+html.ar-mode body {
   @apply text-white; /* Texte blanc par défaut pour contraste avec caméra */
 }
 
-#root {
+/* Styles par défaut pour #root (sans ar-mode) */
+html:not(.ar-mode) #root {
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Styles AR pour #root */
+html.ar-mode #root {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
@@ -232,9 +255,9 @@ model-viewer::part(default-ar-button):hover {
   transform: scale(1.05);
 }
 
-/* Empêcher le scroll sur mobile */
+/* Empêcher le scroll sur mobile - uniquement en mode AR */
 @media (max-width: 768px) {
-  body {
+  html.ar-mode body {
     -webkit-overflow-scrolling: touch;
     overflow: hidden;
     position: fixed;
@@ -243,9 +266,9 @@ model-viewer::part(default-ar-button):hover {
   }
 }
 
-/* Optimisations pour iOS */
+/* Optimisations pour iOS - uniquement en mode AR */
 @supports (-webkit-touch-callout: none) {
-  body {
+  html.ar-mode body {
     -webkit-overflow-scrolling: touch;
   }
   

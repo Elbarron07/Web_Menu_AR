@@ -36,13 +36,20 @@ export const authService = {
     const user = await this.getCurrentUser();
     if (!user) return false;
     
+    // Utiliser maybeSingle() pour éviter les erreurs si l'utilisateur n'est pas admin
     const { data, error } = await supabase
       .from('admin_users')
       .select('id')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
     
-    return !error && !!data;
+    // Si erreur de permission RLS, retourner false silencieusement
+    if (error) {
+      console.warn('Erreur lors de la vérification admin:', error);
+      return false;
+    }
+    
+    return !!data;
   },
 
   async getAdminUser(): Promise<AdminUser | null> {
@@ -53,7 +60,7 @@ export const authService = {
       .from('admin_users')
       .select('*')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
     
     if (error || !data) return null;
     

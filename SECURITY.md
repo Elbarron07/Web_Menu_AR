@@ -37,6 +37,8 @@ Les clés Supabase ne sont plus en dur dans le code source. Elles sont chargées
 Les headers suivants sont envoyés avec chaque réponse HTTP :
 
 - **Content-Security-Policy** : Restreint les sources de contenu autorisées
+  - `connect-src` autorise `blob:` pour permettre le chargement des textures des modèles 3D GLB/GLTF par `model-viewer`
+  - `img-src` autorise `blob:` pour l'affichage des images générées dynamiquement
 - **Strict-Transport-Security** : Force l'utilisation de HTTPS
 - **X-Frame-Options** : Empêche l'intégration dans des iframes (protection XSS)
 - **X-Content-Type-Options** : Empêche le navigateur de deviner le type MIME
@@ -71,6 +73,7 @@ Les headers suivants sont envoyés avec chaque réponse HTTP :
 - Content Security Policy (CSP) strict
 - Headers X-XSS-Protection
 - X-Frame-Options pour empêcher le clickjacking
+- Autorisation de `blob:` dans `connect-src` et `img-src` uniquement pour le chargement des ressources 3D locales (modèles GLB/GLTF)
 
 ### ✅ Protection contre les modifications non autorisées
 

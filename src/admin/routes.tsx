@@ -11,9 +11,9 @@ import { Settings } from './pages/Settings';
 export const AdminRoutes = () => {
   return (
     <Routes>
-      <Route path="/admin/login" element={<Login />} />
+      <Route path="login" element={<Login />} />
       <Route
-        path="/admin"
+        path="dashboard"
         element={
           <ProtectedRoute>
             <AdminLayout>
@@ -23,7 +23,17 @@ export const AdminRoutes = () => {
         }
       />
       <Route
-        path="/admin/menu"
+        path=""
+        element={
+          <ProtectedRoute>
+            <AdminLayout>
+              <Dashboard />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="menu"
         element={
           <ProtectedRoute>
             <AdminLayout>
@@ -33,7 +43,7 @@ export const AdminRoutes = () => {
         }
       />
       <Route
-        path="/admin/assets"
+        path="assets"
         element={
           <ProtectedRoute>
             <AdminLayout>
@@ -43,7 +53,7 @@ export const AdminRoutes = () => {
         }
       />
       <Route
-        path="/admin/analytics"
+        path="analytics"
         element={
           <ProtectedRoute>
             <AdminLayout>
@@ -53,7 +63,7 @@ export const AdminRoutes = () => {
         }
       />
       <Route
-        path="/admin/settings"
+        path="settings"
         element={
           <ProtectedRoute>
             <AdminLayout>
@@ -62,7 +72,7 @@ export const AdminRoutes = () => {
           </ProtectedRoute>
         }
       />
-      <Route path="/admin/*" element={<Navigate to="/admin" replace />} />
+      <Route path="*" element={<Navigate to="/admin" replace />} />
     </Routes>
   );
 };
