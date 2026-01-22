@@ -461,13 +461,12 @@ export const SpinningTacticalMenu = ({
             onClick={onClose}
           />
 
-          {/* Conteneur du menu avec parallax - pleine surface */}
+          {/* Conteneur du menu avec parallax - permet au menu d'être coupé aux bords */}
           <div 
             ref={containerRef}
-            className="absolute inset-0 overflow-hidden pointer-events-auto parallax-container"
+            className="absolute left-0 top-0 bottom-0 overflow-hidden pointer-events-auto parallax-container"
             style={{ 
               width: '100vw',
-              height: '100vh',
               transform: `translate3d(${parallaxOffset.x}px, ${parallaxOffset.y}px, 0)`,
             }}
             onClick={(e) => e.stopPropagation()}
@@ -485,19 +484,19 @@ export const SpinningTacticalMenu = ({
                 opacity: { duration: 0.3 }
               }}
             >
-              {/* SVG avec le cercle complet - centré horizontalement */}
-              <svg
-                width={svgSize}
-                height={svgSize}
-                viewBox={`${-outerRadius} ${centerY - outerRadius} ${svgSize} ${svgSize}`}
+              {/* Conteneur invisible élargi pour la zone de drag (200% de la taille du SVG) */}
+              <div
                 className="absolute cursor-grab active:cursor-grabbing"
                 style={{
-                  left: '50%',
+                  left: '2px',
                   top: '50%',
                   transform: 'translate(-50%, -50%)',
+                  width: `${svgSize * 2}px`,
+                  height: `${svgSize * 2}px`,
                   touchAction: 'none',
                   WebkitTouchCallout: 'none',
                   userSelect: 'none',
+                  pointerEvents: 'auto',
                 } as React.CSSProperties}
                 onMouseDown={(e) => {
                   e.stopPropagation();
@@ -519,6 +518,19 @@ export const SpinningTacticalMenu = ({
                   handleDragEnd();
                 }}
               >
+                {/* SVG avec le cercle complet - centré dans le conteneur invisible */}
+                <svg
+                  width={svgSize}
+                  height={svgSize}
+                  viewBox={`${-outerRadius} ${centerY - outerRadius} ${svgSize} ${svgSize}`}
+                  style={{
+                    position: 'absolute',
+                    left: '50%',
+                    top: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    pointerEvents: 'none',
+                  } as React.CSSProperties}
+                >
                 {/* Groupe rotatif avec tous les segments */}
                 <g
                   transform={svgTransformValue}
@@ -584,6 +596,7 @@ export const SpinningTacticalMenu = ({
                             backdropFilter: 'blur(12px)',
                             WebkitBackdropFilter: 'blur(12px)',
                             filter: isHovered ? 'drop-shadow(0 0 8px ' + colors.glow + ')' : 'none',
+                            pointerEvents: 'auto',
                           }}
                           onClick={(e) => {
                             e.stopPropagation();
@@ -646,6 +659,7 @@ export const SpinningTacticalMenu = ({
                           onMouseEnter={() => setHoveredItem(segment.item.id)}
                           onMouseLeave={() => setHoveredItem(null)}
                           className="cursor-pointer"
+                          style={{ pointerEvents: 'auto' }}
                         >
                           {segment.item.icon && (
                             <motion.text
@@ -736,6 +750,7 @@ export const SpinningTacticalMenu = ({
                       backdropFilter: 'blur(24px)',
                       WebkitBackdropFilter: 'blur(24px)',
                       border: '1px solid rgba(255, 255, 255, 0.1)',
+                      pointerEvents: 'auto',
                     }}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -829,6 +844,7 @@ export const SpinningTacticalMenu = ({
                   )}
                 </g>
               </svg>
+              </div>
             </motion.div>
           </div>
         </motion.div>
