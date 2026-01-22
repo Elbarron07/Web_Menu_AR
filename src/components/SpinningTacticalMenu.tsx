@@ -432,8 +432,22 @@ export const SpinningTacticalMenu = ({
 
     // Navigation immédiate (pas besoin d'attendre pour les clics rapides)
     if (menuData[itemId] && menuData[itemId].length > 0) {
-      setNavigationPath([...navigationPath, currentLevel]);
-      setCurrentLevel(itemId);
+      const newNavigationPath = [...navigationPath, currentLevel];
+      const newCurrentLevel = itemId;
+      
+      // Ajouter une entrée dans l'historique
+      window.history.pushState(
+        { 
+          navigationPath: newNavigationPath, 
+          currentLevel: newCurrentLevel,
+          isMenuNavigation: true 
+        },
+        '',
+        window.location.href
+      );
+      
+      setNavigationPath(newNavigationPath);
+      setCurrentLevel(newCurrentLevel);
       rotation.set(0);
     } else {
       if (onSelectItem) {
@@ -447,7 +461,20 @@ export const SpinningTacticalMenu = ({
   const handleBack = () => {
     if (navigationPath.length > 0) {
       const previousLevel = navigationPath[navigationPath.length - 1];
-      setNavigationPath(navigationPath.slice(0, -1));
+      const newNavigationPath = navigationPath.slice(0, -1);
+      
+      // Mettre à jour l'historique
+      window.history.replaceState(
+        { 
+          navigationPath: newNavigationPath,
+          currentLevel: previousLevel,
+          isMenuNavigation: true 
+        },
+        '',
+        window.location.href
+      );
+      
+      setNavigationPath(newNavigationPath);
       setCurrentLevel(previousLevel);
       rotation.set(0);
     }
@@ -470,6 +497,57 @@ export const SpinningTacticalMenu = ({
       return () => window.removeEventListener('keydown', handleEscape);
     }
   }, [isOpen, navigationPath.length]);
+
+  // Initialiser l'historique quand le menu s'ouvre
+  useEffect(() => {
+    if (isOpen) {
+      // Ajouter une entrée initiale dans l'historique
+      window.history.pushState(
+        { 
+          navigationPath: [],
+          currentLevel: 'root',
+          isMenuNavigation: true 
+        },
+        '',
+        window.location.href
+      );
+    }
+  }, [isOpen]);
+
+  // Intercepter l'événement popstate pour gérer le bouton retour
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handlePopState = () => {
+      // Si on est dans un sous-menu, revenir au menu précédent
+      if (navigationPath.length > 0) {
+        const previousLevel = navigationPath[navigationPath.length - 1];
+        const newNavigationPath = navigationPath.slice(0, -1);
+        
+        // Mettre à jour l'état du composant
+        setNavigationPath(newNavigationPath);
+        setCurrentLevel(previousLevel);
+        rotation.set(0);
+        
+        // Synchroniser l'historique avec le nouvel état
+        window.history.replaceState(
+          { 
+            navigationPath: newNavigationPath,
+            currentLevel: previousLevel,
+            isMenuNavigation: true 
+          },
+          '',
+          window.location.href
+        );
+      } else {
+        // Si on est au menu principal, fermer le menu
+        onClose();
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [isOpen, navigationPath, currentLevel, onClose]);
 
   if (!isOpen) return null;
 
