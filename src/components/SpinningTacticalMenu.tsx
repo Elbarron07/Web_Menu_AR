@@ -128,6 +128,7 @@ export const SpinningTacticalMenu = ({
   const [ripplePosition, setRipplePosition] = useState<{ x: number; y: number } | null>(null);
   const [parallaxOffset, setParallaxOffset] = useState({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
+  const centerRef = useRef<{ x: number; y: number } | null>(null);
   
   // Obtenir la catégorie de l'item actuel pour les couleurs
   // Pour les sous-menus, hériter la catégorie du menu principal
@@ -191,9 +192,9 @@ export const SpinningTacticalMenu = ({
   // Motion value pour la rotation avec inertie
   const rotation = useMotionValue(0);
   const springRotation = useSpring(rotation, {
-    damping: 25, // Réduit pour plus d'inertie
-    stiffness: 250, // Réduit pour une rotation plus fluide
-    mass: 0.4, // Réduit pour une réponse plus rapide
+    damping: 20, // Réduit pour plus d'inertie et de fluidité
+    stiffness: 320, // Augmenté pour une réponse plus rapide
+    mass: 0.35, // Réduit pour une réponse plus rapide
   });
   
   // Transform SVG pour la rotation autour du centre
@@ -219,9 +220,8 @@ export const SpinningTacticalMenu = ({
 
   // Gérer le drag pour la rotation
   const [isDragging, setIsDragging] = useState(false);
-  const [lastY, setLastY] = useState(0);
   const [startRotation, setStartRotation] = useState(0);
-  const dragStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
+  const dragStartRef = useRef<{ x: number; y: number; time: number; startAngle?: number } | null>(null);
 
   const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
     e.stopPropagation();
@@ -233,41 +233,56 @@ export const SpinningTacticalMenu = ({
       return;
     }
     
-    setIsDragging(false); // Réinitialiser l'état de drag
-    setLastY(clientY);
+    // Obtenir les coordonnées du centre de la roue à l'écran
+    // Le conteneur de drag est positionné avec left: '2px', top: '50%', transform: 'translate(-50%, -50%)'
+    // Donc le centre réel est à 2px du bord gauche et au milieu vertical
+    const centerXScreen = 2; // 2px du bord gauche (après transform -50%)
+    const centerYScreen = window.innerHeight / 2; // Milieu vertical de l'écran
+    centerRef.current = { x: centerXScreen, y: centerYScreen };
+    
+    // Calculer l'angle initial avec Math.atan2
+    const startAngle = Math.atan2(
+      clientY - centerRef.current.y,
+      clientX - centerRef.current.x
+    );
+    
+    setIsDragging(true); // Démarrer le drag immédiatement
     setStartRotation(rotation.get());
-    dragStartRef.current = { x: clientX, y: clientY, time: Date.now() };
+    dragStartRef.current = { 
+      x: clientX, 
+      y: clientY, 
+      time: Date.now(),
+      startAngle: startAngle
+    };
   };
 
   const handleDragMove = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!dragStartRef.current) return;
+    if (!dragStartRef.current || !centerRef.current || !isDragging) return;
     
+    e.stopPropagation();
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
     
-    if (!isDragging && dragStartRef.current) {
-      const dx = Math.abs(clientX - dragStartRef.current.x);
-      const dy = Math.abs(clientY - dragStartRef.current.y);
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      
-      // Réduire le seuil de 10px à 5px pour une détection plus rapide
-      if (distance > 5) {
-        setIsDragging(true);
-        setLastY(clientY);
-        setStartRotation(rotation.get());
-      } else {
-        return;
-      }
-    }
+    // Calculer l'angle actuel avec Math.atan2
+    const currentAngle = Math.atan2(
+      clientY - centerRef.current.y,
+      clientX - centerRef.current.x
+    );
     
-    if (!isDragging) return;
+    // Calculer la différence d'angle
+    const startAngle = dragStartRef.current.startAngle ?? currentAngle;
+    let angleDelta = currentAngle - startAngle;
     
-    e.stopPropagation();
-    const deltaY = clientY - lastY;
-    // Augmenter la sensibilité de la rotation (multiplicateur de 1.5)
-    const rotationDelta = (deltaY / outerRadius) * (180 / Math.PI) * 1.5;
+    // Normaliser l'angle pour gérer le passage par -π/π
+    if (angleDelta > Math.PI) angleDelta -= 2 * Math.PI;
+    if (angleDelta < -Math.PI) angleDelta += 2 * Math.PI;
+    
+    // Convertir en degrés et appliquer un facteur de sensibilité
+    const sensitivity = 1.3; // Facteur de sensibilité ajustable
+    const rotationDelta = angleDelta * (180 / Math.PI) * sensitivity;
+    
+    // Appliquer la rotation
     rotation.set(startRotation + rotationDelta);
-    setLastY(clientY);
   };
 
   const handleDragEnd = () => {
@@ -276,13 +291,30 @@ export const SpinningTacticalMenu = ({
   };
 
   useEffect(() => {
-    if (!isDragging) return;
+    if (!isDragging || !dragStartRef.current || !centerRef.current) return;
+
+    const sensitivity = 1.3; // Facteur de sensibilité ajustable
 
     const handleMouseMove = (e: MouseEvent) => {
-      const deltaY = e.clientY - lastY;
-      const rotationDelta = (deltaY / outerRadius) * (180 / Math.PI);
+      // Calculer l'angle actuel avec Math.atan2
+      const currentAngle = Math.atan2(
+        e.clientY - centerRef.current!.y,
+        e.clientX - centerRef.current!.x
+      );
+      
+      // Calculer la différence d'angle
+      const startAngle = dragStartRef.current!.startAngle ?? currentAngle;
+      let angleDelta = currentAngle - startAngle;
+      
+      // Normaliser l'angle pour gérer le passage par -π/π
+      if (angleDelta > Math.PI) angleDelta -= 2 * Math.PI;
+      if (angleDelta < -Math.PI) angleDelta += 2 * Math.PI;
+      
+      // Convertir en degrés et appliquer le facteur de sensibilité
+      const rotationDelta = angleDelta * (180 / Math.PI) * sensitivity;
+      
+      // Appliquer la rotation
       rotation.set(startRotation + rotationDelta);
-      setLastY(e.clientY);
     };
 
     const handleMouseUp = () => {
@@ -290,16 +322,32 @@ export const SpinningTacticalMenu = ({
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      if (!isDragging || !dragStartRef.current) return;
+      if (!isDragging || !dragStartRef.current || !centerRef.current) return;
       e.preventDefault();
       e.stopPropagation();
+      
       if (e.touches.length > 0) {
-        const deltaY = e.touches[0].clientY - lastY;
-        if (Math.abs(deltaY) > 2) {
-          const rotationDelta = (deltaY / outerRadius) * (180 / Math.PI);
-          rotation.set(startRotation + rotationDelta);
-          setLastY(e.touches[0].clientY);
-        }
+        const touch = e.touches[0];
+        
+        // Calculer l'angle actuel avec Math.atan2
+        const currentAngle = Math.atan2(
+          touch.clientY - centerRef.current.y,
+          touch.clientX - centerRef.current.x
+        );
+        
+        // Calculer la différence d'angle
+        const startAngle = dragStartRef.current.startAngle ?? currentAngle;
+        let angleDelta = currentAngle - startAngle;
+        
+        // Normaliser l'angle pour gérer le passage par -π/π
+        if (angleDelta > Math.PI) angleDelta -= 2 * Math.PI;
+        if (angleDelta < -Math.PI) angleDelta += 2 * Math.PI;
+        
+        // Convertir en degrés et appliquer le facteur de sensibilité
+        const rotationDelta = angleDelta * (180 / Math.PI) * sensitivity;
+        
+        // Appliquer la rotation
+        rotation.set(startRotation + rotationDelta);
       }
     };
 
@@ -324,7 +372,7 @@ export const SpinningTacticalMenu = ({
       window.removeEventListener('touchend', handleTouchEnd);
       window.removeEventListener('touchcancel', handleTouchCancel);
     };
-  }, [isDragging, lastY, outerRadius, rotation, startRotation]);
+  }, [isDragging, rotation, startRotation]);
 
   // Parallax effect avec deviceorientation
   useEffect(() => {
