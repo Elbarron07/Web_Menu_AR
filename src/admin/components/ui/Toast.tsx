@@ -25,7 +25,7 @@ const iconColorMap = {
 };
 
 export const ToastItem = ({ toast, onClose }: { toast: Toast; onClose: () => void }) => {
-  const Icon = iconMap[toast.type];
+  const Icon = iconMap[toast.type as keyof typeof iconMap];
   
   return (
     <motion.div
@@ -34,13 +34,13 @@ export const ToastItem = ({ toast, onClose }: { toast: Toast; onClose: () => voi
       exit={{ opacity: 0, x: 100, scale: 0.95 }}
       transition={{ duration: 0.2 }}
       className={`
-        ${colorMap[toast.type]}
+        ${colorMap[toast.type as keyof typeof colorMap]}
         pointer-events-auto
         flex items-start gap-3 p-4 rounded-xl border shadow-lg
         min-w-[320px] max-w-md
       `}
     >
-      <Icon className={`w-5 h-5 flex-shrink-0 mt-0.5 ${iconColorMap[toast.type]}`} />
+      <Icon className={`w-5 h-5 flex-shrink-0 mt-0.5 ${iconColorMap[toast.type as keyof typeof iconColorMap]}`} />
       <p className="flex-1 text-sm font-medium">{toast.message}</p>
       <button
         onClick={onClose}
@@ -58,7 +58,7 @@ export const ToastContainer = () => {
   return (
     <div className="fixed top-4 right-4 z-[9999] flex flex-col gap-2 pointer-events-none">
       <AnimatePresence>
-        {toasts.map(toast => (
+        {toasts.map((toast: Toast) => (
           <ToastItem key={toast.id} toast={toast} onClose={() => hideToast(toast.id)} />
         ))}
       </AnimatePresence>

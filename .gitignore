@@ -31,6 +31,4 @@ npm-debug.log*
 
 # Admin components - work in progress (not yet integrated)
 src/admin/components/dashboard/
-src/admin/components/ui/
-src/admin/hooks/useToast.tsx
 src/admin/styles/
