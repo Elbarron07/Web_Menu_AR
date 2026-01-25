@@ -12,7 +12,7 @@ html:not(.ar-mode),
 html:not(.ar-mode) body {
   margin: 0;
   padding: 0;
-  background: #ffffff;
+  background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
   overflow: auto;
   position: relative;
 }
@@ -53,19 +53,19 @@ html.ar-mode #root {
   left: 0;
 }
 
-/* Styles glassmorphism pour éléments HUD */
+/* Styles glassmorphism pour éléments HUD - Version claire */
 .glassmorphism {
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .glassmorphism-badge {
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .glassmorphism-button {
@@ -76,6 +76,24 @@ html.ar-mode #root {
 .glassmorphism-annotation {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+}
+
+/* Glassmorphism clair pour design SAAS moderne */
+.glass-light {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 24px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.12);
 }
 
 /* Assurer que les éléments sont transparents par défaut */
@@ -277,13 +295,22 @@ model-viewer::part(default-ar-button):hover {
   }
 }
 
-/* Premium Glassmorphism Panel */
+/* Premium Glassmorphism Panel - Version claire */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Glassmorphism sombre pour mode AR uniquement */
+html.ar-mode .glass-panel {
+  background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
 }
 
 /* Neon Glow Effects - Category Specific */

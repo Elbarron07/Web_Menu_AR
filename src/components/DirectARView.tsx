@@ -27,6 +27,7 @@ const DirectARView = () => {
     const [showMenu, setShowMenu] = useState(!id);
     const [selectedHotspot, setSelectedHotspot] = useState<any>(null);
     const [showCartFeedback, setShowCartFeedback] = useState(false);
+    const [isARMode, setIsARMode] = useState(false);
 
     useEffect(() => {
         if (product && product.variants && product.variants.length > 0) {
@@ -83,8 +84,23 @@ const DirectARView = () => {
         if (arViewerRef.current && product?.id) {
             analytics.trackARSessionStart(product.id);
             await arViewerRef.current.activateAR();
+            setIsARMode(true);
         }
     };
+
+    // Détecter le mode AR via la classe html.ar-mode
+    useEffect(() => {
+        const checkARMode = () => {
+            setIsARMode(document.documentElement.classList.contains('ar-mode'));
+        };
+        checkARMode();
+        const observer = new MutationObserver(checkARMode);
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['class']
+        });
+        return () => observer.disconnect();
+    }, []);
 
     // Track view 3D when product is loaded
     useEffect(() => {
@@ -189,7 +205,22 @@ const DirectARView = () => {
     }
 
     return (
-        <div className="relative w-screen h-screen overflow-hidden" style={{ background: 'transparent' }}>
+        <div className="relative w-screen h-screen overflow-hidden">
+            {/* Fond hybride : statique clair par défaut, caméra en mode AR */}
+            {!isARMode && (
+                <div 
+                    className="fixed inset-0 z-0 bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100"
+                    style={{
+                        background: 'linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 50%, #E0E7FF 100%)',
+                    }}
+                >
+                    {/* Formes abstraites bleues subtiles */}
+                    <div className="absolute top-20 right-20 w-64 h-64 bg-primary-200/20 rounded-full blur-3xl"></div>
+                    <div className="absolute bottom-20 left-20 w-96 h-96 bg-primary-300/10 rounded-full blur-3xl"></div>
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-primary-100/15 rounded-full blur-3xl"></div>
+                </div>
+            )}
+
             {/* AR Viewer avec model-viewer fullscreen */}
             {product && product.modelUrl && (
                 <ARViewer
@@ -203,30 +234,25 @@ const DirectARView = () => {
                 />
             )}
 
-            {/* Bouton retour au menu */}
+            {/* Bouton retour au menu - Pilule blanche flottante */}
             {product && !showMenu && (
                 <motion.button
                     onClick={() => {
-                        setShowMenu(true);
-                        navigate('/', { replace: true });
+                        window.location.href = '/';
                     }}
-                    className="fixed top-4 left-4 z-[60] glass-panel px-4 py-2 sm:px-6 sm:py-3 rounded-xl backdrop-blur-xl border border-white/20 text-white font-semibold shadow-xl hover:bg-white/20 transition-all pointer-events-auto"
+                    className={`fixed top-4 left-4 z-[60] rounded-full w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shadow-soft transition-all pointer-events-auto ${
+                        isARMode 
+                            ? 'bg-white/10 backdrop-blur-xl border border-white/20 text-white' 
+                            : 'bg-white/90 backdrop-blur-xl border border-white/30 text-primary-600'
+                    }`}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    whileHover={{ scale: 1.05 }}
+                    whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.95 }}
-                    style={{
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        backdropFilter: 'blur(12px)',
-                        WebkitBackdropFilter: 'blur(12px)',
-                    }}
+                    aria-label="Retour au menu précédent"
                 >
-                    <span className="flex items-center gap-2">
-                        <span>←</span>
-                        <span className="hidden sm:inline">Retour au menu</span>
-                        <span className="sm:hidden">Retour</span>
-                    </span>
+                    <span className="text-xl sm:text-2xl">←</span>
                 </motion.button>
             )}
 

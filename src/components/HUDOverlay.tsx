@@ -94,14 +94,20 @@ export const HUDOverlay = ({
                     ease: [0.4, 0, 0.2, 1],
                 }}
             >
-                {/* Top Bar - Product Info Badge avec glassmorphism premium */}
+                {/* Top Bar - Product Info Badge avec glassmorphism clair */}
                 <div className="pointer-events-auto p-4 sm:p-6 relative">
                     <motion.div
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="glass-panel bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-2xl relative overflow-hidden"
+                        className={`backdrop-blur-2xl border rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-2xl relative overflow-hidden ${
+                            isARMode 
+                                ? 'bg-white/15 border-white/20' 
+                                : 'bg-white/80 border-white/30'
+                        }`}
                         style={{
-                            boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37), 0 0 0 1px rgba(255, 255, 255, 0.1)',
+                            boxShadow: isARMode 
+                                ? '0 8px 32px 0 rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.2)' 
+                                : '0 8px 32px 0 rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.3)',
                         }}
                     >
                         {/* Social Proof - Floating Hearts */}
@@ -137,13 +143,10 @@ export const HUDOverlay = ({
                                     </motion.div>
                                 ))}
                                 <motion.span
-                                    className="text-white text-xs sm:text-sm font-bold ml-1"
+                                    className="text-slate-900 text-xs sm:text-sm font-bold ml-1 bg-white/80 backdrop-blur-sm px-2 py-0.5 rounded-full"
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     transition={{ delay: 0.5 }}
-                                    style={{
-                                        textShadow: '0 2px 4px rgba(0,0,0,0.8)',
-                                    }}
                                 >
                                     {displayPopularity}
                                 </motion.span>
@@ -152,11 +155,15 @@ export const HUDOverlay = ({
 
                         <div className="flex justify-between items-start gap-3 sm:gap-4">
                             <div className="flex-1 min-w-0">
-                                <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white drop-shadow-lg truncate uppercase tracking-wide">
+                                <h1 className={`text-xl sm:text-2xl lg:text-3xl font-bold truncate tracking-wide ${
+                                    isARMode ? 'text-white drop-shadow-lg' : 'text-slate-900'
+                                }`}>
                                     {productName}
                                 </h1>
                                 {productDesc && (
-                                    <p className="text-gray-200 text-xs sm:text-sm mt-1 sm:mt-1.5 font-medium line-clamp-2">
+                                    <p className={`text-xs sm:text-sm mt-1 sm:mt-1.5 font-medium line-clamp-2 ${
+                                        isARMode ? 'text-white/90 drop-shadow-md' : 'text-slate-600'
+                                    }`}>
                                         {productDesc}
                                     </p>
                                 )}
@@ -176,11 +183,15 @@ export const HUDOverlay = ({
                                                 repeat: Infinity,
                                                 ease: 'linear',
                                             }}
-                                            className="text-primary-400 text-sm sm:text-base"
+                                            className="text-primary-600 text-sm sm:text-base"
                                         >
                                             ⏱️
                                         </motion.div>
-                                        <span className="text-xs sm:text-sm text-gray-300 font-medium bg-white/10 backdrop-blur-sm px-2 sm:px-3 py-1 rounded-full border border-white/20">
+                                        <span className={`text-xs sm:text-sm font-medium px-2 sm:px-3 py-1 rounded-full border ${
+                                            isARMode 
+                                                ? 'text-white/90 bg-black/30 border-white/20' 
+                                                : 'text-slate-600 bg-slate-100 border-slate-200'
+                                        }`}>
                                             Temps moyen : {preparationTime}
                                         </span>
                                     </motion.div>
@@ -188,18 +199,19 @@ export const HUDOverlay = ({
                             </div>
                             <div className="flex flex-col items-end gap-1 sm:gap-1.5 flex-shrink-0">
                                 <motion.span
-                                    className="text-3xl sm:text-4xl font-black text-primary-400 drop-shadow-lg leading-none"
+                                    className="text-2xl sm:text-3xl font-black text-primary-600 leading-none"
                                     initial={{ scale: 0 }}
                                     animate={{ scale: 1 }}
                                     transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                                    style={{
-                                        textShadow: '0 0 20px rgba(251, 191, 36, 0.6)',
-                                    }}
                                 >
                                     {price.toFixed(2)}€
                                 </motion.span>
                                 {calories && (
-                                    <span className="text-xs text-gray-300 bg-white/10 backdrop-blur-sm px-2 sm:px-3 py-1 rounded-full border border-white/20">
+                                    <span className={`text-xs px-2 sm:px-3 py-1 rounded-full border ${
+                                        isARMode 
+                                            ? 'text-white/90 bg-black/30 border-white/20' 
+                                            : 'text-slate-600 bg-slate-100 border-slate-200'
+                                    }`}>
                                         {calories} kcal
                                     </span>
                                 )}
@@ -220,19 +232,19 @@ export const HUDOverlay = ({
                                 disabled={isARLoading}
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
-                                className={`glass-panel w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl border border-white/30 backdrop-blur-xl shadow-xl font-black text-sm sm:text-base flex items-center justify-center gap-2 sm:gap-3 transition-all ${
+                                className={`w-full sm:w-auto px-6 sm:px-8 py-4 sm:py-5 rounded-3xl font-semibold text-base sm:text-lg flex items-center justify-center gap-2 sm:gap-3 transition-all ${
                                     isARLoading
-                                        ? 'bg-blue-500/70 text-white cursor-wait'
+                                        ? 'bg-primary-500 text-white cursor-wait'
                                         : arError
-                                        ? 'bg-red-500/70 text-white'
+                                        ? 'bg-error-500 text-white'
                                         : isARMode
-                                        ? 'bg-green-500/90 text-white'
-                                        : 'bg-gradient-to-r from-blue-500/90 to-purple-600/90 text-white hover:from-blue-600 hover:to-purple-700'
+                                        ? 'bg-success-500 text-white'
+                                        : 'bg-gradient-to-r from-primary-600 to-primary-700 text-white hover:from-primary-700 hover:to-primary-800'
                                 }`}
                                 style={{
                                     boxShadow: isARMode 
-                                        ? '0 0 30px rgba(34, 197, 94, 0.6)' 
-                                        : '0 8px 32px rgba(0, 0, 0, 0.3)',
+                                        ? '0 0 30px rgba(16, 185, 129, 0.6)' 
+                                        : '0 8px 32px rgba(37, 99, 235, 0.4)',
                                 }}
                             >
                                 {isARLoading ? (
@@ -289,17 +301,23 @@ export const HUDOverlay = ({
                             <motion.button
                                 key={variant.size}
                                 onClick={() => onVariantChange(variant)}
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.95 }}
-                                className={`size-selector-button w-14 h-14 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center font-black backdrop-blur-xl border-2 transition-all shadow-xl ${
-                                    selectedVariant?.size === variant.size
-                                        ? 'bg-white/90 text-black border-white scale-110 shadow-[0_0_30px_rgba(255,255,255,0.5)]'
-                                        : 'bg-black/20 text-white border-white/30 hover:bg-white/10'
-                                }`}
-                                style={{
-                                    backdropFilter: 'blur(20px)',
-                                    WebkitBackdropFilter: 'blur(20px)',
+                                whileHover={{ 
+                                    scale: 1.1,
+                                    transition: { type: 'spring', stiffness: 400, damping: 20 }
                                 }}
+                                whileTap={{ 
+                                    scale: 0.95,
+                                    transition: { type: 'spring', stiffness: 600, damping: 30 }
+                                }}
+                                className={`size-selector-button w-14 h-14 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center font-semibold border-2 transition-all shadow-md ${
+                                    selectedVariant?.size === variant.size
+                                        ? isARMode
+                                            ? 'bg-white/30 text-white border-white/50 scale-110 shadow-[0_0_20px_rgba(255,255,255,0.3)]'
+                                            : 'bg-white text-slate-900 border-primary-600 scale-110 shadow-[0_0_20px_rgba(37,99,235,0.3)]'
+                                        : isARMode
+                                            ? 'bg-black/20 text-white border-white/30 hover:bg-white/10'
+                                            : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-white hover:border-slate-300'
+                                }`}
                             >
                                 <span className="text-xl sm:text-2xl">{variant.size}</span>
                                 {variant.priceModifier > 0 && (
@@ -346,12 +364,14 @@ export const HUDOverlay = ({
                         onClick={onAddToCart}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className="w-full glass-panel bg-gradient-to-r from-primary-600/90 to-primary-700/90 backdrop-blur-xl text-white font-black text-lg sm:text-xl py-4 sm:py-6 rounded-2xl sm:rounded-3xl border border-white/30 shadow-[0_8px_32px_rgba(37,99,235,0.4)] active:shadow-inner flex items-center justify-center gap-2 sm:gap-3 transition-all"
+                        className="w-full bg-slate-900 text-white font-bold text-lg sm:text-xl py-4 sm:py-6 rounded-3xl shadow-2xl active:shadow-inner flex items-center justify-center gap-2 sm:gap-3 transition-all hover:bg-slate-800"
                         style={{
-                            boxShadow: '0 8px 32px rgba(251, 146, 60, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1)',
+                            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
                         }}
                     >
-                        <span className="text-xl sm:text-2xl">🛒</span>
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
                         <span>Commander • {price.toFixed(2)}€</span>
                     </motion.button>
                 </motion.div>

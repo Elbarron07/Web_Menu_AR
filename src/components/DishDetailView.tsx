@@ -32,7 +32,7 @@ const DishDetailView = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 min-h-[600px]">
                     {/* Left: AR Viewer Skeleton */}
                     <div className="relative h-[50vh] lg:h-auto lg:min-h-[600px]">
-                        <SkeletonBox width="100%" height="100%" rounded="xl" className="bg-black/50" />
+                        <SkeletonBox width="100%" height="100%" rounded="xl" className="bg-slate-200" />
                         <div className="absolute inset-0 flex items-center justify-center">
                             <SkeletonCircle size="60px" />
                         </div>
@@ -50,7 +50,7 @@ const DishDetailView = () => {
         );
     }
 
-    if (!product) return <div className="text-center py-20 text-2xl text-white">Produit non trouvé 😢</div>;
+    if (!product) return <div className="text-center py-20 text-2xl text-slate-900">Produit non trouvé 😢</div>;
 
     const handleVariantChange = (variant: any) => {
         setSelectedVariant(variant);
@@ -78,16 +78,17 @@ const DishDetailView = () => {
     };
 
     return (
-        <div className="container mx-auto px-4 py-6 lg:py-12">
-            <button
+        <div className="container mx-auto px-4 py-6 lg:py-12 bg-gradient-to-br from-slate-50 to-blue-50/20 min-h-screen">
+            <motion.button
                 onClick={() => navigate(-1)}
-                className="mb-8 text-gray-400 hover:text-white flex items-center gap-2 group transition-colors"
+                className="mb-8 bg-white/90 backdrop-blur-xl border border-white/30 rounded-full w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center text-primary-600 shadow-soft hover:bg-white hover:scale-110 transition-all"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
             >
-                <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center group-hover:bg-gray-700">
-                    ←
-                </div>
-                <span>Retour au menu</span>
-            </button>
+                <span className="text-xl sm:text-2xl">←</span>
+            </motion.button>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 min-h-[600px]">
                 {/* Left: AR Viewer */}
@@ -118,74 +119,83 @@ const DishDetailView = () => {
                 >
                     <div>
                         <div className="flex justify-between items-start">
-                            <h1 className="text-5xl font-extrabold mb-2 text-white/90">{product.name}</h1>
-                            <div className="bg-primary-500/10 text-primary-500 px-4 py-2 rounded-xl font-bold text-xl border border-primary-500/20">
+                            <h1 className="text-4xl sm:text-5xl font-bold mb-2 text-slate-900">{product.name}</h1>
+                            <div className="bg-primary-600 text-white px-4 py-2 rounded-xl font-bold text-xl shadow-soft">
                                 {currentPrice.toFixed(2)}€
                             </div>
                         </div>
-                        <p className="text-xl text-gray-300 font-medium mt-2">{product.shortDesc}</p>
-                        <p className="text-gray-400 text-lg mt-4 leading-relaxed border-l-4 border-gray-700 pl-4">
+                        <p className="text-xl sm:text-2xl text-slate-700 font-semibold mt-2">{product.shortDesc}</p>
+                        <p className="text-slate-600 text-lg mt-4 leading-relaxed border-l-4 border-primary-200 pl-4">
                             {product.fullDesc}
                         </p>
                     </div>
 
                     {/* Fiche Technique */}
-                    <div className="bg-gray-800/40 p-6 rounded-2xl border border-gray-700/50 backdrop-blur-sm">
-                        <h3 className="font-bold mb-4 text-gray-200 flex items-center gap-2">
+                    <div className="bg-white/80 backdrop-blur-2xl border border-white/30 p-6 rounded-3xl shadow-soft">
+                        <h3 className="font-bold mb-4 text-slate-900 flex items-center gap-2">
                             📊 Info
                         </h3>
                         <div className="grid grid-cols-2 gap-y-4 gap-x-8 text-sm">
-                            <div className="flex justify-between border-b border-gray-700/50 pb-2">
-                                <span className="text-gray-500">Dimensions</span>
-                                <span className="text-white font-medium">{product.dimensions}</span>
+                            <div className="flex justify-between border-b border-slate-200 pb-2">
+                                <span className="text-slate-600">Dimensions</span>
+                                <span className="text-slate-900 font-medium">{product.dimensions}</span>
                             </div>
-                            <div className="flex justify-between border-b border-gray-700/50 pb-2">
-                                <span className="text-gray-500">Calories</span>
-                                <span className="text-white font-medium">{product.nutrition.calories} kcal</span>
+                            <div className="flex justify-between border-b border-slate-200 pb-2">
+                                <span className="text-slate-600">Calories</span>
+                                <span className="text-slate-900 font-medium">{product.nutrition.calories} kcal</span>
                             </div>
                         </div>
                     </div>
 
                     {/* Variants */}
                     <div>
-                        <h3 className="font-bold mb-4 text-gray-200">Choisir la taille</h3>
-                        <div className="flex gap-4">
+                        <h3 className="font-bold mb-4 text-slate-900">Choisir la taille</h3>
+                        <div className="flex gap-4 bg-slate-100 p-1 rounded-2xl">
                             {product.variants.map((variant: any) => (
                                 <button
                                     key={variant.size}
                                     onClick={() => handleVariantChange(variant)}
-                                    className={`flex-1 py-3 px-4 rounded-xl border-2 font-bold transition-all ${selectedVariant?.size === variant.size
-                                            ? 'border-primary-500 bg-primary-500 text-white shadow-lg shadow-primary-500/20 scale-105'
-                                            : 'border-gray-600 text-gray-400 hover:border-gray-400 hover:bg-gray-800'
+                                    className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all ${
+                                        selectedVariant?.size === variant.size
+                                            ? 'bg-white text-slate-900 shadow-md scale-105'
+                                            : 'text-slate-700 hover:text-slate-900'
                                         }`}
                                 >
                                     {variant.size}
+                                    {variant.priceModifier > 0 && (
+                                        <span className="text-xs block mt-1 text-slate-500">
+                                            +{variant.priceModifier.toFixed(0)}€
+                                        </span>
+                                    )}
                                 </button>
                             ))}
                         </div>
                     </div>
 
                     <div className="mt-auto pt-4 hidden lg:block">
-                        <button
+                        <motion.button
                             id="add-btn"
                             onClick={handleAddToCart}
-                            className="w-full bg-white text-black font-extrabold text-lg py-5 rounded-2xl hover:bg-gray-200 transition-all shadow-xl hover:shadow-2xl hover:-translate-y-1 active:scale-95"
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="w-full bg-primary-600 text-white font-bold text-lg py-5 rounded-3xl hover:bg-primary-700 transition-all shadow-[0_8px_32px_rgba(37,99,235,0.4)]"
                         >
                             Ajouter au panier • {currentPrice.toFixed(2)}€
-                        </button>
+                        </motion.button>
                     </div>
                 </motion.div>
             </div>
 
             {/* Mobile Sticky Bar - Hidden on LG screens */}
             <div className="lg:hidden fixed bottom-6 left-4 right-4 z-50">
-                <button
+                <motion.button
                     id="mobile-add-btn"
                     onClick={handleAddToCart}
-                    className="w-full bg-white text-black font-extrabold text-lg py-4 rounded-2xl shadow-2xl active:scale-95 transition-transform border-2 border-white/20"
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full bg-primary-600 text-white font-bold text-lg py-4 rounded-3xl shadow-2xl transition-transform"
                 >
                     Ajouter • {currentPrice.toFixed(2)}€
-                </button>
+                </motion.button>
             </div>
         </div>
     );

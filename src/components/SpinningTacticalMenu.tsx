@@ -19,21 +19,21 @@ interface SpinningTacticalMenuProps {
   onClose: () => void;
 }
 
-// Fonction pour obtenir les couleurs par catégorie avec glassmorphism premium
+// Fonction pour obtenir les couleurs par catégorie avec glassmorphism premium - Version claire
 const getCategoryColor = (category: string) => {
-  const colorMap: Record<string, { fill: string; stroke: string; glow: string; hoverFill: string; neonClass: string }> = {
-    'Pizza': { fill: 'rgba(255, 255, 255, 0.1)', stroke: 'rgba(255, 107, 53, 0.4)', glow: 'rgba(255, 107, 53, 0.8)', hoverFill: 'rgba(255, 107, 53, 0.2)', neonClass: 'neon-glow-pizza' },
-    'Hamburger': { fill: 'rgba(255, 255, 255, 0.1)', stroke: 'rgba(212, 165, 116, 0.4)', glow: 'rgba(212, 165, 116, 0.8)', hoverFill: 'rgba(212, 165, 116, 0.2)', neonClass: 'neon-glow-hamburger' },
-    'Chawarma': { fill: 'rgba(255, 255, 255, 0.1)', stroke: 'rgba(255, 140, 0, 0.4)', glow: 'rgba(255, 140, 0, 0.8)', hoverFill: 'rgba(255, 140, 0, 0.2)', neonClass: 'neon-glow-chawarma' },
-    'Tacos': { fill: 'rgba(255, 255, 255, 0.1)', stroke: 'rgba(255, 215, 0, 0.4)', glow: 'rgba(255, 215, 0, 0.8)', hoverFill: 'rgba(255, 215, 0, 0.2)', neonClass: 'neon-glow-tacos' },
-    'Sushi': { fill: 'rgba(255, 255, 255, 0.1)', stroke: 'rgba(32, 178, 170, 0.4)', glow: 'rgba(32, 178, 170, 0.8)', hoverFill: 'rgba(32, 178, 170, 0.2)', neonClass: 'neon-glow-sushi' },
-    'Pâtes': { fill: 'rgba(255, 255, 255, 0.1)', stroke: 'rgba(220, 20, 60, 0.4)', glow: 'rgba(220, 20, 60, 0.8)', hoverFill: 'rgba(220, 20, 60, 0.2)', neonClass: 'neon-glow-pates' },
-    'Salade': { fill: 'rgba(255, 255, 255, 0.1)', stroke: 'rgba(152, 251, 152, 0.4)', glow: 'rgba(152, 251, 152, 0.8)', hoverFill: 'rgba(152, 251, 152, 0.2)', neonClass: 'neon-glow-salade' },
-    'Desserts': { fill: 'rgba(255, 255, 255, 0.1)', stroke: 'rgba(218, 112, 214, 0.4)', glow: 'rgba(218, 112, 214, 0.8)', hoverFill: 'rgba(218, 112, 214, 0.2)', neonClass: 'neon-glow-desserts' },
-    'Boissons': { fill: 'rgba(255, 255, 255, 0.1)', stroke: 'rgba(0, 206, 209, 0.4)', glow: 'rgba(0, 206, 209, 0.8)', hoverFill: 'rgba(0, 206, 209, 0.2)', neonClass: 'neon-glow-boissons' },
-    'Plats': { fill: 'rgba(255, 255, 255, 0.1)', stroke: 'rgba(255, 215, 0, 0.4)', glow: 'rgba(255, 215, 0, 0.8)', hoverFill: 'rgba(255, 215, 0, 0.2)', neonClass: 'neon-glow-plats' },
+  const colorMap: Record<string, { fill: string; stroke: string; glow: string; hoverFill: string; neonClass: string; activeFill: string }> = {
+    'Pizza': { fill: 'rgba(255, 255, 255, 0.7)', stroke: 'rgba(255, 107, 53, 0.3)', glow: 'rgba(255, 107, 53, 0.6)', hoverFill: 'rgba(255, 107, 53, 0.15)', neonClass: 'neon-glow-pizza', activeFill: '#2563EB' },
+    'Hamburger': { fill: 'rgba(255, 255, 255, 0.7)', stroke: 'rgba(212, 165, 116, 0.3)', glow: 'rgba(212, 165, 116, 0.6)', hoverFill: 'rgba(212, 165, 116, 0.15)', neonClass: 'neon-glow-hamburger', activeFill: '#2563EB' },
+    'Chawarma': { fill: 'rgba(255, 255, 255, 0.7)', stroke: 'rgba(255, 140, 0, 0.3)', glow: 'rgba(255, 140, 0, 0.6)', hoverFill: 'rgba(255, 140, 0, 0.15)', neonClass: 'neon-glow-chawarma', activeFill: '#2563EB' },
+    'Tacos': { fill: 'rgba(255, 255, 255, 0.7)', stroke: 'rgba(255, 215, 0, 0.3)', glow: 'rgba(255, 215, 0, 0.6)', hoverFill: 'rgba(255, 215, 0, 0.15)', neonClass: 'neon-glow-tacos', activeFill: '#2563EB' },
+    'Sushi': { fill: 'rgba(255, 255, 255, 0.7)', stroke: 'rgba(32, 178, 170, 0.3)', glow: 'rgba(32, 178, 170, 0.6)', hoverFill: 'rgba(32, 178, 170, 0.15)', neonClass: 'neon-glow-sushi', activeFill: '#2563EB' },
+    'Pâtes': { fill: 'rgba(255, 255, 255, 0.7)', stroke: 'rgba(220, 20, 60, 0.3)', glow: 'rgba(220, 20, 60, 0.6)', hoverFill: 'rgba(220, 20, 60, 0.15)', neonClass: 'neon-glow-pates', activeFill: '#2563EB' },
+    'Salade': { fill: 'rgba(255, 255, 255, 0.7)', stroke: 'rgba(152, 251, 152, 0.3)', glow: 'rgba(152, 251, 152, 0.6)', hoverFill: 'rgba(152, 251, 152, 0.15)', neonClass: 'neon-glow-salade', activeFill: '#2563EB' },
+    'Desserts': { fill: 'rgba(255, 255, 255, 0.7)', stroke: 'rgba(218, 112, 214, 0.3)', glow: 'rgba(218, 112, 214, 0.6)', hoverFill: 'rgba(218, 112, 214, 0.15)', neonClass: 'neon-glow-desserts', activeFill: '#2563EB' },
+    'Boissons': { fill: 'rgba(255, 255, 255, 0.7)', stroke: 'rgba(0, 206, 209, 0.3)', glow: 'rgba(0, 206, 209, 0.6)', hoverFill: 'rgba(0, 206, 209, 0.15)', neonClass: 'neon-glow-boissons', activeFill: '#2563EB' },
+    'Plats': { fill: 'rgba(255, 255, 255, 0.7)', stroke: 'rgba(255, 215, 0, 0.3)', glow: 'rgba(255, 215, 0, 0.6)', hoverFill: 'rgba(255, 215, 0, 0.15)', neonClass: 'neon-glow-plats', activeFill: '#2563EB' },
   };
-  return colorMap[category] || { fill: 'rgba(255, 255, 255, 0.05)', stroke: 'rgba(255, 255, 255, 0.2)', glow: 'rgba(255, 255, 255, 0.3)', hoverFill: 'rgba(255, 255, 255, 0.1)', neonClass: '' };
+  return colorMap[category] || { fill: 'rgba(255, 255, 255, 0.7)', stroke: 'rgba(37, 99, 235, 0.3)', glow: 'rgba(37, 99, 235, 0.6)', hoverFill: 'rgba(37, 99, 235, 0.15)', neonClass: '', activeFill: '#2563EB' };
 };
 
 // Fonction pour convertir un angle en coordonnées
@@ -576,13 +576,13 @@ export const SpinningTacticalMenu = ({
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-[100] pointer-events-none"
         >
-          {/* Overlay avec glassmorphism premium */}
+          {/* Overlay avec glassmorphism premium - Version claire */}
           <div
             className="absolute inset-0 pointer-events-auto"
             style={{
-              background: 'linear-gradient(135deg, rgba(255, 107, 53, 0.2) 0%, rgba(255, 165, 0, 0.2) 50%, rgba(255, 215, 0, 0.15) 100%)',
-              backdropFilter: 'blur(24px)',
-              WebkitBackdropFilter: 'blur(24px)',
+              background: 'linear-gradient(135deg, rgba(37, 99, 235, 0.05) 0%, rgba(59, 130, 246, 0.03) 50%, rgba(147, 197, 253, 0.02) 100%)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
             }}
             onClick={onClose}
           />
@@ -605,8 +605,9 @@ export const SpinningTacticalMenu = ({
               exit={{ x: -outerRadius, scale: 0.8, opacity: 0 }}
               transition={{ 
                 type: 'spring', 
-                damping: 20, 
-                stiffness: 300,
+                damping: 22, 
+                stiffness: 320,
+                mass: 0.35,
                 opacity: { duration: 0.3 }
               }}
             >
@@ -711,17 +712,17 @@ export const SpinningTacticalMenu = ({
                           />
                         )}
                         
-                        {/* Segment principal avec glassmorphism */}
+                        {/* Segment principal avec glassmorphism blanc */}
                         <motion.path
                           d={path}
-                          fill={isHovered || isSelected ? colors.hoverFill : colors.fill}
-                          stroke={colors.stroke}
+                          fill={isSelected ? colors.activeFill : (isHovered ? colors.hoverFill : colors.fill)}
+                          stroke={isSelected ? '#2563EB' : colors.stroke}
                           strokeWidth={isHovered || isSelected ? '2.5' : '1.5'}
                           className={`cursor-pointer transition-all ${isHovered ? colors.neonClass : ''}`}
                           style={{
-                            backdropFilter: 'blur(12px)',
-                            WebkitBackdropFilter: 'blur(12px)',
-                            filter: isHovered ? 'drop-shadow(0 0 8px ' + colors.glow + ')' : 'none',
+                            backdropFilter: 'blur(20px)',
+                            WebkitBackdropFilter: 'blur(20px)',
+                            filter: isSelected ? 'drop-shadow(0 0 20px rgba(37, 99, 235, 0.4))' : (isHovered ? 'drop-shadow(0 0 8px ' + colors.glow + ')' : 'none'),
                             pointerEvents: 'auto',
                           }}
                           onClick={(e) => {
@@ -749,13 +750,19 @@ export const SpinningTacticalMenu = ({
                           }}
                           onMouseEnter={() => setHoveredItem(segment.item.id)}
                           onMouseLeave={() => setHoveredItem(null)}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
+                          whileHover={{ 
+                            scale: 1.05,
+                            transition: { type: 'spring', stiffness: 400, damping: 20 }
+                          }}
+                          whileTap={{ 
+                            scale: 0.95,
+                            transition: { type: 'spring', stiffness: 600, damping: 30 }
+                          }}
                           animate={isSelected ? { 
-                            scale: 1.15,
-                            filter: `drop-shadow(0 0 12px ${colors.glow})`,
+                            scale: 1.1,
+                            filter: 'drop-shadow(0 0 20px rgba(37, 99, 235, 0.4))',
                           } : {}}
-                          transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                          transition={{ type: 'spring', stiffness: 400, damping: 25, duration: 0.3 }}
                         />
                         
                         {/* Ripple effect */}
@@ -793,7 +800,7 @@ export const SpinningTacticalMenu = ({
                               y="-15"
                               textAnchor="middle"
                               dominantBaseline="middle"
-                              fill="white"
+                              fill={isSelected ? "white" : (isHovered ? colors.stroke : "#1F2937")}
                               fontSize="36"
                               className="select-none pointer-events-none"
                               custom={segment.index}
@@ -801,9 +808,8 @@ export const SpinningTacticalMenu = ({
                               initial="hidden"
                               animate="visible"
                               style={{ 
-                                fontFamily: 'Fredoka One, cursive',
-                                filter: isHovered ? 'drop-shadow(0 0 12px rgba(255,255,255,0.9))' : 'drop-shadow(0 2px 4px rgba(0,0,0,0.8))',
-                                textShadow: '0 0 8px rgba(255,255,255,0.5)',
+                                fontFamily: 'Inter, sans-serif',
+                                filter: isSelected ? 'drop-shadow(0 0 12px rgba(255,255,255,0.9))' : (isHovered ? 'drop-shadow(0 0 8px ' + colors.glow + ')' : 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))'),
                               }}
                             >
                               {segment.item.icon}
@@ -814,18 +820,18 @@ export const SpinningTacticalMenu = ({
                             y="12"
                             textAnchor="middle"
                             dominantBaseline="middle"
-                            fill={isHovered ? colors.stroke : 'white'}
+                            fill={isSelected ? "white" : (isHovered ? colors.stroke : "#1F2937")}
                             fontSize="14"
-                            fontWeight="bold"
+                            fontWeight="600"
                             className="select-none pointer-events-none"
                             style={{ 
-                              fontFamily: 'Comfortaa, sans-serif',
-                              textShadow: '0 2px 8px rgba(0,0,0,0.9)',
+                              fontFamily: 'Inter, sans-serif',
+                              textShadow: isSelected ? '0 2px 8px rgba(0,0,0,0.3)' : 'none',
                               textTransform: 'uppercase',
                               letterSpacing: '0.05em',
                             }}
                             animate={isHovered ? { scale: 1.1 } : { scale: 1 }}
-                            transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                            transition={{ type: 'spring', stiffness: 400, damping: 20, duration: 0.25 }}
                           >
                             {segment.item.label}
                           </motion.text>
@@ -835,17 +841,16 @@ export const SpinningTacticalMenu = ({
                               y="28"
                               textAnchor="middle"
                               dominantBaseline="middle"
-                              fill="rgba(255, 255, 255, 0.95)"
+                              fill={isSelected ? "rgba(255, 255, 255, 0.95)" : "#6B7280"}
                               fontSize="11"
                               fontWeight="600"
                               className="select-none pointer-events-none"
                               style={{ 
-                                fontFamily: 'Comfortaa, sans-serif',
-                                textShadow: '0 1px 4px rgba(0,0,0,0.9)',
-                                backdropFilter: 'blur(4px)',
+                                fontFamily: 'Inter, sans-serif',
+                                textShadow: isSelected ? '0 1px 4px rgba(0,0,0,0.3)' : 'none',
                               }}
                               animate={isHovered ? { scale: 1.05 } : { scale: 1 }}
-                              transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                              transition={{ type: 'spring', stiffness: 400, damping: 20, duration: 0.25 }}
                             >
                               {segment.item.price}
                             </motion.text>
@@ -867,72 +872,74 @@ export const SpinningTacticalMenu = ({
                     cx={centerX}
                     cy={centerY}
                     r={innerRadius}
-                    fill="rgba(255, 255, 255, 0.05)"
-                    stroke="rgba(255, 215, 0, 0.4)"
+                    fill={navigationPath.length > 0 ? "rgba(37, 99, 235, 0.9)" : "rgba(255, 255, 255, 0.8)"}
+                    stroke={navigationPath.length > 0 ? "#2563EB" : "rgba(37, 99, 235, 0.3)"}
                     strokeWidth="2"
                     clipPath="url(#halfCircleClip)"
                     className="cursor-pointer"
                     style={{
                       backdropFilter: 'blur(24px)',
                       WebkitBackdropFilter: 'blur(24px)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      border: '1px solid rgba(255, 255, 255, 0.3)',
                       pointerEvents: 'auto',
+                      boxShadow: navigationPath.length > 0 ? '0 0 20px rgba(37, 99, 235, 0.4)' : '0 4px 20px rgba(0, 0, 0, 0.1)',
                     }}
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleBack();
+                      if (navigationPath.length > 0) {
+                        handleBack();
+                      }
                     }}
                     onTouchStart={(e) => {
                       e.stopPropagation();
                     }}
                     whileHover={{ 
-                      fill: 'rgba(255, 140, 0, 0.15)', 
-                      stroke: 'rgba(255, 215, 0, 0.8)',
+                      fill: navigationPath.length > 0 ? 'rgba(37, 99, 235, 1)' : 'rgba(255, 255, 255, 0.9)', 
+                      stroke: navigationPath.length > 0 ? '#2563EB' : 'rgba(37, 99, 235, 0.5)',
                       scale: 1.05
                     }}
                     whileTap={{ scale: 0.95 }}
-                    animate={{ 
-                      stroke: navigationPath.length > 0 ? 'rgba(255, 107, 53, 0.6)' : 'rgba(255, 215, 0, 0.4)'
-                    }}
                     transition={{ type: 'spring', stiffness: 300, damping: 25 }}
                   />
-                  {/* Effet de pulse sur le bouton central */}
-                  <motion.circle
-                    cx={centerX}
-                    cy={centerY}
-                    r={innerRadius}
-                    fill="none"
-                    stroke="rgba(255, 215, 0, 0.3)"
-                    strokeWidth="2"
-                    clipPath="url(#halfCircleClip)"
-                    className="pointer-events-none"
-                    animate={{ 
-                      scale: [1, 1.1, 1],
-                      opacity: [0.3, 0.6, 0.3]
-                    }}
-                    transition={{ 
-                      duration: 2,
-                      repeat: Infinity,
-                      ease: 'easeInOut'
-                    }}
-                  />
+                  {/* Effet de pulse sur le bouton central - seulement si navigationPath */}
+                  {navigationPath.length > 0 && (
+                    <motion.circle
+                      cx={centerX}
+                      cy={centerY}
+                      r={innerRadius}
+                      fill="none"
+                      stroke="rgba(37, 99, 235, 0.3)"
+                      strokeWidth="2"
+                      clipPath="url(#halfCircleClip)"
+                      className="pointer-events-none"
+                      animate={{ 
+                        scale: [1, 1.1, 1],
+                        opacity: [0.3, 0.6, 0.3]
+                      }}
+                      transition={{ 
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: 'easeInOut'
+                      }}
+                    />
+                  )}
                   <text
                     x={centerX + innerRadius / 2}
                     y={centerY - 10}
                     textAnchor="middle"
                     dominantBaseline="middle"
-                    fill="white"
+                    fill={navigationPath.length > 0 ? "white" : "#1F2937"}
                     fontSize="16"
                     fontWeight="bold"
                     className="select-none pointer-events-none"
                     style={{ 
-                      fontFamily: 'Fredoka One, cursive',
-                      textShadow: '0 2px 8px rgba(0,0,0,0.9)',
+                      fontFamily: 'Inter, sans-serif',
+                      textShadow: navigationPath.length > 0 ? '0 2px 8px rgba(0,0,0,0.3)' : 'none',
                       textTransform: 'uppercase',
                       letterSpacing: '0.1em',
                     }}
                   >
-                    {navigationPath.length > 0 ? '← RETOUR' : '🍽️ MENU'}
+                    {navigationPath.length > 0 ? '← RETOUR' : 'MENU'}
                   </text>
                   {navigationPath.length > 0 && (
                     <text
@@ -940,12 +947,12 @@ export const SpinningTacticalMenu = ({
                       y={centerY + 10}
                       textAnchor="middle"
                       dominantBaseline="middle"
-                      fill="rgba(255, 255, 255, 0.8)"
+                      fill="rgba(255, 255, 255, 0.9)"
                       fontSize="11"
                       className="select-none pointer-events-none"
                       style={{ 
-                        fontFamily: 'Comfortaa, sans-serif',
-                        textShadow: '0 1px 4px rgba(0,0,0,0.9)'
+                        fontFamily: 'Inter, sans-serif',
+                        textShadow: '0 1px 4px rgba(0,0,0,0.3)'
                       }}
                     >
                       {currentLevelTitle}
@@ -957,12 +964,11 @@ export const SpinningTacticalMenu = ({
                       y={centerY + 10}
                       textAnchor="middle"
                       dominantBaseline="middle"
-                      fill="rgba(255, 215, 0, 0.9)"
+                      fill="#6B7280"
                       fontSize="10"
                       className="select-none pointer-events-none"
                       style={{ 
-                        fontFamily: 'Comfortaa, sans-serif',
-                        textShadow: '0 1px 4px rgba(0,0,0,0.9)'
+                        fontFamily: 'Inter, sans-serif',
                       }}
                     >
                       Bienvenue !
