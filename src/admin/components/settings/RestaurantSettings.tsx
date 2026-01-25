@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Save, Upload } from 'lucide-react';
-import { supabase } from '../../../lib/supabase';
+import { adminApi } from '../../../lib/adminApi';
 import { storageService } from '../../../lib/storage';
 
 const settingsSchema = z.object({
@@ -38,16 +38,7 @@ export const RestaurantSettings = () => {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const { data, error } = await supabase
-          .from('restaurant_settings')
-          .select('*')
-          .limit(1)
-          .maybeSingle();
-
-        if (error && error.code !== 'PGRST116') {
-          console.error('Error fetching settings:', error);
-          return;
-        }
+        const data = await adminApi.settings.getSettings();
 
         if (data) {
           setValue('name', data.name || '');
@@ -83,18 +74,12 @@ export const RestaurantSettings = () => {
 
   const onSubmit = async (data: SettingsFormData) => {
     try {
-      const { error } = await supabase
-        .from('restaurant_settings')
-        .upsert({
-          name: data.name,
-          logo_url: data.logo_url || null,
-          theme_color: data.theme_color,
-          qr_code_base_url: data.qr_code_base_url || null,
-        }, {
-          onConflict: 'id',
-        });
-
-      if (error) throw error;
+      await adminApi.settings.updateSettings({
+        name: data.name,
+        logo_url: data.logo_url || undefined,
+        theme_color: data.theme_color,
+        qr_code_base_url: data.qr_code_base_url || undefined,
+      });
       alert('Paramètres sauvegardés avec succès');
     } catch (error: any) {
       alert(`Erreur : ${error.message}`);

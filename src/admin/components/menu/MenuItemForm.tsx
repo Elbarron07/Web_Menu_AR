@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X } from 'lucide-react';
+import { X, Package } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -7,7 +7,8 @@ import { useMenuAdmin } from '../../hooks/useMenuAdmin';
 import { storageService } from '../../../lib/storage';
 import type { MenuItem } from '../../../hooks/useMenu';
 import { VariantManager } from './VariantManager';
-import { supabase } from '../../../lib/supabase';
+import { ModelUploader } from '../assets/ModelUploader';
+import { HotspotEditor } from '../assets/HotspotEditor';
 
 const menuItemSchema = z.object({
   id: z.string().min(1, 'ID requis'),
@@ -36,13 +37,14 @@ export const MenuItemForm = ({ item, onClose, onSuccess }: MenuItemFormProps) =>
   const { createMenuItem, updateMenuItem } = useMenuAdmin();
   const [uploadingImage, setUploadingImage] = useState(false);
   const [variants, setVariants] = useState(item?.variants || []);
-  const hotspots = item?.hotspots || [];
+  const [hotspots, setHotspots] = useState<Array<{ slot: string; pos: string; label: string; detail: string }>>(item?.hotspots || []);
 
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
     setValue,
+    watch,
   } = useForm<MenuItemFormData>({
     resolver: zodResolver(menuItemSchema),
     defaultValues: item ? {
@@ -107,66 +109,14 @@ export const MenuItemForm = ({ item, onClose, onSuccess }: MenuItemFormProps) =>
           allergenes: data.allergenes,
           temps: data.temps,
         },
+        variants,
+        hotspots,
       };
-
-      const menuItemId = item ? item.id : data.id;
 
       if (item) {
         await updateMenuItem(item.id, menuItemData);
       } else {
-        await createMenuItem(menuItemData);
-      }
-
-      // Gérer les variantes
-      if (variants.length > 0) {
-        // Supprimer les anciennes variantes
-        if (item) {
-          await supabase
-            .from('menu_item_variants')
-            .delete()
-            .eq('menu_item_id', menuItemId);
-        }
-
-        // Insérer les nouvelles variantes
-        const variantsToInsert = variants.map((v) => ({
-          menu_item_id: menuItemId,
-          size: v.size,
-          label: v.label,
-          price_modifier: v.priceModifier,
-          scale: v.scale,
-        }));
-
-        const { error: variantsError } = await supabase
-          .from('menu_item_variants')
-          .insert(variantsToInsert);
-
-        if (variantsError) throw variantsError;
-      }
-
-      // Gérer les hotspots
-      if (hotspots.length > 0) {
-        // Supprimer les anciens hotspots
-        if (item) {
-          await supabase
-            .from('menu_item_hotspots')
-            .delete()
-            .eq('menu_item_id', menuItemId);
-        }
-
-        // Insérer les nouveaux hotspots
-        const hotspotsToInsert = hotspots.map((h) => ({
-          menu_item_id: menuItemId,
-          slot: h.slot,
-          pos: h.pos,
-          label: h.label,
-          detail: h.detail,
-        }));
-
-        const { error: hotspotsError } = await supabase
-          .from('menu_item_hotspots')
-          .insert(hotspotsToInsert);
-
-        if (hotspotsError) throw hotspotsError;
+        await createMenuItem(menuItemData as Partial<MenuItem> & { id: string });
       }
 
       onSuccess();
@@ -293,13 +243,16 @@ export const MenuItemForm = ({ item, onClose, onSuccess }: MenuItemFormProps) =>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Modèle 3D (.glb)
+            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+              <Package className="w-4 h-4" />
+              Modèle 3D (.glb / .gltf)
             </label>
-            <input
-              {...register('modelUrl')}
-              placeholder="/assets/models/pizza.glb"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+            <p className="text-sm text-gray-500 mb-2">
+              Téléversez un fichier .glb ou .gltf pour le modèle 3D du plat.
+            </p>
+            <ModelUploader
+              onUploadComplete={(url) => setValue('modelUrl', url || '')}
+              currentUrl={watch('modelUrl') || ''}
             />
           </div>
 
@@ -338,25 +291,22 @@ export const MenuItemForm = ({ item, onClose, onSuccess }: MenuItemFormProps) =>
 
           <VariantManager variants={variants} onChange={setVariants} />
 
-          <div className="border border-gray-200 rounded-lg p-4">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Hotspots</h3>
-            <p className="text-sm text-gray-600 mb-4">
-              Les hotspots peuvent être configurés dans l'Asset Manager après l'upload du modèle 3D.
-            </p>
-            {hotspots.length > 0 && (
-              <div className="space-y-2">
-                {hotspots.map((hotspot, index) => (
-                  <div
-                    key={index}
-                    className="p-3 bg-gray-50 rounded-lg text-sm"
-                  >
-                    <p className="font-medium">{hotspot.label}</p>
-                    <p className="text-gray-600">{hotspot.pos}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          {watch('modelUrl') && (
+            <div className="border border-gray-200 rounded-lg p-4">
+              <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
+                <Package className="w-5 h-5" />
+                Éditeur de hotspots
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Cliquez sur le modèle 3D pour placer des points d'intérêt interactifs.
+              </p>
+              <HotspotEditor
+                modelUrl={watch('modelUrl') || ''}
+                hotspots={hotspots}
+                onChange={setHotspots}
+              />
+            </div>
+          )}
 
           <div className="flex justify-end gap-4 pt-4 border-t border-gray-200">
             <button

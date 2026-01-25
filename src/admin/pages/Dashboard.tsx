@@ -1,4 +1,5 @@
 import { useMenu } from '../../hooks/useMenu';
+import { useAnalytics } from '../hooks/useAnalytics';
 import { Package, UtensilsCrossed, Eye, ShoppingCart, Sparkles, Clock, User, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { StatCard } from '../components/ui/StatCard';
@@ -6,9 +7,34 @@ import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Table } from '../components/ui/Table';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { formatDistanceToNow } from 'date-fns';
 
 export const Dashboard = () => {
-  const { menuItems, loading } = useMenu();
+  const { menuItems, loading: menuLoading } = useMenu();
+  const { data: analyticsData, loading: analyticsLoading } = useAnalytics(7);
+
+  // Format number with thousands separator
+  const formatNumber = (num: number) => {
+    return num.toLocaleString('fr-FR');
+  };
+
+  // Get activity icon and color based on event type
+  const getActivityInfo = (type: string) => {
+    switch (type) {
+      case 'view_3d':
+        return { icon: Eye, color: 'text-amber-600 bg-amber-50', title: 'Vue AR' };
+      case 'add_to_cart':
+        return { icon: ShoppingCart, color: 'text-green-600 bg-green-50', title: 'Ajout au panier' };
+      case 'ar_session_start':
+        return { icon: User, color: 'text-blue-600 bg-blue-50', title: 'Session AR démarrée' };
+      case 'ar_session_end':
+        return { icon: Clock, color: 'text-purple-600 bg-purple-50', title: 'Session AR terminée' };
+      case 'hotspot_click':
+        return { icon: FileText, color: 'text-orange-600 bg-orange-50', title: 'Hotspot cliqué' };
+      default:
+        return { icon: FileText, color: 'text-gray-600 bg-gray-50', title: 'Activité' };
+    }
+  };
 
   // KPI Stats
   const stats = [
@@ -30,7 +56,7 @@ export const Dashboard = () => {
     },
     {
       label: 'Vues AR (7j)',
-      value: '1,234',
+      value: analyticsData ? formatNumber(analyticsData.totalViews) : '...',
       icon: Eye,
       iconColor: 'bg-success-500',
       trend: { value: '+21%', direction: 'up' as const },
@@ -38,7 +64,7 @@ export const Dashboard = () => {
     },
     {
       label: 'Ajouts panier',
-      value: '341',
+      value: analyticsData ? formatNumber(analyticsData.totalCarts) : '...',
       icon: ShoppingCart,
       iconColor: 'bg-warning-500',
       trend: { value: '+8%', direction: 'up' as const },
@@ -46,7 +72,8 @@ export const Dashboard = () => {
     },
   ];
 
-  // Monthly Revenue Data (mock data for now)
+  // Monthly Revenue Data (placeholder - no orders table yet)
+  // TODO: Connect to orders table when available
   const monthlyRevenue = [
     { month: 'Mar', revenue: 12000 },
     { month: 'Avr', revenue: 13500 },
@@ -59,13 +86,22 @@ export const Dashboard = () => {
     { month: 'Nov', revenue: 16000 },
   ];
 
-  // Activities (mock data)
-  const activities = [
-    { icon: User, title: 'Nouveau client', time: 'Il y a 2 min', color: 'text-blue-600 bg-blue-50' },
-    { icon: FileText, title: 'Nouvelle commande', time: 'Il y a 15 min', color: 'text-green-600 bg-green-50' },
-    { icon: Package, title: 'Modèle 3D uploadé', time: 'Il y a 1h', color: 'text-purple-600 bg-purple-50' },
-    { icon: Eye, title: 'Vue AR complétée', time: 'Il y a 2h', color: 'text-amber-600 bg-amber-50' },
-  ];
+  // Activities from analytics
+  const activities = analyticsData?.recentActivities?.slice(0, 4).map((activity) => {
+    const info = getActivityInfo(activity.type);
+    const Icon = info.icon;
+    const timeAgo = formatDistanceToNow(new Date(activity.created_at), {
+      addSuffix: true,
+    });
+    return {
+      icon: Icon,
+      title: activity.menu_item_name
+        ? `${info.title}: ${activity.menu_item_name}`
+        : info.title,
+      time: timeAgo,
+      color: info.color,
+    };
+  }) || [];
 
   // Recent Items Table
   const recentItemsColumns = [
@@ -79,7 +115,7 @@ export const Dashboard = () => {
     ) },
   ];
 
-  if (loading) {
+  if (menuLoading || analyticsLoading) {
     return <div className="text-center py-12 text-gray-600">Chargement...</div>;
   }
 
@@ -114,7 +150,7 @@ export const Dashboard = () => {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-xl font-bold text-gray-900">Revenus mensuels</h2>
-                <p className="text-sm text-gray-500 mt-1">Évolution sur 9 mois</p>
+                <p className="text-sm text-gray-500 mt-1">Évolution sur 9 mois (Données indicatives - à connecter avec table orders)</p>
               </div>
               <Badge variant="success" size="sm" trend="up">
                 +12%
