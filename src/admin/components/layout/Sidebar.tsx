@@ -5,7 +5,9 @@ import {
   Package, 
   BarChart3, 
   Settings,
-  LogOut
+  LogOut,
+  Users,
+  Database
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -14,6 +16,8 @@ const menuItems = [
   { path: '/admin/menu', icon: UtensilsCrossed, label: 'Menu' },
   { path: '/admin/assets', icon: Package, label: 'Assets 3D' },
   { path: '/admin/analytics', icon: BarChart3, label: 'Analytics' },
+  { path: '/admin/customers', icon: Users, label: 'Clients' },
+  { path: '/admin/data-analytics', icon: Database, label: 'Données' },
   { path: '/admin/settings', icon: Settings, label: 'Paramètres' },
 ];
 
@@ -22,42 +26,51 @@ export const Sidebar = () => {
   const { signOut } = useAuth();
 
   return (
-    <div className="w-64 bg-gray-900 text-white min-h-screen flex flex-col">
-      <div className="p-6 border-b border-gray-800">
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">
-          Admin Panel
-        </h1>
+    <div className="w-64 bg-background-sidebar min-h-screen flex flex-col border-r border-gray-200">
+      {/* Logo/Branding */}
+      <div className="p-6 border-b border-gray-200">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center shadow-soft">
+            <LayoutDashboard className="w-6 h-6 text-white" />
+          </div>
+          <h1 className="text-xl font-bold text-gray-900">
+            Admin
+          </h1>
+        </div>
       </div>
 
-      <nav className="flex-1 p-4 space-y-2">
+      {/* Navigation */}
+      <nav className="flex-1 p-4 space-y-1">
         {menuItems.map((item) => {
           const Icon = item.icon;
-          const isActive = location.pathname === item.path;
+          const isActive = location.pathname === item.path || 
+            (item.path === '/admin' && location.pathname === '/admin');
           
           return (
             <Link
               key={item.path}
               to={item.path}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
                 isActive
-                  ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                  ? 'bg-primary-600 text-white shadow-soft'
+                  : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
               }`}
             >
               <Icon className="w-5 h-5" />
-              <span className="font-medium">{item.label}</span>
+              <span className="font-medium text-sm">{item.label}</span>
             </Link>
           );
         })}
       </nav>
 
-      <div className="p-4 border-t border-gray-800">
+      {/* Logout */}
+      <div className="p-4 border-t border-gray-200">
         <button
           onClick={signOut}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors"
         >
           <LogOut className="w-5 h-5" />
-          <span className="font-medium">Déconnexion</span>
+          <span className="font-medium text-sm">Déconnexion</span>
         </button>
       </div>
     </div>

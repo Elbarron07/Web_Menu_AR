@@ -176,7 +176,7 @@ export const HUDOverlay = ({
                                                 repeat: Infinity,
                                                 ease: 'linear',
                                             }}
-                                            className="text-amber-400 text-sm sm:text-base"
+                                            className="text-primary-400 text-sm sm:text-base"
                                         >
                                             ⏱️
                                         </motion.div>
@@ -188,7 +188,7 @@ export const HUDOverlay = ({
                             </div>
                             <div className="flex flex-col items-end gap-1 sm:gap-1.5 flex-shrink-0">
                                 <motion.span
-                                    className="text-3xl sm:text-4xl font-black text-amber-400 drop-shadow-lg leading-none"
+                                    className="text-3xl sm:text-4xl font-black text-primary-400 drop-shadow-lg leading-none"
                                     initial={{ scale: 0 }}
                                     animate={{ scale: 1 }}
                                     transition={{ type: 'spring', stiffness: 300, damping: 20 }}
@@ -346,7 +346,7 @@ export const HUDOverlay = ({
                         onClick={onAddToCart}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className="w-full glass-panel bg-gradient-to-r from-amber-500/90 to-orange-600/90 backdrop-blur-xl text-white font-black text-lg sm:text-xl py-4 sm:py-6 rounded-2xl sm:rounded-3xl border border-white/30 shadow-[0_8px_32px_rgba(251,146,60,0.4)] active:shadow-inner flex items-center justify-center gap-2 sm:gap-3 transition-all"
+                        className="w-full glass-panel bg-gradient-to-r from-primary-600/90 to-primary-700/90 backdrop-blur-xl text-white font-black text-lg sm:text-xl py-4 sm:py-6 rounded-2xl sm:rounded-3xl border border-white/30 shadow-[0_8px_32px_rgba(37,99,235,0.4)] active:shadow-inner flex items-center justify-center gap-2 sm:gap-3 transition-all"
                         style={{
                             boxShadow: '0 8px 32px rgba(251, 146, 60, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1)',
                         }}

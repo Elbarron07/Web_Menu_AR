@@ -1,6 +1,7 @@
 import { Settings as SettingsIcon } from 'lucide-react';
 import { RestaurantSettings } from '../components/settings/RestaurantSettings';
 import { QRCodeGenerator } from '../components/settings/QRCodeGenerator';
+import { Card } from '../components/ui/Card';
 
 export const Settings = () => {
   return (
@@ -13,8 +14,12 @@ export const Settings = () => {
         <p className="text-gray-600">Configurez votre restaurant et générez des QR Codes</p>
       </div>
 
-      <RestaurantSettings />
-      <QRCodeGenerator />
+      <Card variant="default" padding="lg">
+        <RestaurantSettings />
+      </Card>
+      <Card variant="default" padding="lg">
+        <QRCodeGenerator />
+      </Card>
     </div>
   );
 };

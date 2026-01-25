@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Package, Upload } from 'lucide-react';
 import { ModelUploader } from '../components/assets/ModelUploader';
 import { HotspotEditor } from '../components/assets/HotspotEditor';
+import { Card } from '../components/ui/Card';
 
 export const AssetManager = () => {
   const [modelUrl, setModelUrl] = useState('');
@@ -15,11 +16,14 @@ export const AssetManager = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Asset Manager 3D</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+          <Package className="w-8 h-8" />
+          Asset Manager 3D
+        </h1>
         <p className="text-gray-600">Gérez vos modèles 3D et configurez les hotspots</p>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <Card variant="default" padding="lg">
         <div className="mb-6">
           <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
             <Upload className="w-6 h-6" />
@@ -50,7 +54,7 @@ export const AssetManager = () => {
             />
           </div>
         )}
-      </div>
+      </Card>
     </div>
   );
 };

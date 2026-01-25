@@ -7,6 +7,8 @@ import { MenuManagement } from './pages/MenuManagement';
 import { AssetManager } from './pages/AssetManager';
 import { Analytics } from './pages/Analytics';
 import { Settings } from './pages/Settings';
+import { CustomerTracking } from './pages/CustomerTracking';
+import { DataAnalytics } from './pages/DataAnalytics';
 
 export const AdminRoutes = () => {
   return (
@@ -68,6 +70,26 @@ export const AdminRoutes = () => {
           <ProtectedRoute>
             <AdminLayout>
               <Settings />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="customers"
+        element={
+          <ProtectedRoute>
+            <AdminLayout>
+              <CustomerTracking />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="data-analytics"
+        element={
+          <ProtectedRoute>
+            <AdminLayout>
+              <DataAnalytics />
             </AdminLayout>
           </ProtectedRoute>
         }

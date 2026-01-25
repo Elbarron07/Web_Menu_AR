@@ -119,7 +119,7 @@ const DishDetailView = () => {
                     <div>
                         <div className="flex justify-between items-start">
                             <h1 className="text-5xl font-extrabold mb-2 text-white/90">{product.name}</h1>
-                            <div className="bg-amber-500/10 text-amber-500 px-4 py-2 rounded-xl font-bold text-xl border border-amber-500/20">
+                            <div className="bg-primary-500/10 text-primary-500 px-4 py-2 rounded-xl font-bold text-xl border border-primary-500/20">
                                 {currentPrice.toFixed(2)}€
                             </div>
                         </div>
@@ -155,7 +155,7 @@ const DishDetailView = () => {
                                     key={variant.size}
                                     onClick={() => handleVariantChange(variant)}
                                     className={`flex-1 py-3 px-4 rounded-xl border-2 font-bold transition-all ${selectedVariant?.size === variant.size
-                                            ? 'border-amber-500 bg-amber-500 text-black shadow-lg shadow-amber-500/20 scale-105'
+                                            ? 'border-primary-500 bg-primary-500 text-white shadow-lg shadow-primary-500/20 scale-105'
                                             : 'border-gray-600 text-gray-400 hover:border-gray-400 hover:bg-gray-800'
                                         }`}
                                 >

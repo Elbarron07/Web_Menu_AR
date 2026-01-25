@@ -29,10 +29,10 @@ export const HotspotInfo = ({ name, detail, position, index }: HotspotInfoProps)
             >
                 <div className="relative">
                     {/* Icône "+" ou point d'intérêt */}
-                    <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full shadow-[0_0_20px_rgba(251,191,36,0.8)] flex items-center justify-center relative z-10 border-2 border-white/50">
+                    <div className="w-8 h-8 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full shadow-[0_0_20px_rgba(37,99,235,0.8)] flex items-center justify-center relative z-10 border-2 border-white/50">
                         <span className="text-white font-black text-lg leading-none">+</span>
                         {/* Animation de pulsation */}
-                        <div className="absolute inset-0 bg-amber-300 rounded-full opacity-60 animate-ping"></div>
+                        <div className="absolute inset-0 bg-primary-300 rounded-full opacity-60 animate-ping"></div>
                     </div>
                 </div>
             </button>

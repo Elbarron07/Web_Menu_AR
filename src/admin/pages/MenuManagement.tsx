@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, UtensilsCrossed } from 'lucide-react';
 import { useMenuAdmin } from '../hooks/useMenuAdmin';
 import { MenuItemForm } from '../components/menu/MenuItemForm';
 import { MenuItemTable } from '../components/menu/MenuItemTable';
+import { Card } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
 import type { MenuItem } from '../../hooks/useMenu';
 
 export const MenuManagement = () => {
@@ -49,19 +51,21 @@ export const MenuManagement = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Gestion du Menu</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+            <UtensilsCrossed className="w-8 h-8" />
+            Gestion du Menu
+          </h1>
           <p className="text-gray-600">Créez et gérez vos plats</p>
         </div>
-        <button
+        <Button
+          icon={<Plus className="w-5 h-5" />}
           onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg"
         >
-          <Plus className="w-5 h-5" />
           Ajouter un plat
-        </button>
+        </Button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <Card variant="default" padding="lg">
         <div className="flex gap-4 mb-6">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -70,13 +74,13 @@ export const MenuManagement = () => {
               placeholder="Rechercher un plat..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+              className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
           </div>
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+            className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           >
             <option value="all">Toutes les catégories</option>
             {categories.map((cat) => (
@@ -92,7 +96,7 @@ export const MenuManagement = () => {
           onEdit={handleEdit}
           onDelete={handleDelete}
         />
-      </div>
+      </Card>
 
       {showForm && (
         <MenuItemForm
