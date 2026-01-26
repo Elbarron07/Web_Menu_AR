@@ -25,7 +25,7 @@ export const useMenuAdmin = () => {
     fetchMenuItems();
   }, []);
 
-  const createMenuItem = async (itemData: Partial<MenuItem> & { id: string }) => {
+  const createMenuItem = async (itemData: Partial<MenuItem> & { id: string; categoryId: string }) => {
     try {
       await adminApi.menu.createMenuItem(itemData);
       await fetchMenuItems();

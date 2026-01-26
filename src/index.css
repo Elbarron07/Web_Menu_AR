@@ -313,48 +313,7 @@ html.ar-mode .glass-panel {
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
 }
 
-/* Neon Glow Effects - Category Specific */
-.neon-glow-pizza {
-  box-shadow: 0 0 20px rgba(255, 107, 53, 0.6), 0 0 40px rgba(255, 107, 53, 0.4), 0 0 60px rgba(255, 107, 53, 0.2);
-}
-
-.neon-glow-hamburger {
-  box-shadow: 0 0 20px rgba(212, 165, 116, 0.6), 0 0 40px rgba(212, 165, 116, 0.4), 0 0 60px rgba(212, 165, 116, 0.2);
-}
-
-.neon-glow-chawarma {
-  box-shadow: 0 0 20px rgba(255, 140, 0, 0.6), 0 0 40px rgba(255, 140, 0, 0.4), 0 0 60px rgba(255, 140, 0, 0.2);
-}
-
-.neon-glow-tacos {
-  box-shadow: 0 0 20px rgba(255, 215, 0, 0.6), 0 0 40px rgba(255, 215, 0, 0.4), 0 0 60px rgba(255, 215, 0, 0.2);
-}
-
-.neon-glow-sushi {
-  box-shadow: 0 0 20px rgba(32, 178, 170, 0.6), 0 0 40px rgba(32, 178, 170, 0.4), 0 0 60px rgba(32, 178, 170, 0.2);
-}
-
-.neon-glow-pates {
-  box-shadow: 0 0 20px rgba(220, 20, 60, 0.6), 0 0 40px rgba(220, 20, 60, 0.4), 0 0 60px rgba(220, 20, 60, 0.2);
-}
-
-.neon-glow-salade {
-  box-shadow: 0 0 20px rgba(152, 251, 152, 0.6), 0 0 40px rgba(152, 251, 152, 0.4), 0 0 60px rgba(152, 251, 152, 0.2);
-}
-
-.neon-glow-desserts {
-  box-shadow: 0 0 20px rgba(218, 112, 214, 0.6), 0 0 40px rgba(218, 112, 214, 0.4), 0 0 60px rgba(218, 112, 214, 0.2);
-}
-
-.neon-glow-boissons {
-  box-shadow: 0 0 20px rgba(0, 206, 209, 0.6), 0 0 40px rgba(0, 206, 209, 0.4), 0 0 60px rgba(0, 206, 209, 0.2);
-}
-
-.neon-glow-plats {
-  box-shadow: 0 0 20px rgba(255, 215, 0, 0.6), 0 0 40px rgba(255, 215, 0, 0.4), 0 0 60px rgba(255, 215, 0, 0.2);
-}
-
-/* Breathing Animation for Neon Glows */
+/* Breathing Animation for Neon Glows (category colors now from BDD) */
 @keyframes breathing-glow {
   0%, 100% {
     opacity: 0.6;

@@ -106,7 +106,7 @@ export const Dashboard = () => {
   // Recent Items Table
   const recentItemsColumns = [
     { key: 'name', header: 'Nom', accessor: (item: any) => item.name },
-    { key: 'category', header: 'Catégorie', accessor: (item: any) => item.category },
+    { key: 'category', header: 'Catégorie', accessor: (item: any) => item.category?.name ?? '-' },
     { key: 'price', header: 'Prix', render: (item: any) => `${item.price.toFixed(2)}€` },
     { key: 'status', header: 'Statut', render: (item: any) => (
       <Badge variant={item.modelUrl ? 'success' : 'warning'} size="sm">

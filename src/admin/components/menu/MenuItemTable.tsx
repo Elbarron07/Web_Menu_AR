@@ -61,7 +61,7 @@ export const MenuItemTable = ({ items, onEdit, onDelete }: MenuItemTableProps) =
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded">
-                  {item.category}
+                  {item.category?.icon ?? '🍽️'} {item.category?.name ?? '-'}
                 </span>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">

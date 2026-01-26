@@ -9,31 +9,28 @@ interface MenuItem {
   price?: string;
 }
 
+export interface CategoryStyles {
+  strokeRgba: string;
+  glowRgba: string;
+}
+
 interface SpinningTacticalMenuProps {
   menuData: {
     root: MenuItem[];
     [key: string]: MenuItem[];
   };
+  categoryStyles?: Record<string, CategoryStyles>;
   onSelectItem?: (itemId: string, path: string[]) => void;
   isOpen: boolean;
   onClose: () => void;
 }
 
-// Fonction pour obtenir les couleurs par catégorie avec glassmorphism premium - Version claire
-const getCategoryColor = (category: string) => {
-  const colorMap: Record<string, { fill: string; stroke: string; glow: string; hoverFill: string; neonClass: string; activeFill: string }> = {
-    'Pizza': { fill: 'rgba(255, 255, 255, 0.7)', stroke: 'rgba(255, 107, 53, 0.3)', glow: 'rgba(255, 107, 53, 0.6)', hoverFill: 'rgba(255, 107, 53, 0.15)', neonClass: 'neon-glow-pizza', activeFill: '#2563EB' },
-    'Hamburger': { fill: 'rgba(255, 255, 255, 0.7)', stroke: 'rgba(212, 165, 116, 0.3)', glow: 'rgba(212, 165, 116, 0.6)', hoverFill: 'rgba(212, 165, 116, 0.15)', neonClass: 'neon-glow-hamburger', activeFill: '#2563EB' },
-    'Chawarma': { fill: 'rgba(255, 255, 255, 0.7)', stroke: 'rgba(255, 140, 0, 0.3)', glow: 'rgba(255, 140, 0, 0.6)', hoverFill: 'rgba(255, 140, 0, 0.15)', neonClass: 'neon-glow-chawarma', activeFill: '#2563EB' },
-    'Tacos': { fill: 'rgba(255, 255, 255, 0.7)', stroke: 'rgba(255, 215, 0, 0.3)', glow: 'rgba(255, 215, 0, 0.6)', hoverFill: 'rgba(255, 215, 0, 0.15)', neonClass: 'neon-glow-tacos', activeFill: '#2563EB' },
-    'Sushi': { fill: 'rgba(255, 255, 255, 0.7)', stroke: 'rgba(32, 178, 170, 0.3)', glow: 'rgba(32, 178, 170, 0.6)', hoverFill: 'rgba(32, 178, 170, 0.15)', neonClass: 'neon-glow-sushi', activeFill: '#2563EB' },
-    'Pâtes': { fill: 'rgba(255, 255, 255, 0.7)', stroke: 'rgba(220, 20, 60, 0.3)', glow: 'rgba(220, 20, 60, 0.6)', hoverFill: 'rgba(220, 20, 60, 0.15)', neonClass: 'neon-glow-pates', activeFill: '#2563EB' },
-    'Salade': { fill: 'rgba(255, 255, 255, 0.7)', stroke: 'rgba(152, 251, 152, 0.3)', glow: 'rgba(152, 251, 152, 0.6)', hoverFill: 'rgba(152, 251, 152, 0.15)', neonClass: 'neon-glow-salade', activeFill: '#2563EB' },
-    'Desserts': { fill: 'rgba(255, 255, 255, 0.7)', stroke: 'rgba(218, 112, 214, 0.3)', glow: 'rgba(218, 112, 214, 0.6)', hoverFill: 'rgba(218, 112, 214, 0.15)', neonClass: 'neon-glow-desserts', activeFill: '#2563EB' },
-    'Boissons': { fill: 'rgba(255, 255, 255, 0.7)', stroke: 'rgba(0, 206, 209, 0.3)', glow: 'rgba(0, 206, 209, 0.6)', hoverFill: 'rgba(0, 206, 209, 0.15)', neonClass: 'neon-glow-boissons', activeFill: '#2563EB' },
-    'Plats': { fill: 'rgba(255, 255, 255, 0.7)', stroke: 'rgba(255, 215, 0, 0.3)', glow: 'rgba(255, 215, 0, 0.6)', hoverFill: 'rgba(255, 215, 0, 0.15)', neonClass: 'neon-glow-plats', activeFill: '#2563EB' },
-  };
-  return colorMap[category] || { fill: 'rgba(255, 255, 255, 0.7)', stroke: 'rgba(37, 99, 235, 0.3)', glow: 'rgba(37, 99, 235, 0.6)', hoverFill: 'rgba(37, 99, 235, 0.15)', neonClass: '', activeFill: '#2563EB' };
+const DEFAULT_COLORS = {
+  fill: 'rgba(255, 255, 255, 0.7)',
+  stroke: 'rgba(37, 99, 235, 0.3)',
+  glow: 'rgba(37, 99, 235, 0.6)',
+  hoverFill: 'rgba(37, 99, 235, 0.15)',
+  activeFill: '#2563EB',
 };
 
 // Fonction pour convertir un angle en coordonnées
@@ -120,6 +117,7 @@ export const SpinningTacticalMenu = ({
   onSelectItem,
   isOpen,
   onClose,
+  categoryStyles = {},
 }: SpinningTacticalMenuProps) => {
   const [currentLevel, setCurrentLevel] = useState<string>('root');
   const [navigationPath, setNavigationPath] = useState<string[]>([]);
@@ -129,7 +127,13 @@ export const SpinningTacticalMenu = ({
   const [parallaxOffset, setParallaxOffset] = useState({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
   const centerRef = useRef<{ x: number; y: number } | null>(null);
-  
+
+  const getColors = (category: string) => {
+    const s = categoryStyles[category];
+    if (s) return { ...DEFAULT_COLORS, stroke: s.strokeRgba, glow: s.glowRgba };
+    return DEFAULT_COLORS;
+  };
+
   // Obtenir la catégorie de l'item actuel pour les couleurs
   // Pour les sous-menus, hériter la catégorie du menu principal
   const getItemCategory = (itemId: string): string => {
@@ -679,7 +683,7 @@ export const SpinningTacticalMenu = ({
                     const labelPos = angleToCoords(segment.midAngle, labelRadius, centerX, centerY);
                     
                     const category = getItemCategory(segment.item.id);
-                    const colors = getCategoryColor(category);
+                    const colors = getColors(category);
 
                     return (
                       <motion.g 
@@ -718,7 +722,7 @@ export const SpinningTacticalMenu = ({
                           fill={isSelected ? colors.activeFill : (isHovered ? colors.hoverFill : colors.fill)}
                           stroke={isSelected ? '#2563EB' : colors.stroke}
                           strokeWidth={isHovered || isSelected ? '2.5' : '1.5'}
-                          className={`cursor-pointer transition-all ${isHovered ? colors.neonClass : ''}`}
+                          className="cursor-pointer transition-all"
                           style={{
                             backdropFilter: 'blur(20px)',
                             WebkitBackdropFilter: 'blur(20px)',

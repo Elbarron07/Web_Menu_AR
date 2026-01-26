@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { Plus, Search, UtensilsCrossed } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Plus, Search, UtensilsCrossed, FolderOpen } from 'lucide-react';
 import { useMenuAdmin } from '../hooks/useMenuAdmin';
+import { useCategories } from '../hooks/useCategories';
 import { MenuItemForm } from '../components/menu/MenuItemForm';
 import { MenuItemTable } from '../components/menu/MenuItemTable';
 import { Card } from '../components/ui/Card';
@@ -9,17 +11,16 @@ import type { MenuItem } from '../../hooks/useMenu';
 
 export const MenuManagement = () => {
   const { menuItems, loading, deleteMenuItem } = useMenuAdmin();
+  const { categories, loading: categoriesLoading } = useCategories();
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all');
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
-
-  const categories = Array.from(new Set(menuItems.map((item) => item.category)));
 
   const filteredItems = menuItems.filter((item) => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.shortDesc.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
+    const matchesCategory = selectedCategoryId === 'all' || item.categoryId === selectedCategoryId;
     return matchesSearch && matchesCategory;
   });
 
@@ -43,9 +44,11 @@ export const MenuManagement = () => {
     setEditingItem(null);
   };
 
-  if (loading) {
+  if (loading || categoriesLoading) {
     return <div className="text-center py-12 text-gray-600">Chargement...</div>;
   }
+
+  const canAddPlat = categories.length > 0;
 
   return (
     <div className="space-y-6">
@@ -57,13 +60,33 @@ export const MenuManagement = () => {
           </h1>
           <p className="text-gray-600">Créez et gérez vos plats</p>
         </div>
-        <Button
-          icon={<Plus className="w-5 h-5" />}
-          onClick={() => setShowForm(true)}
-        >
-          Ajouter un plat
-        </Button>
+        {canAddPlat ? (
+          <Button
+            icon={<Plus className="w-5 h-5" />}
+            onClick={() => setShowForm(true)}
+          >
+            Ajouter un plat
+          </Button>
+        ) : (
+          <Link to="/admin/categories">
+            <Button icon={<FolderOpen className="w-5 h-5" />} variant="secondary">
+              Créer d&apos;abord une catégorie
+            </Button>
+          </Link>
+        )}
       </div>
+
+      {!canAddPlat && (
+        <Card variant="default" padding="lg" className="bg-amber-50 border-amber-200">
+          <p className="text-amber-800">
+            Aucune catégorie. Créez-en une dans{' '}
+            <Link to="/admin/categories" className="font-semibold text-primary-600 hover:underline">
+              Catégories
+            </Link>{' '}
+            avant d&apos;ajouter des plats.
+          </p>
+        </Card>
+      )}
 
       <Card variant="default" padding="lg">
         <div className="flex gap-4 mb-6">
@@ -78,14 +101,14 @@ export const MenuManagement = () => {
             />
           </div>
           <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
+            value={selectedCategoryId}
+            onChange={(e) => setSelectedCategoryId(e.target.value)}
             className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           >
             <option value="all">Toutes les catégories</option>
             {categories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
+              <option key={cat.id} value={cat.id}>
+                {cat.icon} {cat.name}
               </option>
             ))}
           </select>
@@ -98,9 +121,10 @@ export const MenuManagement = () => {
         />
       </Card>
 
-      {showForm && (
+      {showForm && canAddPlat && (
         <MenuItemForm
           item={editingItem}
+          categories={categories}
           onClose={handleCloseForm}
           onSuccess={handleCloseForm}
         />

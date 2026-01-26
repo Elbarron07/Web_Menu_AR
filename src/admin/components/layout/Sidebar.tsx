@@ -7,12 +7,14 @@ import {
   Settings,
   LogOut,
   Users,
-  Database
+  Database,
+  FolderOpen
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
 const menuItems = [
   { path: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
+  { path: '/admin/categories', icon: FolderOpen, label: 'Catégories' },
   { path: '/admin/menu', icon: UtensilsCrossed, label: 'Menu' },
   { path: '/admin/assets', icon: Package, label: 'Assets 3D' },
   { path: '/admin/analytics', icon: BarChart3, label: 'Analytics' },

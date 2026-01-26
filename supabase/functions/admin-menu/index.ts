@@ -33,12 +33,19 @@ serve(async (req) => {
 
     const method = req.method;
 
-    // GET: List all menu items with variants and hotspots
+    // GET: List all menu items with variants, hotspots, and category (join menu_categories)
     if (method === 'GET') {
+      const { data: categories, error: catError } = await supabaseAdmin
+        .from('menu_categories')
+        .select('*')
+        .order('display_order', { ascending: true });
+
+      if (catError) throw catError;
+
       const { data: items, error: itemsError } = await supabaseAdmin
         .from('menu_items')
         .select('*')
-        .order('category', { ascending: true });
+        .order('name', { ascending: true });
 
       if (itemsError) throw itemsError;
 
@@ -54,36 +61,57 @@ serve(async (req) => {
 
       if (hotspotsError) throw hotspotsError;
 
-      // Combine data
-      const menuData = (items || []).map((item: any) => ({
-        id: item.id,
-        name: item.name,
-        category: item.category,
-        shortDesc: item.short_desc,
-        fullDesc: item.full_desc,
-        price: parseFloat(item.price),
-        image2D: item.image_2d,
-        modelUrl: item.model_url,
-        dimensions: item.dimensions,
-        nutrition: item.nutrition,
-        status: item.status,
-        variants: (variants || [])
-          .filter((v: any) => v.menu_item_id === item.id)
-          .map((v: any) => ({
-            size: v.size,
-            label: v.label,
-            priceModifier: parseFloat(v.price_modifier),
-            scale: v.scale,
-          })),
-        hotspots: (hotspots || [])
-          .filter((h: any) => h.menu_item_id === item.id)
-          .map((h: any) => ({
-            slot: h.slot,
-            pos: h.pos,
-            label: h.label,
-            detail: h.detail,
-          })),
-      }));
+      const catMap = new Map((categories || []).map((c: any) => [c.id, c]));
+
+      const menuData = (items || [])
+        .map((item: any) => {
+          const cat = item.category_id ? catMap.get(item.category_id) : null;
+          return {
+            id: item.id,
+            name: item.name,
+            categoryId: item.category_id,
+            category: cat
+              ? {
+                  id: cat.id,
+                  name: cat.name,
+                  icon: cat.icon,
+                  strokeRgba: cat.stroke_rgba,
+                  glowRgba: cat.glow_rgba,
+                  displayOrder: cat.display_order,
+                }
+              : null,
+            shortDesc: item.short_desc,
+            fullDesc: item.full_desc,
+            price: parseFloat(item.price),
+            image2D: item.image_2d,
+            modelUrl: item.model_url,
+            dimensions: item.dimensions,
+            nutrition: item.nutrition,
+            status: item.status,
+            variants: (variants || [])
+              .filter((v: any) => v.menu_item_id === item.id)
+              .map((v: any) => ({
+                size: v.size,
+                label: v.label,
+                priceModifier: parseFloat(v.price_modifier),
+                scale: v.scale,
+              })),
+            hotspots: (hotspots || [])
+              .filter((h: any) => h.menu_item_id === item.id)
+              .map((h: any) => ({
+                slot: h.slot,
+                pos: h.pos,
+                label: h.label,
+                detail: h.detail,
+              })),
+          };
+        })
+        .sort((a: any, b: any) => {
+          const oA = a.category?.displayOrder ?? 9999;
+          const oB = b.category?.displayOrder ?? 9999;
+          if (oA !== oB) return oA - oB;
+          return (a.name || '').localeCompare(b.name || '');
+        });
 
       return new Response(JSON.stringify(menuData), {
         status: 200,
@@ -91,13 +119,14 @@ serve(async (req) => {
       });
     }
 
-    // POST: Create new menu item
+    // POST: Create new menu item (categoryId required)
     if (method === 'POST') {
       const body = await req.json();
       const {
         id,
         name,
-        category,
+        categoryId,
+        category_id,
         shortDesc,
         fullDesc,
         price,
@@ -109,13 +138,20 @@ serve(async (req) => {
         hotspots = [],
       } = body;
 
-      // Insert menu item
+      const catId = categoryId ?? category_id;
+      if (!catId) {
+        return new Response(JSON.stringify({ error: 'categoryId is required' }), {
+          status: 400,
+          headers: { ...corsHeaders(origin), 'Content-Type': 'application/json' },
+        });
+      }
+
       const { data: newItem, error: itemError } = await supabaseAdmin
         .from('menu_items')
         .insert({
           id,
           name,
-          category,
+          category_id: catId,
           short_desc: shortDesc,
           full_desc: fullDesc,
           price,
@@ -170,13 +206,14 @@ serve(async (req) => {
       });
     }
 
-    // PATCH: Update menu item
+    // PATCH: Update menu item (categoryId optional)
     if (method === 'PATCH') {
       const body = await req.json();
       const {
         id: itemId,
         name,
-        category,
+        categoryId,
+        category_id,
         shortDesc,
         fullDesc,
         price,
@@ -195,20 +232,21 @@ serve(async (req) => {
         });
       }
 
-      // Update menu item
+      const updates: Record<string, unknown> = {};
+      if (name !== undefined) updates.name = name;
+      if (shortDesc !== undefined) updates.short_desc = shortDesc;
+      if (fullDesc !== undefined) updates.full_desc = fullDesc;
+      if (price !== undefined) updates.price = price;
+      if (image2D !== undefined) updates.image_2d = image2D;
+      if (modelUrl !== undefined) updates.model_url = modelUrl || null;
+      if (dimensions !== undefined) updates.dimensions = dimensions;
+      if (nutrition !== undefined) updates.nutrition = nutrition;
+      const catId = categoryId ?? category_id;
+      if (catId !== undefined && catId !== null) updates.category_id = catId;
+
       const { error: itemError } = await supabaseAdmin
         .from('menu_items')
-        .update({
-          name,
-          category,
-          short_desc: shortDesc,
-          full_desc: fullDesc,
-          price,
-          image_2d: image2D,
-          model_url: modelUrl || null,
-          dimensions,
-          nutrition,
-        })
+        .update(updates)
         .eq('id', itemId);
 
       if (itemError) throw itemError;

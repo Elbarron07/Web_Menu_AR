@@ -3,6 +3,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { AdminLayout } from './components/layout/AdminLayout';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
+import { Categories } from './pages/Categories';
 import { MenuManagement } from './pages/MenuManagement';
 import { AssetManager } from './pages/AssetManager';
 import { Analytics } from './pages/Analytics';
@@ -30,6 +31,16 @@ export const AdminRoutes = () => {
           <ProtectedRoute>
             <AdminLayout>
               <Dashboard />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="categories"
+        element={
+          <ProtectedRoute>
+            <AdminLayout>
+              <Categories />
             </AdminLayout>
           </ProtectedRoute>
         }

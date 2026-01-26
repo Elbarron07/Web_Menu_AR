@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { useMenuAdmin } from '../../hooks/useMenuAdmin';
 import { storageService } from '../../../lib/storage';
 import type { MenuItem } from '../../../hooks/useMenu';
+import type { MenuCategory } from '../../../lib/adminApi';
 import { VariantManager } from './VariantManager';
 import { ModelUploader } from '../assets/ModelUploader';
 import { HotspotEditor } from '../assets/HotspotEditor';
@@ -13,7 +14,7 @@ import { HotspotEditor } from '../assets/HotspotEditor';
 const menuItemSchema = z.object({
   id: z.string().min(1, 'ID requis'),
   name: z.string().min(1, 'Nom requis'),
-  category: z.string().min(1, 'Catégorie requise'),
+  categoryId: z.string().min(1, 'Catégorie requise'),
   shortDesc: z.string().min(1, 'Description courte requise'),
   fullDesc: z.string().min(1, 'Description complète requise'),
   price: z.number().min(0, 'Prix doit être positif'),
@@ -29,11 +30,12 @@ type MenuItemFormData = z.infer<typeof menuItemSchema>;
 
 interface MenuItemFormProps {
   item?: MenuItem | null;
+  categories: MenuCategory[];
   onClose: () => void;
   onSuccess: () => void;
 }
 
-export const MenuItemForm = ({ item, onClose, onSuccess }: MenuItemFormProps) => {
+export const MenuItemForm = ({ item, categories, onClose, onSuccess }: MenuItemFormProps) => {
   const { createMenuItem, updateMenuItem } = useMenuAdmin();
   const [uploadingImage, setUploadingImage] = useState(false);
   const [variants, setVariants] = useState(item?.variants || []);
@@ -50,7 +52,7 @@ export const MenuItemForm = ({ item, onClose, onSuccess }: MenuItemFormProps) =>
     defaultValues: item ? {
       id: item.id,
       name: item.name,
-      category: item.category,
+      categoryId: item.categoryId,
       shortDesc: item.shortDesc,
       fullDesc: item.fullDesc,
       price: item.price,
@@ -63,7 +65,7 @@ export const MenuItemForm = ({ item, onClose, onSuccess }: MenuItemFormProps) =>
     } : {
       id: '',
       name: '',
-      category: '',
+      categoryId: categories[0]?.id ?? '',
       shortDesc: '',
       fullDesc: '',
       price: 0,
@@ -97,7 +99,7 @@ export const MenuItemForm = ({ item, onClose, onSuccess }: MenuItemFormProps) =>
       const menuItemData = {
         id: data.id,
         name: data.name,
-        category: data.category,
+        categoryId: data.categoryId,
         shortDesc: data.shortDesc,
         fullDesc: data.fullDesc,
         price: data.price,
@@ -116,7 +118,7 @@ export const MenuItemForm = ({ item, onClose, onSuccess }: MenuItemFormProps) =>
       if (item) {
         await updateMenuItem(item.id, menuItemData);
       } else {
-        await createMenuItem(menuItemData as Partial<MenuItem> & { id: string });
+        await createMenuItem(menuItemData as Partial<MenuItem> & { id: string; categoryId: string });
       }
 
       onSuccess();
@@ -171,11 +173,18 @@ export const MenuItemForm = ({ item, onClose, onSuccess }: MenuItemFormProps) =>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Catégorie *
               </label>
-              <input
-                {...register('category')}
+              <select
+                {...register('categoryId')}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
-              />
-              {errors.category && <p className="text-red-500 text-sm mt-1">{errors.category.message}</p>}
+              >
+                <option value="">Sélectionner une catégorie</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.icon ?? '🍽️'} {c.name}
+                  </option>
+                ))}
+              </select>
+              {errors.categoryId && <p className="text-red-500 text-sm mt-1">{errors.categoryId.message}</p>}
             </div>
 
             <div>

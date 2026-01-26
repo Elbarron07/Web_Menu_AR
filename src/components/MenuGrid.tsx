@@ -5,8 +5,8 @@ import { useMenu } from '../hooks/useMenu';
 const MenuGrid = () => {
     const { menuItems, loading } = useMenu();
     
-    // Extract unique categories
-    const categories = Array.from(new Set(menuItems.map((p) => p.category)));
+    // Extract unique category names (from BDD)
+    const categories = Array.from(new Set(menuItems.map((p) => p.category?.name).filter(Boolean))) as string[];
 
     if (loading) {
         return (
@@ -33,7 +33,7 @@ const MenuGrid = () => {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {menuItems.filter((p) => p.category === category).map((plat) => (
+                        {menuItems.filter((p) => p.category?.name === category).map((plat) => (
                             <motion.div
                                 key={plat.id}
                                 initial={{ opacity: 0, y: 20 }}

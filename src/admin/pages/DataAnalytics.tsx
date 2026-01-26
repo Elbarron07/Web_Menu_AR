@@ -25,7 +25,7 @@ export const DataAnalytics = () => {
       const menuItem = menuItems.find((m) => m.id === item.menu_item_id);
       if (!menuItem) return;
 
-      const category = menuItem.category;
+      const category = menuItem.category?.name ?? 'Sans catégorie';
       if (!categoryStats.has(category)) {
         categoryStats.set(category, { views: 0, conversions: 0 });
       }
@@ -56,7 +56,7 @@ export const DataAnalytics = () => {
       const menuItem = menuItems.find((m) => m.id === item.menu_item_id);
       if (!menuItem) return;
 
-      const category = menuItem.category;
+      const category = menuItem.category?.name ?? 'Sans catégorie';
       const current = categoryViews.get(category) || 0;
       categoryViews.set(category, current + item.views);
       totalViews += item.views;

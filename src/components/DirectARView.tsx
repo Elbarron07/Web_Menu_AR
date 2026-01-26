@@ -135,65 +135,46 @@ const DirectARView = () => {
         });
     };
 
-    // Convertir menuItems en format pour SpinningTacticalMenu
-    const tacticalMenuData = useMemo(() => {
-        if (!menuItems.length) return { root: [] };
-        
-        // Grouper les plats par catégorie
-        const categoriesMap = new Map<string, Array<{ id: string; label: string; icon?: string; price?: string }>>();
-        
+    // Convertir menuItems en format pour SpinningTacticalMenu (catégories, icônes et couleurs depuis BDD)
+    const { tacticalMenuData, categoryStyles } = useMemo(() => {
+        const empty = { tacticalMenuData: { root: [] as Array<{ id: string; label: string; icon?: string; price?: string }> }, categoryStyles: {} as Record<string, { strokeRgba: string; glowRgba: string }> };
+        if (!menuItems.length) return empty;
+
+        type CatEntry = { items: Array<{ id: string; label: string; icon?: string; price?: string }>; icon: string; strokeRgba: string; glowRgba: string };
+        const categoriesMap = new Map<string, CatEntry>();
+
         menuItems.forEach((dish) => {
-            const category = dish.category || 'Plats';
-            
-            if (!categoriesMap.has(category)) {
-                categoriesMap.set(category, []);
+            const catName = dish.category?.name ?? 'Plats';
+            const icon = dish.category?.icon ?? '🍽️';
+            const strokeRgba = dish.category?.strokeRgba ?? 'rgba(37, 99, 235, 0.3)';
+            const glowRgba = dish.category?.glowRgba ?? 'rgba(37, 99, 235, 0.6)';
+            if (!categoriesMap.has(catName)) {
+                categoriesMap.set(catName, { items: [], icon, strokeRgba, glowRgba });
             }
-            
-            categoriesMap.get(category)!.push({
+            categoriesMap.get(catName)!.items.push({
                 id: dish.id,
                 label: dish.name,
                 price: `${dish.price.toFixed(2)}€`
             });
         });
 
-        // Créer le format attendu par SpinningTacticalMenu
-        const rootCategories = Array.from(categoriesMap.keys()).map(category => ({
-            id: category.toLowerCase().replace(/\s+/g, '-'),
-            label: category,
-            icon: getCategoryIcon(category)
-        }));
+        const slug = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
+        const categoryStyles: Record<string, { strokeRgba: string; glowRgba: string }> = {};
+        const rootCategories = Array.from(categoriesMap.entries()).map(([name, { icon, strokeRgba, glowRgba }]) => {
+            categoryStyles[name] = { strokeRgba, glowRgba };
+            return { id: slug(name), label: name, icon };
+        });
 
         const menuStructure: {
             root: Array<{ id: string; label: string; icon?: string; price?: string }>;
             [key: string]: Array<{ id: string; label: string; icon?: string; price?: string }>;
-        } = {
-            root: rootCategories
-        };
-
-        // Ajouter les sous-menus pour chaque catégorie
-        categoriesMap.forEach((items, category) => {
-            const categoryKey = category.toLowerCase().replace(/\s+/g, '-');
-            menuStructure[categoryKey] = items;
+        } = { root: rootCategories };
+        categoriesMap.forEach(({ items }, name) => {
+            menuStructure[slug(name)] = items;
         });
 
-        return menuStructure;
+        return { tacticalMenuData: menuStructure, categoryStyles };
     }, [menuItems]);
-
-    // Fonction pour obtenir l'icône selon la catégorie
-    function getCategoryIcon(category: string): string {
-        const iconMap: Record<string, string> = {
-            'Plats': '🍽️',
-            'Desserts': '🍰',
-            'Boissons': '🥤',
-            'Entrées': '🥗',
-            'Pizza': '🍕',
-            'Chawarma': '🥙',
-            'Hamburger': '🍔',
-            'Frites': '🍟',
-            'Poulet': '🍗'
-        };
-        return iconMap[category] || '🍽️';
-    }
 
     // Afficher un skeleton pendant le chargement
     if (id && itemLoading) {
@@ -260,6 +241,7 @@ const DirectARView = () => {
             {showMenu && !product && (
                 <SpinningTacticalMenu
                     menuData={tacticalMenuData}
+                    categoryStyles={categoryStyles}
                     isOpen={showMenu}
                     onClose={() => setShowMenu(false)}
                     onSelectItem={(itemId, _path) => handleTacticalMenuSelect(itemId)}

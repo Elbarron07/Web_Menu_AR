@@ -1,10 +1,20 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 
+export interface MenuCategoryRef {
+  id: string;
+  name: string;
+  icon: string | null;
+  strokeRgba: string | null;
+  glowRgba: string | null;
+  displayOrder: number;
+}
+
 export interface MenuItem {
   id: string;
   name: string;
-  category: string;
+  categoryId: string;
+  category: MenuCategoryRef | null;
   shortDesc: string;
   fullDesc: string;
   price: number;
@@ -39,31 +49,49 @@ export const useMenu = () => {
     const fetchMenuItems = async () => {
       try {
         setLoading(true);
-        
-        // Récupérer les articles principaux
+
+        const { data: categories, error: catError } = await supabase
+          .from('menu_categories')
+          .select('id, name, icon, stroke_rgba, glow_rgba, display_order')
+          .order('display_order', { ascending: true });
+
+        if (catError) throw catError;
+
         const { data: items, error: itemsError } = await supabase
           .from('menu_items')
           .select('*')
-          .order('category', { ascending: true });
+          .order('name', { ascending: true });
 
         if (itemsError) throw itemsError;
 
-        // Récupérer toutes les variantes
         const { data: variants, error: variantsError } = await supabase
           .from('menu_item_variants')
           .select('*');
 
         if (variantsError) throw variantsError;
 
-        // Récupérer tous les hotspots
         const { data: hotspots, error: hotspotsError } = await supabase
           .from('menu_item_hotspots')
           .select('*');
 
         if (hotspotsError) throw hotspotsError;
 
-        // Combiner les données
+        const catMap = new Map(
+          (categories || []).map((c: any) => [
+            c.id,
+            {
+              id: c.id,
+              name: c.name,
+              icon: c.icon,
+              strokeRgba: c.stroke_rgba,
+              glowRgba: c.glow_rgba,
+              displayOrder: c.display_order ?? 0,
+            },
+          ])
+        );
+
         const menuData: MenuItem[] = (items || []).map((item: any) => {
+          const cat = item.category_id ? catMap.get(item.category_id) ?? null : null;
           const itemVariants = (variants || [])
             .filter((v: any) => v.menu_item_id === item.id)
             .map((v: any) => ({
@@ -72,7 +100,6 @@ export const useMenu = () => {
               priceModifier: parseFloat(v.price_modifier),
               scale: v.scale,
             }));
-
           const itemHotspots = (hotspots || [])
             .filter((h: any) => h.menu_item_id === item.id)
             .map((h: any) => ({
@@ -85,7 +112,8 @@ export const useMenu = () => {
           return {
             id: item.id,
             name: item.name,
-            category: item.category,
+            categoryId: item.category_id,
+            category: cat,
             shortDesc: item.short_desc,
             fullDesc: item.full_desc,
             price: parseFloat(item.price),
@@ -97,6 +125,14 @@ export const useMenu = () => {
             hotspots: itemHotspots,
           };
         });
+
+        const byCategory = (a: MenuItem, b: MenuItem) => {
+          const oA = a.category?.displayOrder ?? 9999;
+          const oB = b.category?.displayOrder ?? 9999;
+          if (oA !== oB) return oA - oB;
+          return (a.name || '').localeCompare(b.name || '');
+        };
+        menuData.sort(byCategory);
 
         setMenuItems(menuData);
         setError(null);
@@ -128,8 +164,7 @@ export const useMenuItem = (id: string | undefined) => {
     const fetchMenuItem = async () => {
       try {
         setLoading(true);
-        
-        // Récupérer l'article principal
+
         const { data: item, error: itemError } = await supabase
           .from('menu_items')
           .select('*')
@@ -138,7 +173,25 @@ export const useMenuItem = (id: string | undefined) => {
 
         if (itemError) throw itemError;
 
-        // Récupérer les variantes
+        let cat: MenuCategoryRef | null = null;
+        if (item.category_id) {
+          const { data: c } = await supabase
+            .from('menu_categories')
+            .select('id, name, icon, stroke_rgba, glow_rgba, display_order')
+            .eq('id', item.category_id)
+            .single();
+          if (c) {
+            cat = {
+              id: c.id,
+              name: c.name,
+              icon: c.icon,
+              strokeRgba: c.stroke_rgba,
+              glowRgba: c.glow_rgba,
+              displayOrder: c.display_order ?? 0,
+            };
+          }
+        }
+
         const { data: variants, error: variantsError } = await supabase
           .from('menu_item_variants')
           .select('*')
@@ -146,7 +199,6 @@ export const useMenuItem = (id: string | undefined) => {
 
         if (variantsError) throw variantsError;
 
-        // Récupérer les hotspots
         const { data: hotspots, error: hotspotsError } = await supabase
           .from('menu_item_hotspots')
           .select('*')
@@ -154,11 +206,11 @@ export const useMenuItem = (id: string | undefined) => {
 
         if (hotspotsError) throw hotspotsError;
 
-        // Combiner les données
         const menuData: MenuItem = {
           id: item.id,
           name: item.name,
-          category: item.category,
+          categoryId: item.category_id,
+          category: cat,
           shortDesc: item.short_desc,
           fullDesc: item.full_desc,
           price: parseFloat(item.price),

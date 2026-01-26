@@ -4,6 +4,16 @@
 import { supabase } from './supabase';
 import type { MenuItem } from '../hooks/useMenu';
 
+export interface MenuCategory {
+  id: string;
+  name: string;
+  icon: string | null;
+  stroke_rgba: string | null;
+  glow_rgba: string | null;
+  display_order: number;
+  created_at?: string;
+}
+
 // Get the Supabase project URL from environment or construct from siteUrl
 const getSupabaseUrl = (): string => {
   const envUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -61,12 +71,52 @@ async function apiRequest<T>(
 }
 
 // ============================================================================
+// Categories API
+// ============================================================================
+
+export const adminCategoriesApi = {
+  async getCategories(): Promise<MenuCategory[]> {
+    return apiRequest<MenuCategory[]>('admin-categories', { method: 'GET' });
+  },
+
+  async createCategory(category: {
+    name: string;
+    icon?: string;
+    stroke_rgba?: string;
+    glow_rgba?: string;
+    display_order?: number;
+  }): Promise<{ success: boolean; category: MenuCategory }> {
+    return apiRequest('admin-categories', {
+      method: 'POST',
+      body: JSON.stringify(category),
+    });
+  },
+
+  async updateCategory(
+    id: string,
+    updates: Partial<Pick<MenuCategory, 'name' | 'icon' | 'stroke_rgba' | 'glow_rgba' | 'display_order'>>
+  ): Promise<{ success: boolean }> {
+    return apiRequest('admin-categories', {
+      method: 'PATCH',
+      body: JSON.stringify({ id, ...updates }),
+    });
+  },
+
+  async deleteCategory(id: string): Promise<{ success: boolean }> {
+    return apiRequest('admin-categories', {
+      method: 'DELETE',
+      body: JSON.stringify({ id }),
+    });
+  },
+};
+
+// ============================================================================
 // Menu API
 // ============================================================================
 
 export const adminMenuApi = {
   /**
-   * Get all menu items with variants and hotspots
+   * Get all menu items with variants, hotspots, and category
    */
   async getMenu(): Promise<MenuItem[]> {
     return apiRequest<MenuItem[]>('admin-menu', {
@@ -75,15 +125,15 @@ export const adminMenuApi = {
   },
 
   /**
-   * Create a new menu item
+   * Create a new menu item (categoryId required)
    */
-  async createMenuItem(item: Partial<MenuItem> & { id: string }): Promise<{ success: boolean; item: any }> {
+  async createMenuItem(item: Partial<MenuItem> & { id: string; categoryId: string }): Promise<{ success: boolean; item: any }> {
     return apiRequest('admin-menu', {
       method: 'POST',
       body: JSON.stringify({
         id: item.id,
         name: item.name,
-        category: item.category,
+        categoryId: item.categoryId,
         shortDesc: item.shortDesc,
         fullDesc: item.fullDesc,
         price: item.price,
@@ -98,7 +148,7 @@ export const adminMenuApi = {
   },
 
   /**
-   * Update a menu item
+   * Update a menu item (categoryId optional)
    */
   async updateMenuItem(
     id: string,
@@ -109,7 +159,7 @@ export const adminMenuApi = {
       body: JSON.stringify({
         id,
         name: item.name,
-        category: item.category,
+        categoryId: item.categoryId,
         shortDesc: item.shortDesc,
         fullDesc: item.fullDesc,
         price: item.price,
@@ -319,6 +369,7 @@ export const adminUploadApi = {
 
 export const adminApi = {
   menu: adminMenuApi,
+  categories: adminCategoriesApi,
   settings: adminSettingsApi,
   analytics: adminAnalyticsApi,
   sessions: adminSessionsApi,
