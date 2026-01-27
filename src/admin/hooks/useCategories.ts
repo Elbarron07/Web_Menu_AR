@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { adminApi, type MenuCategory } from '../../lib/adminApi';
+import { useAuth } from './useAuth';
 
 export const useCategories = () => {
   const [categories, setCategories] = useState<MenuCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { isAdmin, loading: authLoading } = useAuth();
 
   const fetchCategories = async () => {
     try {
@@ -21,8 +23,12 @@ export const useCategories = () => {
   };
 
   useEffect(() => {
+    // Attendre que l'authentification soit vérifiée et que l'utilisateur soit admin
+    if (authLoading || !isAdmin) {
+      return;
+    }
     fetchCategories();
-  }, []);
+  }, [isAdmin, authLoading]);
 
   const createCategory = async (category: {
     name: string;

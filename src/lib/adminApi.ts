@@ -32,27 +32,128 @@ const getEdgeFunctionUrl = (functionName: string): string => {
   return `https://${projectRef}.supabase.co/functions/v1/${functionName}`;
 };
 
+// Constantes pour la gestion des tokens
+const TOKEN_REFRESH_MARGIN_SECONDS = 300; // 5 minutes - marge de sécurité avant expiration
+
 /**
  * Get the current session token for authenticated requests
+ * Garantit un token valide et rafraîchi proactivement
+ * - Utilise getUser() pour forcer la vérification côté serveur
+ * - Rafraîchit proactivement si le token expire dans moins de 5 minutes
  */
 async function getAuthToken(): Promise<string | null> {
-  const { data: { session } } = await supabase.auth.getSession();
-  return session?.access_token || null;
+  try {
+    // Étape 1: Vérifier d'abord la session locale pour éviter des appels réseau inutiles
+    const { data: { session: localSession } } = await supabase.auth.getSession();
+    
+    if (!localSession) {
+      console.debug('[getAuthToken] Aucune session locale');
+      return null;
+    }
+    
+    // Étape 2: Vérifier si le token expire bientôt (marge de 5 minutes)
+    const now = Math.floor(Date.now() / 1000);
+    const expiresAt = localSession.expires_at;
+    const timeUntilExpiry = expiresAt ? expiresAt - now : 0;
+    
+    console.debug('[getAuthToken] Token expire dans', timeUntilExpiry, 'secondes');
+    
+    // Étape 3: Rafraîchir proactivement si nécessaire
+    if (timeUntilExpiry < TOKEN_REFRESH_MARGIN_SECONDS) {
+      console.debug('[getAuthToken] Rafraîchissement proactif du token (expire dans moins de 5 min)...');
+      
+      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+      
+      if (refreshError) {
+        console.error('[getAuthToken] Erreur lors du rafraîchissement:', {
+          message: refreshError.message,
+          status: refreshError.status,
+        });
+        // Ne pas retourner null immédiatement, essayer avec le token actuel s'il est encore valide
+        if (timeUntilExpiry > 0 && localSession.access_token) {
+          console.warn('[getAuthToken] Utilisation du token existant malgré l\'erreur de rafraîchissement');
+          return localSession.access_token;
+        }
+        return null;
+      }
+      
+      if (refreshData?.session?.access_token) {
+        console.debug('[getAuthToken] Token rafraîchi avec succès, nouvelle expiration dans',
+          refreshData.session.expires_at ? refreshData.session.expires_at - now : 'inconnu', 'secondes');
+        return refreshData.session.access_token;
+      }
+    }
+    
+    // Étape 4: Vérifier le token côté serveur avec getUser() pour s'assurer qu'il est valide
+    console.debug('[getAuthToken] Vérification du token avec getUser()...');
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError) {
+      console.error('[getAuthToken] Token invalide côté serveur:', {
+        message: userError.message,
+        status: userError.status,
+      });
+      
+      // Tenter un rafraîchissement si la vérification échoue
+      console.debug('[getAuthToken] Tentative de rafraîchissement après erreur getUser()...');
+      const { data: retryRefresh, error: retryError } = await supabase.auth.refreshSession();
+      
+      if (retryError || !retryRefresh?.session?.access_token) {
+        console.error('[getAuthToken] Rafraîchissement échoué:', retryError?.message);
+        return null;
+      }
+      
+      console.debug('[getAuthToken] Token récupéré après rafraîchissement');
+      return retryRefresh.session.access_token;
+    }
+    
+    if (!user) {
+      console.warn('[getAuthToken] Aucun utilisateur trouvé');
+      return null;
+    }
+    
+    console.debug('[getAuthToken] Token valide pour:', user.email);
+    
+    // Récupérer le token à jour après la vérification
+    const { data: { session: finalSession } } = await supabase.auth.getSession();
+    
+    if (!finalSession?.access_token) {
+      console.warn('[getAuthToken] Session perdue après vérification');
+      return null;
+    }
+    
+    return finalSession.access_token;
+  } catch (error) {
+    console.error('[getAuthToken] Erreur inattendue:', error);
+    return null;
+  }
 }
 
 /**
  * Make an authenticated request to an Edge Function
+ * Inclut un système de retry automatique sur erreur 401
+ * @param functionName - Nom de la Edge Function
+ * @param options - Options fetch
+ * @param isRetry - Indique si c'est un retry (usage interne)
  */
 async function apiRequest<T>(
   functionName: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  isRetry: boolean = false
 ): Promise<T> {
   const token = await getAuthToken();
   if (!token) {
+    console.error(`[apiRequest] Pas de token pour ${functionName}`);
     throw new Error('Not authenticated');
   }
 
   const url = getEdgeFunctionUrl(functionName);
+  console.debug(`[apiRequest] Requête vers ${functionName}`, { 
+    url, 
+    hasToken: !!token,
+    isRetry 
+  });
+  
   const response = await fetch(url, {
     ...options,
     headers: {
@@ -62,9 +163,44 @@ async function apiRequest<T>(
     },
   });
 
+  // Gestion des erreurs 401 avec retry automatique
+  if (response.status === 401 && !isRetry) {
+    console.warn(`[apiRequest] Erreur 401 pour ${functionName}, tentative de rafraîchissement...`);
+    
+    // Forcer le rafraîchissement du token
+    const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+    
+    if (refreshError) {
+      console.error('[apiRequest] Échec du rafraîchissement:', refreshError.message);
+      throw new Error('Session expired. Please login again.');
+    }
+    
+    if (refreshData?.session?.access_token) {
+      console.debug('[apiRequest] Token rafraîchi, retry de la requête...');
+      // Retry avec le nouveau token (isRetry=true pour éviter boucle infinie)
+      return apiRequest<T>(functionName, options, true);
+    }
+    
+    throw new Error('Session expired. Please login again.');
+  }
+
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Unknown error' }));
-    throw new Error(error.error || `HTTP ${response.status}`);
+    const errorText = await response.text().catch(() => 'Unknown error');
+    let errorData;
+    try {
+      errorData = JSON.parse(errorText);
+    } catch {
+      errorData = { error: errorText };
+    }
+    
+    console.error(`[apiRequest] Erreur ${response.status} pour ${functionName}:`, {
+      status: response.status,
+      statusText: response.statusText,
+      error: errorData,
+      isRetry,
+    });
+    
+    throw new Error(errorData.error || `HTTP ${response.status}`);
   }
 
   return response.json();
@@ -257,11 +393,15 @@ export interface AnalyticsData {
 export const adminAnalyticsApi = {
   /**
    * Get analytics data for a given number of days
+   * Inclut retry automatique sur 401
    */
-  async getAnalytics(days: number = 7): Promise<AnalyticsData> {
+  async getAnalytics(days: number = 7, isRetry: boolean = false): Promise<AnalyticsData> {
     const url = getEdgeFunctionUrl('admin-analytics') + `?days=${days}`;
     const token = await getAuthToken();
     if (!token) throw new Error('Not authenticated');
+    
+    console.debug('[getAnalytics] Requête analytics', { days, isRetry });
+    
     const response = await fetch(url, {
       method: 'GET',
       headers: {
@@ -269,8 +409,23 @@ export const adminAnalyticsApi = {
         'Content-Type': 'application/json',
       },
     });
+    
+    // Retry sur 401
+    if (response.status === 401 && !isRetry) {
+      console.warn('[getAnalytics] Erreur 401, tentative de rafraîchissement...');
+      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+      
+      if (refreshError || !refreshData?.session) {
+        throw new Error('Session expired. Please login again.');
+      }
+      
+      console.debug('[getAnalytics] Token rafraîchi, retry...');
+      return this.getAnalytics(days, true);
+    }
+    
     if (!response.ok) {
       const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+      console.error('[getAnalytics] Erreur:', { status: response.status, error });
       throw new Error(error.error || `HTTP ${response.status}`);
     }
     return response.json();
@@ -312,8 +467,9 @@ export interface SessionsData {
 export const adminSessionsApi = {
   /**
    * Get sessions data (customers) for a given number of days
+   * Inclut retry automatique sur 401
    */
-  async getSessions(days: number = 30, search?: string): Promise<SessionsData> {
+  async getSessions(days: number = 30, search?: string, isRetry: boolean = false): Promise<SessionsData> {
     const params = new URLSearchParams();
     params.set('days', days.toString());
     if (search) {
@@ -326,6 +482,8 @@ export const adminSessionsApi = {
       throw new Error('Not authenticated');
     }
 
+    console.debug('[getSessions] Requête sessions', { days, search, isRetry });
+
     const response = await fetch(`${url}?${params.toString()}`, {
       method: 'GET',
       headers: {
@@ -334,8 +492,22 @@ export const adminSessionsApi = {
       },
     });
 
+    // Retry sur 401
+    if (response.status === 401 && !isRetry) {
+      console.warn('[getSessions] Erreur 401, tentative de rafraîchissement...');
+      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+      
+      if (refreshError || !refreshData?.session) {
+        throw new Error('Session expired. Please login again.');
+      }
+      
+      console.debug('[getSessions] Token rafraîchi, retry...');
+      return this.getSessions(days, search, true);
+    }
+
     if (!response.ok) {
       const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+      console.error('[getSessions] Erreur:', { status: response.status, error });
       throw new Error(error.error || `HTTP ${response.status}`);
     }
 

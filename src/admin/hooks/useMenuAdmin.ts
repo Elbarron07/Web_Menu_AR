@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { adminApi } from '../../lib/adminApi';
 import type { MenuItem } from '../../hooks/useMenu';
+import { useAuth } from './useAuth';
 
 export const useMenuAdmin = () => {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { isAdmin, loading: authLoading } = useAuth();
 
   const fetchMenuItems = async () => {
     try {
@@ -22,8 +24,12 @@ export const useMenuAdmin = () => {
   };
 
   useEffect(() => {
+    // Attendre que l'authentification soit vérifiée et que l'utilisateur soit admin
+    if (authLoading || !isAdmin) {
+      return;
+    }
     fetchMenuItems();
-  }, []);
+  }, [isAdmin, authLoading]);
 
   const createMenuItem = async (itemData: Partial<MenuItem> & { id: string; categoryId: string }) => {
     try {

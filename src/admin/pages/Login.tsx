@@ -56,43 +56,72 @@ export const Login = () => {
         if (updateError) throw updateError;
 
         // Se connecter avec le nouveau mot de passe
+        console.debug('[Login Invite] Tentative de connexion pour:', email);
         const signInResult = await signIn(email, password);
         
         if (!signInResult || !signInResult.user) {
           throw new Error('Erreur lors de la connexion');
         }
         
-        // Attendre un peu pour que la session soit bien établie
-        await new Promise(resolve => setTimeout(resolve, 300));
+        console.debug('[Login Invite] Connexion réussie, user:', signInResult.user.id);
+        
+        // Attendre que la session soit bien établie
+        await new Promise(resolve => setTimeout(resolve, 500));
         
         // Vérifier que l'utilisateur est bien admin en utilisant authService
+        console.debug('[Login Invite] Vérification des droits admin...');
         const isAdmin = await authService.isAdmin();
+        console.debug('[Login Invite] Résultat isAdmin:', isAdmin);
         
         if (!isAdmin) {
-          throw new Error('Vous n\'avez pas les droits d\'administration');
+          // Deuxième tentative après un délai supplémentaire
+          console.debug('[Login Invite] Première vérification échouée, retry...');
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          const isAdminRetry = await authService.isAdmin();
+          console.debug('[Login Invite] Résultat isAdmin retry:', isAdminRetry);
+          
+          if (!isAdminRetry) {
+            throw new Error('Vous n\'avez pas les droits d\'administration');
+          }
         }
         
         // Rediriger vers le dashboard
+        console.debug('[Login Invite] Redirection vers le dashboard');
         navigate('/admin/dashboard', { replace: true });
       } else {
         // Connexion normale
+        console.debug('[Login] Tentative de connexion pour:', email);
         const signInResult = await signIn(email, password);
         
         if (!signInResult || !signInResult.user) {
           throw new Error('Erreur lors de la connexion');
         }
         
-        // Attendre un peu pour que la session soit bien établie
-        await new Promise(resolve => setTimeout(resolve, 300));
+        console.debug('[Login] Connexion réussie, user:', signInResult.user.id);
+        
+        // Attendre que la session soit bien établie
+        // Le token doit être propagé avant de vérifier les droits admin
+        await new Promise(resolve => setTimeout(resolve, 500));
         
         // Vérifier que l'utilisateur est bien admin en utilisant authService
+        console.debug('[Login] Vérification des droits admin...');
         const isAdmin = await authService.isAdmin();
+        console.debug('[Login] Résultat isAdmin:', isAdmin);
         
         if (!isAdmin) {
-          throw new Error('Vous n\'avez pas les droits d\'administration');
+          // Deuxième tentative après un délai supplémentaire
+          console.debug('[Login] Première vérification échouée, retry...');
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          const isAdminRetry = await authService.isAdmin();
+          console.debug('[Login] Résultat isAdmin retry:', isAdminRetry);
+          
+          if (!isAdminRetry) {
+            throw new Error('Vous n\'avez pas les droits d\'administration');
+          }
         }
         
         // Rediriger vers le dashboard
+        console.debug('[Login] Redirection vers le dashboard');
         navigate('/admin/dashboard', { replace: true });
       }
     } catch (err: any) {
