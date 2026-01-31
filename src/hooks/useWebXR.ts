@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { logger } from '../lib/logger';
 
 interface UseWebXRReturn {
   session: XRSession | null;
@@ -94,7 +95,7 @@ export const useWebXR = (): UseWebXRReturn => {
             baseLayer: new XRWebGLLayer(xrSession, gl)
           });
         }).catch((err: any) => {
-          console.error('Erreur makeXRCompatible:', err);
+          logger.error('Erreur makeXRCompatible:', err);
         });
       } else {
         // Fallback pour navigateurs sans makeXRCompatible
@@ -103,21 +104,21 @@ export const useWebXR = (): UseWebXRReturn => {
             baseLayer: new XRWebGLLayer(xrSession, gl)
           });
         } catch (err: any) {
-          console.error('Erreur updateRenderState:', err);
+          logger.error('Erreur updateRenderState:', err);
         }
       }
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors du démarrage de la session WebXR';
       setError(errorMessage);
-      console.error('Erreur WebXR:', err);
+      logger.error('Erreur WebXR:', err);
     }
   };
 
   const endSession = () => {
     if (session) {
       session.end().catch((err) => {
-        console.error('Erreur lors de la fermeture de la session:', err);
+        logger.error('Erreur lors de la fermeture de la session:', err);
       });
     }
   };
@@ -139,7 +140,7 @@ export const useWebXR = (): UseWebXRReturn => {
       const hitTestResults = frame.getHitTestResults(hitTestSourceRef.current);
       return Array.from(hitTestResults);
     } catch (err) {
-      console.error('Erreur hit test:', err);
+      logger.error('Erreur hit test:', err);
       return null;
     }
   };

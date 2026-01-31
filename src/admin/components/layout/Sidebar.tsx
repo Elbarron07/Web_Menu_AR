@@ -11,16 +11,17 @@ import {
   FolderOpen
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { adminRoute } from '../../../config/routes';
 
 const menuItems = [
-  { path: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
-  { path: '/admin/categories', icon: FolderOpen, label: 'Catégories' },
-  { path: '/admin/menu', icon: UtensilsCrossed, label: 'Menu' },
-  { path: '/admin/assets', icon: Package, label: 'Assets 3D' },
-  { path: '/admin/analytics', icon: BarChart3, label: 'Analytics' },
-  { path: '/admin/customers', icon: Users, label: 'Clients' },
-  { path: '/admin/data-analytics', icon: Database, label: 'Données' },
-  { path: '/admin/settings', icon: Settings, label: 'Paramètres' },
+  { path: adminRoute(), icon: LayoutDashboard, label: 'Dashboard' },
+  { path: adminRoute('categories'), icon: FolderOpen, label: 'Catégories' },
+  { path: adminRoute('menu'), icon: UtensilsCrossed, label: 'Menu' },
+  { path: adminRoute('assets'), icon: Package, label: 'Assets 3D' },
+  { path: adminRoute('analytics'), icon: BarChart3, label: 'Analytics' },
+  { path: adminRoute('customers'), icon: Users, label: 'Clients' },
+  { path: adminRoute('data-analytics'), icon: Database, label: 'Données' },
+  { path: adminRoute('settings'), icon: Settings, label: 'Paramètres' },
 ];
 
 export const Sidebar = () => {
@@ -46,7 +47,7 @@ export const Sidebar = () => {
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.path || 
-            (item.path === '/admin' && location.pathname === '/admin');
+            (item.path === adminRoute() && location.pathname === adminRoute());
           
           return (
             <Link

@@ -7,6 +7,7 @@ import { MenuItemForm } from '../components/menu/MenuItemForm';
 import { MenuItemTable } from '../components/menu/MenuItemTable';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
+import { adminRoute } from '../../config/routes';
 import type { MenuItem } from '../../hooks/useMenu';
 
 export const MenuManagement = () => {
@@ -68,7 +69,7 @@ export const MenuManagement = () => {
             Ajouter un plat
           </Button>
         ) : (
-          <Link to="/admin/categories">
+          <Link to={adminRoute('categories')}>
             <Button icon={<FolderOpen className="w-5 h-5" />} variant="secondary">
               Créer d&apos;abord une catégorie
             </Button>
@@ -80,7 +81,7 @@ export const MenuManagement = () => {
         <Card variant="default" padding="lg" className="bg-amber-50 border-amber-200">
           <p className="text-amber-800">
             Aucune catégorie. Créez-en une dans{' '}
-            <Link to="/admin/categories" className="font-semibold text-primary-600 hover:underline">
+            <Link to={adminRoute('categories')} className="font-semibold text-primary-600 hover:underline">
               Catégories
             </Link>{' '}
             avant d&apos;ajouter des plats.

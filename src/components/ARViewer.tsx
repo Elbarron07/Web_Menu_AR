@@ -1,6 +1,7 @@
 import { useRef, useEffect, useImperativeHandle, forwardRef } from 'react';
 import '@google/model-viewer';
 import { analytics } from '../lib/analytics';
+import { logger } from '../lib/logger';
 
 interface Hotspot {
     slot: string;
@@ -41,7 +42,7 @@ export const ARViewer = forwardRef<ARViewerRef, ARViewerProps>(({
                     // Activer l'AR programmatiquement
                     await (modelViewerRef.current as any).activateAR();
                 } catch (error) {
-                    console.error('Erreur lors de l\'activation AR:', error);
+                    logger.error('Erreur lors de l\'activation AR:', error);
                     throw error;
                 }
             }
@@ -62,16 +63,16 @@ export const ARViewer = forwardRef<ARViewerRef, ARViewerProps>(({
 
         const handleLoad = () => {
             // Le modèle est chargé, s'assurer que les contrôles caméra sont actifs
-            console.log('✅ Modèle chargé avec succès:', modelUrl);
+            logger.debug('✅ Modèle chargé avec succès:', modelUrl);
             if (modelViewer.cameraControls) {
-                console.log('✅ Contrôles caméra activés');
+                logger.debug('✅ Contrôles caméra activés');
             }
             // Donner le focus pour activer les interactions
             modelViewer.focus();
         };
 
         const handleError = (event: any) => {
-            console.error('❌ Erreur de chargement du modèle:', {
+            logger.error('❌ Erreur de chargement du modèle:', {
                 modelUrl,
                 error: event.detail || event,
                 message: event.message || 'Erreur inconnue'
@@ -79,20 +80,20 @@ export const ARViewer = forwardRef<ARViewerRef, ARViewerProps>(({
         };
 
         const handleModelVisibility = () => {
-            console.log('👁️ Modèle visible');
+            logger.debug('👁️ Modèle visible');
         };
 
         const handleProgress = (event: any) => {
             const progress = event.detail?.totalProgress || 0;
             if (progress > 0 && progress < 1) {
-                console.log(`📦 Chargement du modèle: ${Math.round(progress * 100)}%`);
+                logger.debug(`📦 Chargement du modèle: ${Math.round(progress * 100)}%`);
             }
         };
 
         const handleARStatus = (event: any) => {
             const status = event.detail?.status;
             if (status === 'not-presenting') {
-                console.log('📱 Mode AR terminé');
+                logger.debug('📱 Mode AR terminé');
                 // Track AR session end
                 if (menuItemId && arSessionStartTime.current) {
                     const duration = Math.round((Date.now() - arSessionStartTime.current) / 1000);
@@ -100,7 +101,7 @@ export const ARViewer = forwardRef<ARViewerRef, ARViewerProps>(({
                     arSessionStartTime.current = null;
                 }
             } else if (status === 'presenting') {
-                console.log('🥽 Mode AR actif - Modèle ancré sur la surface');
+                logger.debug('🥽 Mode AR actif - Modèle ancré sur la surface');
                 // Track AR session start
                 if (menuItemId) {
                     arSessionStartTime.current = Date.now();
@@ -109,7 +110,7 @@ export const ARViewer = forwardRef<ARViewerRef, ARViewerProps>(({
         };
 
         const handleARPlace = () => {
-            console.log('📍 Modèle placé sur la surface en mode AR');
+            logger.debug('📍 Modèle placé sur la surface en mode AR');
         };
 
         // Écouter les événements de chargement
@@ -128,7 +129,7 @@ export const ARViewer = forwardRef<ARViewerRef, ARViewerProps>(({
         }
 
         // Log initial pour débogage
-        console.log('🔍 Initialisation ARViewer avec modèle:', modelUrl);
+        logger.debug('🔍 Initialisation ARViewer avec modèle:', modelUrl);
 
         return () => {
             modelViewer.removeEventListener('load', handleLoad);

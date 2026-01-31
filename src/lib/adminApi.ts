@@ -1,7 +1,7 @@
-// Admin API Client - Version directe Supabase (sans Edge Functions)
-// Utilise directement le client Supabase pour toutes les opérations
+// Admin API Client - Version directe Supabase
 
 import { supabase } from './supabase';
+import { logger } from './logger';
 import type { MenuItem } from '../hooks/useMenu';
 
 export interface MenuCategory {
@@ -26,7 +26,7 @@ export const adminCategoriesApi = {
       .order('display_order', { ascending: true });
 
     if (error) {
-      console.error('[getCategories] Erreur:', error);
+      logger.error('[getCategories] Erreur:', error);
       throw new Error(error.message);
     }
 
@@ -53,7 +53,7 @@ export const adminCategoriesApi = {
       .single();
 
     if (error) {
-      console.error('[createCategory] Erreur:', error);
+      logger.error('[createCategory] Erreur:', error);
       throw new Error(error.message);
     }
 
@@ -70,7 +70,7 @@ export const adminCategoriesApi = {
       .eq('id', id);
 
     if (error) {
-      console.error('[updateCategory] Erreur:', error);
+      logger.error('[updateCategory] Erreur:', error);
       throw new Error(error.message);
     }
 
@@ -95,7 +95,7 @@ export const adminCategoriesApi = {
       .eq('id', id);
 
     if (error) {
-      console.error('[deleteCategory] Erreur:', error);
+      logger.error('[deleteCategory] Erreur:', error);
       throw new Error(error.message);
     }
 
@@ -116,7 +116,7 @@ export const adminMenuApi = {
       .order('display_order', { ascending: true });
 
     if (catError) {
-      console.error('[getMenu] Erreur catégories:', catError);
+      logger.error('[getMenu] Erreur catégories:', catError);
       throw new Error(catError.message);
     }
 
@@ -127,7 +127,7 @@ export const adminMenuApi = {
       .order('name', { ascending: true });
 
     if (itemsError) {
-      console.error('[getMenu] Erreur items:', itemsError);
+      logger.error('[getMenu] Erreur items:', itemsError);
       throw new Error(itemsError.message);
     }
 
@@ -137,7 +137,7 @@ export const adminMenuApi = {
       .select('*');
 
     if (variantsError) {
-      console.error('[getMenu] Erreur variants:', variantsError);
+      logger.error('[getMenu] Erreur variants:', variantsError);
       throw new Error(variantsError.message);
     }
 
@@ -147,7 +147,7 @@ export const adminMenuApi = {
       .select('*');
 
     if (hotspotsError) {
-      console.error('[getMenu] Erreur hotspots:', hotspotsError);
+      logger.error('[getMenu] Erreur hotspots:', hotspotsError);
       throw new Error(hotspotsError.message);
     }
 
@@ -226,7 +226,7 @@ export const adminMenuApi = {
       .single();
 
     if (itemError) {
-      console.error('[createMenuItem] Erreur:', itemError);
+      logger.error('[createMenuItem] Erreur:', itemError);
       throw new Error(itemError.message);
     }
 
@@ -245,7 +245,7 @@ export const adminMenuApi = {
         .insert(variantsToInsert);
 
       if (variantsError) {
-        console.error('[createMenuItem] Erreur variants:', variantsError);
+        logger.error('[createMenuItem] Erreur variants:', variantsError);
       }
     }
 
@@ -264,7 +264,7 @@ export const adminMenuApi = {
         .insert(hotspotsToInsert);
 
       if (hotspotsError) {
-        console.error('[createMenuItem] Erreur hotspots:', hotspotsError);
+        logger.error('[createMenuItem] Erreur hotspots:', hotspotsError);
       }
     }
 
@@ -289,7 +289,7 @@ export const adminMenuApi = {
       .eq('id', id);
 
     if (itemError) {
-      console.error('[updateMenuItem] Erreur:', itemError);
+      logger.error('[updateMenuItem] Erreur:', itemError);
       throw new Error(itemError.message);
     }
 
@@ -335,7 +335,7 @@ export const adminMenuApi = {
       .eq('id', id);
 
     if (error) {
-      console.error('[deleteMenuItem] Erreur:', error);
+      logger.error('[deleteMenuItem] Erreur:', error);
       throw new Error(error.message);
     }
 
@@ -362,7 +362,7 @@ export const adminSettingsApi = {
       .maybeSingle();
 
     if (error && error.code !== 'PGRST116') {
-      console.error('[getSettings] Erreur:', error);
+      logger.error('[getSettings] Erreur:', error);
       throw new Error(error.message);
     }
 
@@ -465,7 +465,7 @@ export const adminAnalyticsApi = {
       .order('created_at', { ascending: false });
 
     if (eventsError) {
-      console.error('[getAnalytics] Erreur events:', eventsError);
+      logger.error('[getAnalytics] Erreur events:', eventsError);
       // Retourner des données vides si la table n'existe pas
       return {
         totalViews: 0,
@@ -614,7 +614,7 @@ export const adminSessionsApi = {
       .order('created_at', { ascending: false });
 
     if (eventsError) {
-      console.error('[getSessions] Erreur:', eventsError);
+      logger.error('[getSessions] Erreur:', eventsError);
       return {
         sessions: [],
         stats: { totalSessions: 0, activeSessions: 0, avgOrders: 0, retentionRate: 0 },
@@ -741,7 +741,7 @@ export const adminUploadApi = {
       .createSignedUploadUrl(path);
 
     if (error) {
-      console.error('[getUploadUrl] Erreur:', error);
+      logger.error('[getUploadUrl] Erreur:', error);
       throw new Error(error.message);
     }
 

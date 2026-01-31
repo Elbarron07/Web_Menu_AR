@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { logger } from '../lib/logger';
 
 interface UseCameraStreamReturn {
   stream: MediaStream | null;
@@ -19,15 +20,13 @@ export const useCameraStream = (): UseCameraStreamReturn => {
       setIsLoading(true);
       setError(null);
 
-      // Arrêter le flux existant s'il y en a un
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
       }
 
-      // Demander l'accès à la caméra
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
-          facingMode: 'environment', // Caméra arrière sur mobile
+          facingMode: 'environment',
           width: { ideal: 1920 },
           height: { ideal: 1080 }
         }
@@ -36,9 +35,9 @@ export const useCameraStream = (): UseCameraStreamReturn => {
       streamRef.current = mediaStream;
       setStream(mediaStream);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur lors de l\'accès à la caméra';
+      const errorMessage = err instanceof Error ? err.message : 'Erreur camera';
       setError(errorMessage);
-      console.error('Erreur caméra:', err);
+      logger.error('[useCameraStream] Erreur');
     } finally {
       setIsLoading(false);
     }

@@ -4,6 +4,8 @@ import { useAuth } from '../hooks/useAuth';
 import { LogIn } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { authService } from '../../lib/auth';
+import { logger } from '../../lib/logger';
+import { adminRoute } from '../../config/routes';
 
 export const Login = () => {
   const [searchParams] = useSearchParams();
@@ -56,29 +58,29 @@ export const Login = () => {
         if (updateError) throw updateError;
 
         // Se connecter avec le nouveau mot de passe
-        console.debug('[Login Invite] Tentative de connexion pour:', email);
+        logger.debug('[Login Invite] Tentative de connexion pour:', email);
         const signInResult = await signIn(email, password);
         
         if (!signInResult || !signInResult.user) {
           throw new Error('Erreur lors de la connexion');
         }
         
-        console.debug('[Login Invite] Connexion réussie, user:', signInResult.user.id);
+        logger.debug('[Login Invite] Connexion réussie, user:', signInResult.user.id);
         
         // Attendre que la session soit bien établie
         await new Promise(resolve => setTimeout(resolve, 500));
         
         // Vérifier que l'utilisateur est bien admin en utilisant authService
-        console.debug('[Login Invite] Vérification des droits admin...');
+        logger.debug('[Login Invite] Vérification des droits admin...');
         const isAdmin = await authService.isAdmin();
-        console.debug('[Login Invite] Résultat isAdmin:', isAdmin);
+        logger.debug('[Login Invite] Résultat isAdmin:', isAdmin);
         
         if (!isAdmin) {
           // Deuxième tentative après un délai supplémentaire
-          console.debug('[Login Invite] Première vérification échouée, retry...');
+          logger.debug('[Login Invite] Première vérification échouée, retry...');
           await new Promise(resolve => setTimeout(resolve, 1000));
           const isAdminRetry = await authService.isAdmin();
-          console.debug('[Login Invite] Résultat isAdmin retry:', isAdminRetry);
+          logger.debug('[Login Invite] Résultat isAdmin retry:', isAdminRetry);
           
           if (!isAdminRetry) {
             throw new Error('Vous n\'avez pas les droits d\'administration');
@@ -86,34 +88,34 @@ export const Login = () => {
         }
         
         // Rediriger vers le dashboard
-        console.debug('[Login Invite] Redirection vers le dashboard');
-        navigate('/admin/dashboard', { replace: true });
+        logger.debug('[Login Invite] Redirection vers le dashboard');
+        navigate(adminRoute('dashboard'), { replace: true });
       } else {
         // Connexion normale
-        console.debug('[Login] Tentative de connexion pour:', email);
+        logger.debug('[Login] Tentative de connexion pour:', email);
         const signInResult = await signIn(email, password);
         
         if (!signInResult || !signInResult.user) {
           throw new Error('Erreur lors de la connexion');
         }
         
-        console.debug('[Login] Connexion réussie, user:', signInResult.user.id);
+        logger.debug('[Login] Connexion réussie, user:', signInResult.user.id);
         
         // Attendre que la session soit bien établie
         // Le token doit être propagé avant de vérifier les droits admin
         await new Promise(resolve => setTimeout(resolve, 500));
         
         // Vérifier que l'utilisateur est bien admin en utilisant authService
-        console.debug('[Login] Vérification des droits admin...');
+        logger.debug('[Login] Vérification des droits admin...');
         const isAdmin = await authService.isAdmin();
-        console.debug('[Login] Résultat isAdmin:', isAdmin);
+        logger.debug('[Login] Résultat isAdmin:', isAdmin);
         
         if (!isAdmin) {
           // Deuxième tentative après un délai supplémentaire
-          console.debug('[Login] Première vérification échouée, retry...');
+          logger.debug('[Login] Première vérification échouée, retry...');
           await new Promise(resolve => setTimeout(resolve, 1000));
           const isAdminRetry = await authService.isAdmin();
-          console.debug('[Login] Résultat isAdmin retry:', isAdminRetry);
+          logger.debug('[Login] Résultat isAdmin retry:', isAdminRetry);
           
           if (!isAdminRetry) {
             throw new Error('Vous n\'avez pas les droits d\'administration');
@@ -121,11 +123,11 @@ export const Login = () => {
         }
         
         // Rediriger vers le dashboard
-        console.debug('[Login] Redirection vers le dashboard');
-        navigate('/admin/dashboard', { replace: true });
+        logger.debug('[Login] Redirection vers le dashboard');
+        navigate(adminRoute('dashboard'), { replace: true });
       }
-    } catch (err: any) {
-      setError(err.message || 'Erreur de connexion');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur de connexion');
       setLoading(false);
     }
   };

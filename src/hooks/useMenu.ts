@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { logger } from '../lib/logger';
 
 export interface MenuCategoryRef {
   id: string;
@@ -136,9 +137,9 @@ export const useMenu = () => {
 
         setMenuItems(menuData);
         setError(null);
-      } catch (err: any) {
-        console.error('Error fetching menu items:', err);
-        setError(err.message || 'Erreur lors du chargement du menu');
+      } catch (err: unknown) {
+        logger.error('[useMenu] Erreur');
+        setError(err instanceof Error ? err.message : 'Erreur lors du chargement du menu');
       } finally {
         setLoading(false);
       }
@@ -234,9 +235,9 @@ export const useMenuItem = (id: string | undefined) => {
 
         setMenuItem(menuData);
         setError(null);
-      } catch (err: any) {
-        console.error('Error fetching menu item:', err);
-        setError(err.message || 'Erreur lors du chargement de l\'article');
+      } catch (err: unknown) {
+        logger.error('[useMenuItem] Erreur');
+        setError(err instanceof Error ? err.message : 'Erreur');
         setMenuItem(null);
       } finally {
         setLoading(false);

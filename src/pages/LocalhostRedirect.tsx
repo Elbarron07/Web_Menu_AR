@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { logger } from '../lib/logger';
 
 /**
  * Page de redirection pour intercepter les liens localhost et les rediriger vers la production
@@ -57,7 +58,7 @@ export const LocalhostRedirect = () => {
         // Rediriger vers la production
         window.location.href = redirectUrl;
       } catch (error: any) {
-        console.error('Erreur lors de la redirection:', error);
+        logger.error('Erreur lors de la redirection:', error);
         setStatus('error');
         setMessage(`Erreur: ${error.message || 'Une erreur est survenue'}`);
         

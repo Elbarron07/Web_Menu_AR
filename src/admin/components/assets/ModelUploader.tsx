@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload, File, X } from 'lucide-react';
 import { storageService } from '../../../lib/storage';
+import { logger } from '../../../lib/logger';
 
 interface ModelUploaderProps {
   onUploadComplete: (url: string) => void;
@@ -38,7 +39,7 @@ export const ModelUploader = ({ onUploadComplete, currentUrl }: ModelUploaderPro
       onUploadComplete(url);
     } catch (error: any) {
       const errorMessage = error.message || 'Erreur inconnue lors de l\'upload';
-      console.error('Erreur upload:', error);
+      logger.error('Erreur upload:', error);
       alert(`Erreur lors de l'upload: ${errorMessage}`);
     } finally {
       setUploading(false);

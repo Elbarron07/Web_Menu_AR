@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { logger } from './logger';
 import type { User, Session } from '@supabase/supabase-js';
 
 export interface AdminUser {
@@ -34,24 +35,22 @@ export const authService = {
 
   async isAdmin(): Promise<boolean> {
     try {
-      // Récupérer la session pour vérifier si l'utilisateur est authentifié
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError) {
-        console.warn('[isAdmin] Erreur getSession:', sessionError.message);
+        logger.warn('[isAdmin] Erreur session');
         return false;
       }
       
       if (!session) {
-        console.debug('[isAdmin] Aucune session active');
+        logger.debug('[isAdmin] Aucune session');
         return false;
       }
       
-      // Tout utilisateur authentifié est considéré comme admin
-      console.info('[isAdmin] Utilisateur authentifié, accès admin accordé:', session.user.email);
+      logger.debug('[isAdmin] Acces accorde');
       return true;
-    } catch (error) {
-      console.error('[isAdmin] Erreur inattendue:', error);
+    } catch {
+      logger.error('[isAdmin] Erreur');
       return false;
     }
   },
@@ -63,14 +62,13 @@ export const authService = {
         return null;
       }
       
-      // Tout utilisateur authentifié est considéré comme admin
       return {
         id: user.id,
         email: user.email || '',
         role: 'admin',
       };
-    } catch (error) {
-      console.error('Erreur inattendue lors de la récupération des données admin:', error);
+    } catch {
+      logger.error('[getAdminUser] Erreur');
       return null;
     }
   },

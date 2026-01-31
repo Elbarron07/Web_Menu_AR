@@ -5,6 +5,7 @@ import { useCameraStream } from '../hooks/useCameraStream';
 import { useWebXR } from '../hooks/useWebXR';
 import { PlaneDetector } from './PlaneDetector';
 import { ARMenu } from './ARMenu';
+import { logger } from '../lib/logger';
 import * as THREE from 'three';
 
 interface WebXRViewerProps {
@@ -31,7 +32,7 @@ const ModelRenderer = ({ modelPath, position, scale, realWorldSize }: ModelRende
   const { scene } = useGLTF(modelPath);
   
   useEffect(() => {
-    console.log('✅ Modèle GLTF chargé avec succès:', modelPath, 'Scene:', scene);
+    logger.debug('✅ Modèle GLTF chargé avec succès:', modelPath, 'Scene:', scene);
   }, [modelPath, scene]);
 
   useEffect(() => {
@@ -41,7 +42,7 @@ const ModelRenderer = ({ modelPath, position, scale, realWorldSize }: ModelRende
       const center = box.getCenter(new THREE.Vector3());
       const size = box.getSize(new THREE.Vector3());
       
-      console.log('📦 Bounding box:', { center, size, min: box.min, max: box.max });
+      logger.debug('📦 Bounding box:', { center, size, min: box.min, max: box.max });
       
       // Calculer l'échelle pour taille réelle (1:1)
       let finalScale = scale.clone();
@@ -66,7 +67,7 @@ const ModelRenderer = ({ modelPath, position, scale, realWorldSize }: ModelRende
         // Appliquer le facteur d'échelle uniformément pour maintenir les proportions
         finalScale.multiplyScalar(scaleFactor);
         
-        console.log('📏 Échelle taille réelle calculée:', {
+        logger.debug('📏 Échelle taille réelle calculée:', {
           realWorldSize,
           modelDimension: isVertical ? `hauteur: ${verticalSize}` : `diamètre: ${horizontalSize}`,
           scaleFactor,
@@ -88,7 +89,7 @@ const ModelRenderer = ({ modelPath, position, scale, realWorldSize }: ModelRende
       // Appliquer l'échelle finale (taille réelle + variant)
       modelRef.current.scale.copy(finalScale);
       
-      console.log('📍 Modèle positionné à taille réelle:', {
+      logger.debug('📍 Modèle positionné à taille réelle:', {
         modelPath,
         position: modelRef.current.position,
         scale: modelRef.current.scale,
@@ -154,7 +155,7 @@ export const WebXRViewer = ({
   useEffect(() => {
     if (stream && videoRef.current) {
       videoRef.current.srcObject = stream;
-      videoRef.current.play().catch(console.error);
+      videoRef.current.play().catch(logger.error);
     }
   }, [stream]);
 
@@ -181,7 +182,7 @@ export const WebXRViewer = ({
 
   // Gérer la détection de plan
   const handlePlaneDetected = (position: THREE.Vector3, _normal: THREE.Vector3) => {
-    console.log('Plan détecté à la position:', position);
+    logger.debug('Plan détecté à la position:', position);
     setDetectedPlane(position);
   };
 
@@ -190,7 +191,7 @@ export const WebXRViewer = ({
     if (modelPath && !detectedPlane && !showMenu) {
       // Après 3 secondes, activer le mode test si aucune surface n'est détectée
       const timer = setTimeout(() => {
-        console.log('Mode test activé - affichage du modèle à position fixe');
+        logger.debug('Mode test activé - affichage du modèle à position fixe');
         setTestMode(true);
         setDetectedPlane(new THREE.Vector3(0, 0, -1)); // Position fixe devant la caméra
       }, 3000);
@@ -262,7 +263,7 @@ export const WebXRViewer = ({
                 setGlContext(gl);
                 // Démarrer la session WebXR
                 startSession(gl).catch((err) => {
-                  console.error('Erreur démarrage WebXR:', err);
+                  logger.error('Erreur démarrage WebXR:', err);
                 });
               }
             }

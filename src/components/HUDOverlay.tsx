@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
+import { logger } from '../lib/logger';
 
 interface Variant {
     size: string;
@@ -69,7 +70,7 @@ export const HUDOverlay = ({
             await onActivateAR();
             setIsARMode(true);
         } catch (error: any) {
-            console.error('Erreur activation AR:', error);
+            logger.error('Erreur activation AR:', error);
             setArError('AR non disponible');
             setTimeout(() => setArError(null), 3000);
         } finally {

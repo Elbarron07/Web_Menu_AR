@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { adminApi, type AnalyticsData } from '../../lib/adminApi';
+import { logger } from '../../lib/logger';
 import { useAuth } from './useAuth';
 
 export type { AnalyticsData };
@@ -11,7 +12,6 @@ export const useAnalytics = (days: number = 7) => {
   const { isAdmin, loading: authLoading } = useAuth();
 
   useEffect(() => {
-    // Attendre que l'authentification soit vérifiée et que l'utilisateur soit admin
     if (authLoading || !isAdmin) {
       return;
     }
@@ -22,9 +22,9 @@ export const useAnalytics = (days: number = 7) => {
         setError(null);
         const analyticsData = await adminApi.analytics.getAnalytics(days);
         setData(analyticsData);
-      } catch (err: any) {
-        console.error('Analytics error:', err);
-        setError(err.message || 'Erreur lors du chargement des analytics');
+      } catch (err: unknown) {
+        logger.error('[useAnalytics] Erreur');
+        setError(err instanceof Error ? err.message : 'Erreur lors du chargement des analytics');
       } finally {
         setLoading(false);
       }

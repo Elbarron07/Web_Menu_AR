@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { ADMIN_PATH } from '../config/routes';
 
 /**
  * Composant wrapper pour les routes AR
@@ -9,11 +10,12 @@ export const ARLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
 
   useEffect(() => {
-    // Vérifier si on est sur une route AR
+    // Verifier si on est sur une route AR
     const isARRoute = location.pathname === '/' || location.pathname.startsWith('/ar/');
     
-    // Vérifier si on est sur une route admin ou autre route non-AR
-    const isAdminRoute = location.pathname.startsWith('/admin/') || 
+    // Verifier si on est sur une route admin ou autre route non-AR
+    const isAdminRoute = location.pathname.startsWith(`/${ADMIN_PATH}/`) || 
+                         location.pathname === `/${ADMIN_PATH}` ||
                          location.pathname.startsWith('/auth/') ||
                          location.pathname.startsWith('/localhost-redirect');
 

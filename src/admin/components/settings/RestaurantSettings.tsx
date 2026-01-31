@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { Save, Upload } from 'lucide-react';
 import { adminApi } from '../../../lib/adminApi';
 import { storageService } from '../../../lib/storage';
+import { logger } from '../../../lib/logger';
 
 const settingsSchema = z.object({
   name: z.string().min(1, 'Nom requis'),
@@ -47,7 +48,7 @@ export const RestaurantSettings = () => {
           setValue('qr_code_base_url', data.qr_code_base_url || window.location.origin);
         }
       } catch (error) {
-        console.error('Error fetching settings:', error);
+        logger.error('Error fetching settings:', error);
       } finally {
         setLoading(false);
       }

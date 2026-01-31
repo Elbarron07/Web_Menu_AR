@@ -8,6 +8,7 @@ import { Badge } from '../components/ui/Badge';
 import { Table } from '../components/ui/Table';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { formatDistanceToNow } from 'date-fns';
+import { adminRoute } from '../../config/routes';
 
 export const Dashboard = () => {
   const { menuItems, loading: menuLoading } = useMenu();
@@ -44,7 +45,7 @@ export const Dashboard = () => {
       icon: UtensilsCrossed,
       iconColor: 'bg-primary-600',
       trend: { value: '+12%', direction: 'up' as const },
-      link: '/admin/menu',
+      link: adminRoute('menu'),
     },
     {
       label: 'Modèles 3D',
@@ -52,7 +53,7 @@ export const Dashboard = () => {
       icon: Package,
       iconColor: 'bg-purple-500',
       trend: { value: '+5', direction: 'up' as const },
-      link: '/admin/assets',
+      link: adminRoute('assets'),
     },
     {
       label: 'Vues AR (7j)',
@@ -60,7 +61,7 @@ export const Dashboard = () => {
       icon: Eye,
       iconColor: 'bg-success-500',
       trend: { value: '+21%', direction: 'up' as const },
-      link: '/admin/analytics',
+      link: adminRoute('analytics'),
     },
     {
       label: 'Ajouts panier',
@@ -68,7 +69,7 @@ export const Dashboard = () => {
       icon: ShoppingCart,
       iconColor: 'bg-warning-500',
       trend: { value: '+8%', direction: 'up' as const },
-      link: '/admin/analytics',
+      link: adminRoute('analytics'),
     },
   ];
 
@@ -187,7 +188,7 @@ export const Dashboard = () => {
           <p className="text-primary-100 text-sm mb-4">
             Découvrez le tracking avancé des clients et les analyses de données approfondies.
           </p>
-          <Link to="/admin/customers">
+          <Link to={adminRoute('customers')}>
             <button className="w-full bg-white text-primary-600 font-semibold py-2.5 px-4 rounded-xl hover:bg-primary-50 transition-colors shadow-lg">
               Explorer maintenant
             </button>

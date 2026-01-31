@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { adminApi } from '../../lib/adminApi';
+import { logger } from '../../lib/logger';
 import type { MenuItem } from '../../hooks/useMenu';
 import { useAuth } from './useAuth';
 
@@ -15,9 +16,9 @@ export const useMenuAdmin = () => {
       const data = await adminApi.menu.getMenu();
       setMenuItems(data);
       setError(null);
-    } catch (err: any) {
-      console.error('Error fetching menu items:', err);
-      setError(err.message || 'Erreur lors du chargement du menu');
+    } catch (err: unknown) {
+      logger.error('[useMenuAdmin] Erreur');
+      setError(err instanceof Error ? err.message : 'Erreur lors du chargement du menu');
     } finally {
       setLoading(false);
     }

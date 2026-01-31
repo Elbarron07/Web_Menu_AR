@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { logger } from '../lib/logger';
+import { adminRoute } from '../config/routes';
 
 /**
  * Fonction pour extraire les paramètres du hash de l'URL (#access_token=...)
@@ -57,17 +59,15 @@ export const AuthCallback = () => {
               
               setTimeout(() => {
                 if (isInvite) {
-                  // Pour une invitation, rediriger vers la page de création de mot de passe
-                  navigate('/admin/login?invite=true');
+                  navigate(adminRoute('login') + '?invite=true');
                 } else {
-                  // Sinon, rediriger vers le dashboard
-                  navigate('/admin/dashboard');
+                  navigate(adminRoute('dashboard'));
                 }
               }, 2000);
               return;
             }
           } catch (sessionError: any) {
-            console.error('Erreur lors de l\'établissement de la session:', sessionError);
+            logger.error('Erreur lors de l\'établissement de la session:', sessionError);
             // Continuer avec le traitement normal si l'établissement de session échoue
           }
         }
@@ -88,7 +88,7 @@ export const AuthCallback = () => {
             setStatus('success');
             setMessage('Invitation acceptée avec succès ! Redirection...');
             setTimeout(() => {
-              navigate('/admin/dashboard');
+              navigate(adminRoute('dashboard'));
             }, 2000);
             return;
           }
@@ -107,31 +107,26 @@ export const AuthCallback = () => {
                 setStatus('success');
                 setMessage('Invitation acceptée avec succès ! Redirection...');
                 setTimeout(() => {
-                  navigate('/admin/dashboard');
+                  navigate(adminRoute('dashboard'));
                 }, 2000);
                 return;
               }
             } catch (tokenError: any) {
-              console.error('Erreur lors du traitement du token:', tokenError);
+              logger.error('Erreur lors du traitement du token:', tokenError);
             }
           }
 
-          // Si pas de session, rediriger vers la page de connexion
-          // avec un message indiquant qu'il faut créer un mot de passe
           setStatus('success');
           setMessage('Redirection vers la création de compte...');
           setTimeout(() => {
-            navigate('/admin/login?invite=true');
+            navigate(adminRoute('login') + '?invite=true');
           }, 2000);
         } 
-        // Si c'est une réinitialisation de mot de passe ou autre type
         else if (token || tokenHash) {
           setMessage('Traitement de la demande...');
           
-          // Rediriger vers la page de connexion avec le token
-          // La page de login gérera le reste
           setTimeout(() => {
-            navigate(`/admin/login?token=${token || tokenHash}&type=${type || 'recovery'}`);
+            navigate(`${adminRoute('login')}?token=${token || tokenHash}&type=${type || 'recovery'}`);
           }, 1000);
         }
         // Si aucun token, rediriger vers la page d'accueil
@@ -143,12 +138,12 @@ export const AuthCallback = () => {
           }, 2000);
         }
       } catch (error: any) {
-        console.error('Erreur lors du traitement de l\'invitation:', error);
+        logger.error('Erreur lors du traitement de l\'invitation:', error);
         setStatus('error');
         setMessage(`Erreur: ${error.message || 'Une erreur est survenue'}`);
         
         setTimeout(() => {
-          navigate('/admin/login');
+          navigate(adminRoute('login'));
         }, 3000);
       }
     };

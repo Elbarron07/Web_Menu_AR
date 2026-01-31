@@ -10,6 +10,7 @@ import { Analytics } from './pages/Analytics';
 import { Settings } from './pages/Settings';
 import { CustomerTracking } from './pages/CustomerTracking';
 import { DataAnalytics } from './pages/DataAnalytics';
+import { adminRoute } from '../config/routes';
 
 export const AdminRoutes = () => {
   return (
@@ -105,7 +106,7 @@ export const AdminRoutes = () => {
           </ProtectedRoute>
         }
       />
-      <Route path="*" element={<Navigate to="/admin" replace />} />
+      <Route path="*" element={<Navigate to={adminRoute()} replace />} />
     </Routes>
   );
 };

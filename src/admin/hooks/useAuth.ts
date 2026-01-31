@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { authService, type AdminUser } from '../../lib/auth';
+import { logger } from '../../lib/logger';
 import type { User } from '@supabase/supabase-js';
 
 export const useAuth = () => {
@@ -23,8 +24,8 @@ export const useAuth = () => {
             setAdminUser(adminData);
           }
         }
-      } catch (error) {
-        console.error('Auth check error:', error);
+      } catch {
+        logger.error('[useAuth] Erreur');
       } finally {
         setLoading(false);
       }

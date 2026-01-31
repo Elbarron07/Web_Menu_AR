@@ -1,15 +1,25 @@
 # Dashboard Admin - Documentation
 
-## Accès
+## Acces
 
-L'interface admin est accessible à l'adresse : `/admin`
+L'interface admin est accessible via la variable d'environnement `VITE_ADMIN_PATH`.
+Par defaut: `/console`
 
-## Première connexion
+## Configuration
 
-Tout utilisateur authentifié via Supabase Auth a automatiquement accès à l'interface admin.
+Definir la route admin dans `.env`:
+```
+VITE_ADMIN_PATH=console
+```
 
-1. Créer un compte utilisateur via Supabase Auth (Dashboard Supabase > Authentication > Users)
-2. Se connecter avec les identifiants sur `/admin/login`
+Sur Vercel, definir cette variable dans Settings > Environment Variables.
+
+## Premiere connexion
+
+Tout utilisateur authentifie via Supabase Auth a automatiquement acces a l'interface admin.
+
+1. Creer un compte utilisateur via Supabase Auth (Dashboard Supabase > Authentication > Users)
+2. Se connecter avec les identifiants sur `/{VITE_ADMIN_PATH}/login`
 
 ## Modules disponibles
 

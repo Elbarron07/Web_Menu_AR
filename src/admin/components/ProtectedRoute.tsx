@@ -1,5 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { adminRoute } from '../../config/routes';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -22,12 +23,12 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
   }
 
   if (!isAdmin) {
-    return <Navigate to="/admin/login" replace state={{ from: location }} />;
+    return <Navigate to={adminRoute('login')} replace state={{ from: location }} />;
   }
 
-  // Vérifier le rôle si requis
+  // Verifier le role si requis
   if (requiredRole === 'super_admin' && adminUser?.role !== 'super_admin') {
-    return <Navigate to="/admin" replace />;
+    return <Navigate to={adminRoute()} replace />;
   }
 
   return <>{children}</>;

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
+import { logger } from '../lib/logger';
 import * as THREE from 'three';
 
 interface PlaneDetectorProps {
@@ -35,7 +36,7 @@ export const PlaneDetector = ({
           }
         }
       } catch (err) {
-        console.error('Erreur initialisation hit test:', err);
+        logger.error('Erreur initialisation hit test:', err);
       }
     };
 
@@ -117,7 +118,7 @@ export const PlaneDetector = ({
         }
       }
     } catch (err) {
-      console.error('Erreur hit test:', err);
+      logger.error('Erreur hit test:', err);
     }
   });
 

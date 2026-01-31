@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { adminApi, type MenuCategory } from '../../lib/adminApi';
+import { logger } from '../../lib/logger';
 import { useAuth } from './useAuth';
 
 export const useCategories = () => {
@@ -14,9 +15,9 @@ export const useCategories = () => {
       const data = await adminApi.categories.getCategories();
       setCategories(data);
       setError(null);
-    } catch (err: any) {
-      console.error('Error fetching categories:', err);
-      setError(err.message || 'Erreur lors du chargement des catégories');
+    } catch (err: unknown) {
+      logger.error('[useCategories] Erreur');
+      setError(err instanceof Error ? err.message : 'Erreur lors du chargement des catégories');
     } finally {
       setLoading(false);
     }

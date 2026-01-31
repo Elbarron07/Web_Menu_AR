@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { logger } from './logger';
 
 export type AnalyticsEventType = 
   | 'view_3d' 
@@ -12,7 +13,7 @@ export interface AnalyticsEvent {
   event_type: AnalyticsEventType;
   session_id?: string;
   duration?: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 class AnalyticsService {
@@ -44,11 +45,10 @@ class AnalyticsService {
         });
 
       if (error) {
-        console.error('Analytics tracking error:', error);
-        // Ne pas bloquer l'application en cas d'erreur
+        logger.error('[Analytics] Erreur tracking');
       }
-    } catch (error) {
-      console.error('Analytics tracking error:', error);
+    } catch {
+      logger.error('[Analytics] Erreur');
     }
   }
 

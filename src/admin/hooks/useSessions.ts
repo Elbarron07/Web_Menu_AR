@@ -1,6 +1,6 @@
-// Hook for fetching customer sessions data
 import { useState, useEffect } from 'react';
 import { adminApi, type SessionsData } from '../../lib/adminApi';
+import { logger } from '../../lib/logger';
 import { useAuth } from './useAuth';
 
 export type { SessionsData, Session } from '../../lib/adminApi';
@@ -12,7 +12,6 @@ export const useSessions = (days: number = 30, search?: string) => {
   const { isAdmin, loading: authLoading } = useAuth();
 
   useEffect(() => {
-    // Attendre que l'authentification soit vérifiée et que l'utilisateur soit admin
     if (authLoading || !isAdmin) {
       return;
     }
@@ -23,9 +22,9 @@ export const useSessions = (days: number = 30, search?: string) => {
         setError(null);
         const sessionsData = await adminApi.sessions.getSessions(days, search);
         setData(sessionsData);
-      } catch (err: any) {
-        console.error('Sessions error:', err);
-        setError(err.message || 'Erreur lors du chargement des sessions');
+      } catch (err: unknown) {
+        logger.error('[useSessions] Erreur');
+        setError(err instanceof Error ? err.message : 'Erreur lors du chargement des sessions');
       } finally {
         setLoading(false);
       }
