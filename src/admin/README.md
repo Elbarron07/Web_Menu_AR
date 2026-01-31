@@ -6,29 +6,10 @@ L'interface admin est accessible à l'adresse : `/admin`
 
 ## Première connexion
 
-### Créer un compte admin
+Tout utilisateur authentifié via Supabase Auth a automatiquement accès à l'interface admin.
 
-1. Créer un compte utilisateur via Supabase Auth (via l'interface Supabase ou programmatiquement)
-2. Insérer l'utilisateur dans la table `admin_users` :
-
-```sql
-INSERT INTO admin_users (id, email, role)
-VALUES (
-  'user-uuid-from-auth-users',
-  'admin@restaurant.com',
-  'admin'
-);
-```
-
-Pour créer un super_admin :
-```sql
-INSERT INTO admin_users (id, email, role)
-VALUES (
-  'user-uuid-from-auth-users',
-  'admin@restaurant.com',
-  'super_admin'
-);
-```
+1. Créer un compte utilisateur via Supabase Auth (Dashboard Supabase > Authentication > Users)
+2. Se connecter avec les identifiants sur `/admin/login`
 
 ## Modules disponibles
 

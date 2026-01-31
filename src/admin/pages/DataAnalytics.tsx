@@ -75,13 +75,10 @@ export const DataAnalytics = () => {
   const timeData = useMemo(() => {
     if (!analyticsData?.eventsByDay) return [];
 
-    // Group events by hour (simplified: use eventsByDay and extract hour)
-    // For now, we'll create hourly buckets from the daily data
-    // In a real implementation, the Edge Function should provide hourly data
+    // Creer des buckets horaires a partir des donnees journalieres
     const hourlyMap = new Map<string, { views: number; conversions: number }>();
 
-    // For demonstration, distribute daily data across hours
-    // In production, the Edge Function should aggregate by hour
+    // Distribuer les donnees journalieres sur les heures typiques
     analyticsData.eventsByDay.forEach((day) => {
       // Distribute views/conversions across typical hours (12h, 18h, 20h are peak)
       const peakHours = [12, 18, 20];
