@@ -34,7 +34,7 @@ export const authService = {
 
   async isAdmin(): Promise<boolean> {
     try {
-      // D'abord récupérer la session pour s'assurer que le token est disponible
+      // Récupérer la session pour vérifier si l'utilisateur est authentifié
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError) {
@@ -47,50 +47,9 @@ export const authService = {
         return false;
       }
       
-      console.debug('[isAdmin] Session trouvée, user:', session.user?.id, session.user?.email);
-      
-      // Utiliser la fonction RPC is_admin() qui a SECURITY DEFINER
-      // Cette fonction contourne les problèmes RLS
-      const { data: isAdminResult, error: rpcError } = await supabase.rpc('is_admin', {
-        user_id: session.user.id
-      });
-      
-      if (rpcError) {
-        console.warn('[isAdmin] Erreur RPC is_admin:', {
-          error: rpcError.message,
-          code: rpcError.code,
-          details: rpcError.details,
-          hint: rpcError.hint,
-        });
-        
-        // Fallback: essayer avec une requête directe
-        console.debug('[isAdmin] Fallback vers requête directe...');
-        const { data: directData, error: directError } = await supabase
-          .from('admin_users')
-          .select('id, role')
-          .eq('id', session.user.id)
-          .maybeSingle();
-        
-        if (directError) {
-          console.warn('[isAdmin] Erreur requête directe:', directError.message);
-          return false;
-        }
-        
-        const isAdmin = !!directData;
-        console.debug('[isAdmin] Résultat fallback:', { isAdmin, data: directData });
-        return isAdmin;
-      }
-      
-      const isAdmin = isAdminResult === true;
-      console.debug('[isAdmin] Résultat RPC:', { isAdmin, rawResult: isAdminResult });
-      
-      if (isAdmin) {
-        console.info('[isAdmin] Utilisateur vérifié comme admin:', session.user.email);
-      } else {
-        console.warn('[isAdmin] Utilisateur NON admin:', session.user.email);
-      }
-      
-      return isAdmin;
+      // Tout utilisateur authentifié est considéré comme admin
+      console.info('[isAdmin] Utilisateur authentifié, accès admin accordé:', session.user.email);
+      return true;
     } catch (error) {
       console.error('[isAdmin] Erreur inattendue:', error);
       return false;
@@ -104,33 +63,11 @@ export const authService = {
         return null;
       }
       
-      // Avec la nouvelle politique RLS, les admins peuvent lire leur propre enregistrement
-      const { data, error } = await supabase
-        .from('admin_users')
-        .select('*')
-        .eq('id', user.id)
-        .maybeSingle();
-      
-      if (error) {
-        // Log détaillé pour diagnostiquer les problèmes RLS
-        console.warn('Erreur lors de la récupération des données admin:', {
-          error: error.message,
-          code: error.code,
-          details: error.details,
-          hint: error.hint,
-          userId: user.id,
-        });
-        return null;
-      }
-      
-      if (!data) {
-        return null;
-      }
-      
+      // Tout utilisateur authentifié est considéré comme admin
       return {
-        id: data.id,
-        email: data.email,
-        role: data.role,
+        id: user.id,
+        email: user.email || '',
+        role: 'admin',
       };
     } catch (error) {
       console.error('Erreur inattendue lors de la récupération des données admin:', error);

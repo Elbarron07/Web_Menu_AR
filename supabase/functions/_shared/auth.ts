@@ -1,6 +1,6 @@
 // Shared authentication module for Supabase Edge Functions
-// Verifies JWT and checks if user is an admin
-// Version 2.0 - Enhanced with role support and detailed logging
+// Verifies JWT - accepts any authenticated user as admin
+// Version 3.0 - Simplified: all authenticated users have admin access
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -13,13 +13,13 @@ export interface AuthResult {
 }
 
 /**
- * Verify that the request comes from an authenticated admin user
- * Uses service_role key to bypass RLS for admin_users check
+ * Verify that the request comes from an authenticated user
+ * Any authenticated user is granted admin access
  * 
  * @param req - The incoming request
  * @param supabaseUrl - Supabase project URL
  * @param supabaseServiceKey - Service role key (bypasses RLS)
- * @returns AuthResult with user info, admin status, and role
+ * @returns AuthResult with user info and admin status
  */
 export async function verifyAdmin(
   req: Request,
@@ -86,66 +86,20 @@ export async function verifyAdmin(
       return { userId: null, email: null, isAdmin: false, role: null, error: 'User not found' };
     }
     
-    console.debug('[verifyAdmin] User authenticated:', {
+    const elapsedMs = Date.now() - startTime;
+    console.info('[verifyAdmin] SUCCESS - User authenticated and granted admin access:', {
       userId: user.id,
       email: user.email,
       emailVerified: user.email_confirmed_at ? true : false,
-    });
-    
-    // Étape 5: Vérifier si l'utilisateur est admin dans admin_users
-    // Utilise service_role donc bypass RLS
-    console.debug('[verifyAdmin] Checking admin_users table...');
-    const { data: adminUser, error: adminError } = await supabaseAdmin
-      .from('admin_users')
-      .select('id, email, role, created_at')
-      .eq('id', user.id)
-      .maybeSingle();
-    
-    if (adminError) {
-      console.error('[verifyAdmin] Database error checking admin status:', {
-        error: adminError.message,
-        code: adminError.code,
-        details: adminError.details,
-        hint: adminError.hint,
-        userId: user.id,
-      });
-      return { 
-        userId: user.id, 
-        email: user.email || null, 
-        isAdmin: false, 
-        role: null, 
-        error: 'Database error while checking admin status' 
-      };
-    }
-    
-    if (!adminUser) {
-      console.warn('[verifyAdmin] User is NOT in admin_users table:', {
-        userId: user.id,
-        email: user.email,
-      });
-      return { 
-        userId: user.id, 
-        email: user.email || null, 
-        isAdmin: false, 
-        role: null, 
-        error: 'Access denied. User is not an administrator.' 
-      };
-    }
-    
-    const elapsedMs = Date.now() - startTime;
-    console.info('[verifyAdmin] SUCCESS - Admin verified:', {
-      userId: user.id,
-      email: user.email,
-      role: adminUser.role,
-      adminSince: adminUser.created_at,
       verificationTimeMs: elapsedMs,
     });
     
+    // Tout utilisateur authentifié est considéré comme admin
     return { 
       userId: user.id, 
-      email: user.email || adminUser.email, 
+      email: user.email || null, 
       isAdmin: true, 
-      role: adminUser.role as 'admin' | 'super_admin',
+      role: 'admin',
       error: null 
     };
     
