@@ -108,7 +108,8 @@ html.ar-mode #root {
   left: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
-  touch-action: pan-x pan-y pinch-zoom !important;
+  /* Laisser model-viewer gerer tous les gestes tactiles */
+  touch-action: none !important;
   -webkit-touch-callout: none !important;
   -webkit-user-select: none !important;
   user-select: none !important;
@@ -116,6 +117,9 @@ html.ar-mode #root {
   pointer-events: auto !important;
   cursor: grab !important;
   outline: none !important;
+  /* Optimisations iOS */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-overflow-scrolling: touch;
 }
 
 .ar-viewer-fullscreen:active {
@@ -129,31 +133,46 @@ html.ar-mode #root {
 /* S'assurer que model-viewer peut recevoir les événements tactiles */
 model-viewer {
   pointer-events: auto !important;
-  touch-action: pan-x pan-y pinch-zoom !important;
+  /* touch-action: none permet a model-viewer de gerer rotation, zoom, pan */
+  touch-action: none !important;
   -webkit-touch-callout: none !important;
   -webkit-user-select: none !important;
   user-select: none !important;
   outline: none !important;
   display: block !important;
+  /* Optimisations iOS Safari */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-overflow-scrolling: touch;
 }
 
 model-viewer:focus {
   outline: none !important;
 }
 
-/* Zone de contrôle caméra de model-viewer */
+/* Bouton AR par defaut - style ameliore */
 model-viewer::part(default-ar-button) {
   pointer-events: auto !important;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 9999px;
+  padding: 12px 24px;
+  font-weight: 600;
+  color: #1f2937;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  border: none;
+  transition: all 0.3s ease;
 }
 
-/* Contrôles caméra de model-viewer */
+model-viewer::part(default-ar-button):hover {
+  background: rgba(255, 255, 255, 1);
+  transform: scale(1.05);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+}
+
+/* Prompt d'interaction (main qui tourne) */
 model-viewer::part(interaction-prompt) {
   pointer-events: none !important;
-}
-
-/* Zone interactive pour la rotation */
-model-viewer::part(default-ar-button) {
-  pointer-events: auto !important;
 }
 
 /* Conteneur principal - ne pas bloquer les interactions */
@@ -242,36 +261,20 @@ model-viewer::part(default-ar-button) {
   pointer-events: auto !important;
 }
 
-/* Optimisations pour la rotation tactile */
+/* Optimisations pour les appareils tactiles (mobile/tablette) */
 @media (hover: none) and (pointer: coarse) {
-  /* Mobile - optimiser pour les gestes tactiles */
+  /* Mobile - laisser model-viewer gerer tous les gestes */
   model-viewer {
-    touch-action: pan-x pan-y pinch-zoom !important;
-    -webkit-touch-action: pan-x pan-y pinch-zoom !important;
+    touch-action: none !important;
+    -webkit-touch-action: none !important;
   }
   
   .ar-viewer-fullscreen {
-    touch-action: pan-x pan-y pinch-zoom !important;
-    -webkit-touch-action: pan-x pan-y pinch-zoom !important;
+    touch-action: none !important;
+    -webkit-touch-action: none !important;
   }
 }
 
-/* Animation pour la main de guidage (interaction-prompt) */
-model-viewer::part(default-ar-button) {
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(10px);
-  border-radius: 9999px;
-  padding: 12px 24px;
-  font-weight: bold;
-  color: #1f2937;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  transition: all 0.3s ease;
-}
-
-model-viewer::part(default-ar-button):hover {
-  background: rgba(255, 255, 255, 1);
-  transform: scale(1.05);
-}
 
 /* Empêcher le scroll sur mobile - uniquement en mode AR */
 @media (max-width: 768px) {

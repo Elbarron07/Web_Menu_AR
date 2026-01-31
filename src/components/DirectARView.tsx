@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useMenu, useMenuItem } from '../hooks/useMenu';
+import { useRestaurantSettings } from '../hooks/useRestaurantSettings';
 import { useCart } from './CartContext';
 import { SpinningTacticalMenu } from './SpinningTacticalMenu';
 import { ARViewer } from './ARViewer';
@@ -17,6 +18,7 @@ const DirectARView = () => {
     const navigate = useNavigate();
     const { menuItems, loading: menuLoading } = useMenu();
     const { menuItem: product, loading: itemLoading } = useMenuItem(id);
+    const { settings } = useRestaurantSettings();
 
     const { addToCart } = useCart();
     const arViewerRef = useRef<ARViewerRef>(null);
@@ -28,6 +30,7 @@ const DirectARView = () => {
     const [selectedHotspot, setSelectedHotspot] = useState<any>(null);
     const [showCartFeedback, setShowCartFeedback] = useState(false);
     const [isARMode, setIsARMode] = useState(false);
+    const [carouselIndex, setCarouselIndex] = useState(0);
 
     useEffect(() => {
         if (product && product.variants && product.variants.length > 0) {
@@ -118,6 +121,21 @@ const DirectARView = () => {
         }
     }, [id, product]);
 
+    // Carrousel automatique pour les images d'arrière-plan
+    useEffect(() => {
+        if (settings?.background_mode !== 'carousel' || !settings?.background_images?.length) {
+            return;
+        }
+        
+        const interval = setInterval(() => {
+            setCarouselIndex((prev) => 
+                (prev + 1) % (settings.background_images?.length || 1)
+            );
+        }, 5000); // Change toutes les 5 secondes
+        
+        return () => clearInterval(interval);
+    }, [settings?.background_mode, settings?.background_images?.length]);
+
     // Convertir les hotspots de l'ancien format au nouveau format si nécessaire
     const convertHotspots = (hotspots: any[]) => {
         return hotspots.map((hotspot, index) => {
@@ -185,23 +203,32 @@ const DirectARView = () => {
         return <MenuSkeleton />;
     }
 
-    return (
-        <div className="relative w-screen h-screen overflow-hidden">
-            {/* Fond hybride : statique clair par défaut, caméra en mode AR */}
-            {!isARMode && (
-                <div 
-                    className="fixed inset-0 z-0 bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100"
-                    style={{
-                        background: 'linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 50%, #E0E7FF 100%)',
-                    }}
-                >
-                    {/* Formes abstraites bleues subtiles */}
-                    <div className="absolute top-20 right-20 w-64 h-64 bg-primary-200/20 rounded-full blur-3xl"></div>
-                    <div className="absolute bottom-20 left-20 w-96 h-96 bg-primary-300/10 rounded-full blur-3xl"></div>
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-primary-100/15 rounded-full blur-3xl"></div>
-                </div>
-            )}
+    // Determiner le fond a afficher
+    const backgroundImages = settings?.background_images || [];
+    const backgroundMode = settings?.background_mode || 'gradient';
 
+    // Debug temporaire - a retirer apres resolution du probleme
+    console.log('[DEBUG] Background settings:', { backgroundMode, backgroundImages, settings, isARMode });
+
+    // Calculer le style de fond - solution radicale avec backgroundImage inline
+    const backgroundStyle: React.CSSProperties = {
+        backgroundColor: '#000000', // Fond noir par defaut
+    };
+
+    if (!isARMode && backgroundImages.length > 0) {
+        if (backgroundMode === 'single') {
+            backgroundStyle.backgroundImage = `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url(${backgroundImages[0]})`;
+            backgroundStyle.backgroundSize = 'cover';
+            backgroundStyle.backgroundPosition = 'center';
+        } else if (backgroundMode === 'carousel') {
+            backgroundStyle.backgroundImage = `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url(${backgroundImages[carouselIndex]})`;
+            backgroundStyle.backgroundSize = 'cover';
+            backgroundStyle.backgroundPosition = 'center';
+        }
+    }
+
+    return (
+        <div className="relative w-screen h-screen overflow-hidden" style={backgroundStyle}>
             {/* AR Viewer avec model-viewer fullscreen */}
             {product && product.modelUrl && (
                 <ARViewer

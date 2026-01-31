@@ -347,14 +347,20 @@ export const adminMenuApi = {
 // Settings API - Direct Supabase
 // ============================================================================
 
+export type BackgroundMode = 'gradient' | 'single' | 'carousel';
+
+export interface RestaurantSettings {
+  id?: string;
+  name?: string;
+  logo_url?: string;
+  theme_color?: string;
+  qr_code_base_url?: string;
+  background_images?: string[];
+  background_mode?: BackgroundMode;
+}
+
 export const adminSettingsApi = {
-  async getSettings(): Promise<{
-    id?: string;
-    name?: string;
-    logo_url?: string;
-    theme_color?: string;
-    qr_code_base_url?: string;
-  }> {
+  async getSettings(): Promise<RestaurantSettings> {
     const { data, error } = await supabase
       .from('restaurant_settings')
       .select('*')
@@ -374,8 +380,9 @@ export const adminSettingsApi = {
     logo_url?: string;
     theme_color?: string;
     qr_code_base_url?: string;
-  }): Promise<any> {
-    // Vérifier si des settings existent
+    background_images?: string[];
+    background_mode?: BackgroundMode;
+  }): Promise<RestaurantSettings> {
     const { data: existing } = await supabase
       .from('restaurant_settings')
       .select('id')
@@ -391,6 +398,8 @@ export const adminSettingsApi = {
           logo_url: settings.logo_url || null,
           theme_color: settings.theme_color || '#f59e0b',
           qr_code_base_url: settings.qr_code_base_url || null,
+          background_images: settings.background_images || [],
+          background_mode: settings.background_mode || 'gradient',
         })
         .eq('id', existing.id)
         .select()
@@ -406,6 +415,8 @@ export const adminSettingsApi = {
           logo_url: settings.logo_url || null,
           theme_color: settings.theme_color || '#f59e0b',
           qr_code_base_url: settings.qr_code_base_url || null,
+          background_images: settings.background_images || [],
+          background_mode: settings.background_mode || 'gradient',
         })
         .select()
         .single();

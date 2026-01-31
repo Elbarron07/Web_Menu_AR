@@ -152,30 +152,43 @@ export const ARViewer = forwardRef<ARViewerRef, ARViewerProps>(({
             ref={modelViewerRef}
             src={modelUrl}
             alt={alt}
+            // Mode AR multi-plateforme: WebXR (Chrome), Scene Viewer (Android), Quick Look (iOS)
             ar
-            ar-modes="webxr"
-            ar-scale="fixed"
+            ar-modes="webxr scene-viewer quick-look"
+            ar-scale="auto"
+            // Controles de camera ameliores
             camera-controls
-            interaction-policy="always"
+            touch-action="none"
+            interaction-prompt="auto"
+            interaction-prompt-style="basic"
+            interaction-policy="always-allow"
+            // Affichage
             reveal="auto"
             shadow-intensity="1"
-            auto-rotate-delay="0"
+            shadow-softness="1"
+            // Rotation libre 360 degres - Vue initiale de face
+            camera-orbit="0deg 90deg auto"
+            min-camera-orbit="-Infinity 0deg auto"
+            max-camera-orbit="Infinity 180deg auto"
+            // Zoom flexible pour voir de pres ou de loin
+            min-field-of-view="10deg"
+            max-field-of-view="90deg"
+            field-of-view="30deg"
+            // Interactions fluides et naturelles
+            interpolation-decay="100"
+            orbit-sensitivity="1"
+            // Pas de limites strictes
+            bounds="tight"
             disable-zoom={false}
             disable-pan={false}
             disable-tap={false}
-            camera-orbit="0deg 75deg 105%"
-            min-camera-orbit="auto 0deg auto"
-            max-camera-orbit="auto 180deg auto"
-            min-field-of-view="10deg"
-            max-field-of-view="45deg"
-            bounds="tight"
             style={{
                 width: '100vw',
                 height: '100vh',
                 position: 'fixed',
                 top: 0,
                 left: 0,
-                backgroundColor: '#000000',
+                backgroundColor: 'transparent',
                 zIndex: 1
             } as any}
             className="ar-viewer-fullscreen"

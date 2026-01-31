@@ -3,9 +3,11 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Save, Upload } from 'lucide-react';
-import { adminApi } from '../../../lib/adminApi';
+import { adminApi, type BackgroundMode } from '../../../lib/adminApi';
 import { storageService } from '../../../lib/storage';
 import { logger } from '../../../lib/logger';
+import { BackgroundSettings } from './BackgroundSettings';
+import { invalidateSettingsCache } from '../../../hooks/useRestaurantSettings';
 
 const settingsSchema = z.object({
   name: z.string().min(1, 'Nom requis'),
@@ -19,6 +21,8 @@ type SettingsFormData = z.infer<typeof settingsSchema>;
 export const RestaurantSettings = () => {
   const [loading, setLoading] = useState(true);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [backgroundImages, setBackgroundImages] = useState<string[]>([]);
+  const [backgroundMode, setBackgroundMode] = useState<BackgroundMode>('gradient');
 
   const {
     register,
@@ -46,6 +50,8 @@ export const RestaurantSettings = () => {
           setValue('logo_url', data.logo_url || '');
           setValue('theme_color', data.theme_color || '#f59e0b');
           setValue('qr_code_base_url', data.qr_code_base_url || window.location.origin);
+          setBackgroundImages(data.background_images || []);
+          setBackgroundMode(data.background_mode || 'gradient');
         }
       } catch (error) {
         logger.error('Error fetching settings:', error);
@@ -80,10 +86,13 @@ export const RestaurantSettings = () => {
         logo_url: data.logo_url || undefined,
         theme_color: data.theme_color,
         qr_code_base_url: data.qr_code_base_url || undefined,
+        background_images: backgroundImages,
+        background_mode: backgroundMode,
       });
+      invalidateSettingsCache();
       alert('Paramètres sauvegardés avec succès');
-    } catch (error: any) {
-      alert(`Erreur : ${error.message}`);
+    } catch (error) {
+      alert(`Erreur : ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
     }
   };
 
@@ -173,6 +182,16 @@ export const RestaurantSettings = () => {
             {...register('qr_code_base_url')}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
             placeholder="https://votre-domaine.com"
+          />
+        </div>
+
+        {/* Background Settings */}
+        <div className="pt-6 border-t border-gray-200">
+          <BackgroundSettings
+            backgroundImages={backgroundImages}
+            backgroundMode={backgroundMode}
+            onImagesChange={setBackgroundImages}
+            onModeChange={setBackgroundMode}
           />
         </div>
 
