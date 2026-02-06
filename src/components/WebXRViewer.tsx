@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, Suspense, useCallback } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Canvas } from '@react-three/fiber';
 import { useGLTF, OrbitControls, PresentationControls } from '@react-three/drei';
 import { useCameraStream } from '../hooks/useCameraStream';
 import { useWebXR } from '../hooks/useWebXR';
@@ -16,14 +16,6 @@ interface WebXRViewerProps {
   hotspots?: Array<{ position: string; name: string; detail?: string }>;
   scale?: string;
   dimensions?: string; // Ex: "Diamètre 30cm", "Hauteur 15cm"
-  onARFallback?: () => void; // Callback quand WebXR échoue
-}
-
-// État de manipulation du modèle
-interface ModelManipulationState {
-  position: THREE.Vector3;
-  rotation: THREE.Euler;
-  scale: number;
 }
 
 // Composant de contrôles AR améliorés
@@ -189,95 +181,6 @@ const InteractiveModelRenderer = ({
   );
 };
 
-const ModelRenderer = ({ modelPath, position, scale, realWorldSize }: ModelRendererProps) => {
-  const modelRef = useRef<THREE.Group>(null);
-  
-  // Charger le modèle GLTF (useGLTF gère automatiquement le cache)
-  const { scene } = useGLTF(modelPath);
-  
-  useEffect(() => {
-    logger.debug('✅ Modèle GLTF chargé avec succès:', modelPath, 'Scene:', scene);
-  }, [modelPath, scene]);
-
-  useEffect(() => {
-    if (modelRef.current && scene) {
-      // Calculer la bounding box pour centrer le modèle
-      const box = new THREE.Box3().setFromObject(scene);
-      const center = box.getCenter(new THREE.Vector3());
-      const size = box.getSize(new THREE.Vector3());
-      
-      logger.debug('📦 Bounding box:', { center, size, min: box.min, max: box.max });
-      
-      // Calculer l'échelle pour taille réelle (1:1)
-      let finalScale = scale.clone();
-      
-      if (realWorldSize) {
-        // Pour une taille réelle, on utilise généralement la dimension horizontale (X ou Z)
-        // Pour une pizza : diamètre = max(size.x, size.z)
-        // Pour un burger : hauteur = size.y
-        // On prend la dimension horizontale la plus grande (X ou Z) pour les plats plats
-        // ou la hauteur (Y) pour les objets verticaux
-        const horizontalSize = Math.max(size.x, size.z);
-        const verticalSize = size.y;
-        
-        // Utiliser la dimension appropriée selon le type d'objet
-        // Si la hauteur est significativement plus grande, c'est probablement un objet vertical
-        const isVertical = verticalSize > horizontalSize * 1.5;
-        const modelDimension = isVertical ? verticalSize : horizontalSize;
-        
-        // Calculer le facteur d'échelle pour que la dimension corresponde à la taille réelle
-        const scaleFactor = realWorldSize / modelDimension;
-        
-        // Appliquer le facteur d'échelle uniformément pour maintenir les proportions
-        finalScale.multiplyScalar(scaleFactor);
-        
-        logger.debug('📏 Échelle taille réelle calculée:', {
-          realWorldSize,
-          modelDimension: isVertical ? `hauteur: ${verticalSize}` : `diamètre: ${horizontalSize}`,
-          scaleFactor,
-          finalScale,
-          isVertical
-        });
-      }
-      
-      // Positionner le modèle : centré sur la position détectée
-      // Ajuster Y pour placer le bas du modèle sur la surface
-      const adjustedY = position.y + (size.y / 2) * finalScale.y;
-      
-      modelRef.current.position.set(
-        position.x - center.x * finalScale.x,
-        adjustedY,
-        position.z - center.z * finalScale.z
-      );
-      
-      // Appliquer l'échelle finale (taille réelle + variant)
-      modelRef.current.scale.copy(finalScale);
-      
-      logger.debug('📍 Modèle positionné à taille réelle:', {
-        modelPath,
-        position: modelRef.current.position,
-        scale: modelRef.current.scale,
-        originalPosition: position,
-        realWorldSize
-      });
-    }
-  }, [position, scale, scene, modelPath, realWorldSize]);
-
-  // Ne pas faire de rotation automatique - laisser l'utilisateur contrôler
-  // useFrame(() => {
-  //   if (modelRef.current) {
-  //     // Animation subtile de rotation
-  //     modelRef.current.rotation.y += 0.005;
-  //   }
-  // });
-
-  return (
-    <primitive 
-      ref={modelRef} 
-      object={scene.clone()}
-    />
-  );
-};
 
 export const WebXRViewer = ({ 
   modelPath, 
@@ -285,8 +188,7 @@ export const WebXRViewer = ({
   onDishSelect,
   hotspots = [],
   scale = "1 1 1",
-  dimensions,
-  onARFallback
+  dimensions
 }: WebXRViewerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
