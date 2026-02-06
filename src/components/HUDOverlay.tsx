@@ -21,7 +21,88 @@ interface HUDOverlayProps {
     onActivateAR?: () => Promise<void>;
     preparationTime?: string;
     popularity?: number;
+    onReplaceModel?: () => void;
+    showARInstructions?: boolean;
 }
+
+// Composant d'instructions de manipulation AR
+const ARInstructionsOverlay: React.FC<{ isFirstTime: boolean; onDismiss: () => void }> = ({ 
+    isFirstTime, 
+    onDismiss 
+}) => {
+    const [currentStep, setCurrentStep] = useState(0);
+    
+    const instructions = [
+        { icon: '👆', text: 'Glissez pour faire tourner le plat', subtext: 'Un doigt pour la rotation' },
+        { icon: '🤏', text: 'Pincez pour zoomer', subtext: 'Deux doigts pour agrandir/réduire' },
+        { icon: '📍', text: 'Tapez pour placer en AR', subtext: 'Pointez vers une surface plane' },
+    ];
+
+    useEffect(() => {
+        if (!isFirstTime) return;
+        
+        const timer = setInterval(() => {
+            setCurrentStep((prev) => {
+                if (prev >= instructions.length - 1) {
+                    clearInterval(timer);
+                    setTimeout(onDismiss, 2000);
+                    return prev;
+                }
+                return prev + 1;
+            });
+        }, 2500);
+
+        return () => clearInterval(timer);
+    }, [isFirstTime, onDismiss, instructions.length]);
+
+    if (!isFirstTime) return null;
+
+    return (
+        <motion.div
+            className="ar-instructions-overlay"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+        >
+            <div className="ar-instruction-card">
+                <motion.div
+                    key={currentStep}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="ar-instruction-content"
+                >
+                    <span className="ar-instruction-icon">{instructions[currentStep].icon}</span>
+                    <div className="ar-instruction-text">
+                        <p className="ar-instruction-main">{instructions[currentStep].text}</p>
+                        <p className="ar-instruction-sub">{instructions[currentStep].subtext}</p>
+                    </div>
+                </motion.div>
+                
+                {/* Indicateurs de progression */}
+                <div className="ar-instruction-dots">
+                    {instructions.map((_, index) => (
+                        <motion.div
+                            key={index}
+                            className={`ar-instruction-dot ${index === currentStep ? 'active' : ''}`}
+                            animate={{
+                                scale: index === currentStep ? 1.2 : 1,
+                                backgroundColor: index === currentStep ? '#3b82f6' : '#d1d5db',
+                            }}
+                        />
+                    ))}
+                </div>
+
+                <button 
+                    onClick={onDismiss}
+                    className="ar-instruction-skip"
+                >
+                    Passer
+                </button>
+            </div>
+        </motion.div>
+    );
+};
 
 export const HUDOverlay = ({
     productName,
@@ -36,11 +117,29 @@ export const HUDOverlay = ({
     onActivateAR,
     preparationTime,
     popularity,
+    onReplaceModel,
+    showARInstructions = true,
 }: HUDOverlayProps) => {
     const [isARLoading, setIsARLoading] = useState(false);
     const [arError, setArError] = useState<string | null>(null);
     const [isARMode, setIsARMode] = useState(false);
     const [floatingHearts, setFloatingHearts] = useState<Array<{ id: number; x: number; y: number }>>([]);
+    const [showInstructions, setShowInstructions] = useState(false);
+    const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
+    
+    // Vérifier si c'est la première visite
+    useEffect(() => {
+        const hasSeenInstructions = localStorage.getItem('ar_instructions_seen');
+        if (!hasSeenInstructions && showARInstructions) {
+            setIsFirstTimeUser(true);
+            setShowInstructions(true);
+        }
+    }, [showARInstructions]);
+    
+    const dismissInstructions = () => {
+        setShowInstructions(false);
+        localStorage.setItem('ar_instructions_seen', 'true');
+    };
 
     // Générer des cœurs flottants pour la preuve sociale
     useEffect(() => {
@@ -83,6 +182,14 @@ export const HUDOverlay = ({
 
     return (
         <AnimatePresence>
+            {/* Overlay d'instructions AR */}
+            {showInstructions && (
+                <ARInstructionsOverlay
+                    isFirstTime={isFirstTimeUser}
+                    onDismiss={dismissInstructions}
+                />
+            )}
+            
             <motion.div
                 className={`hud-overlay pointer-events-none fixed inset-0 z-50 flex flex-col ${isARMode ? 'ar-mode' : ''}`}
                 initial={false}
@@ -220,19 +327,18 @@ export const HUDOverlay = ({
                         </div>
                     </motion.div>
                     
-                    {/* Bouton Immersion Totale avec transition AR */}
-                    {onActivateAR && (
-                        <motion.div
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2 }}
-                            className="mt-3 sm:mt-4 flex justify-center"
-                        >
+                    {/* Boutons d'action AR */}
+                    <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
+                        {/* Bouton Immersion Totale */}
+                        {onActivateAR && (
                             <motion.button
                                 onClick={handleActivateAR}
                                 disabled={isARLoading}
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.2 }}
                                 className={`w-full sm:w-auto px-6 sm:px-8 py-4 sm:py-5 rounded-3xl font-semibold text-base sm:text-lg flex items-center justify-center gap-2 sm:gap-3 transition-all ${
                                     isARLoading
                                         ? 'bg-primary-500 text-white cursor-wait'
@@ -274,6 +380,63 @@ export const HUDOverlay = ({
                                     </>
                                 )}
                             </motion.button>
+                        )}
+
+                        {/* Bouton Replacer - visible en mode AR */}
+                        {isARMode && onReplaceModel && (
+                            <motion.button
+                                onClick={onReplaceModel}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="px-4 sm:px-5 py-3 sm:py-4 rounded-2xl font-medium text-sm sm:text-base flex items-center gap-2 bg-white/20 backdrop-blur-xl text-white border border-white/30 hover:bg-white/30 transition-all"
+                            >
+                                <span>📍</span>
+                                <span>Replacer</span>
+                            </motion.button>
+                        )}
+
+                        {/* Bouton Aide */}
+                        <motion.button
+                            onClick={() => setShowInstructions(true)}
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.95 }}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.4 }}
+                            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all ${
+                                isARMode 
+                                    ? 'bg-white/20 backdrop-blur-xl text-white border border-white/30' 
+                                    : 'bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200'
+                            }`}
+                            aria-label="Aide manipulation"
+                        >
+                            <span className="text-lg">❓</span>
+                        </motion.button>
+                    </div>
+                    
+                    {/* Mini-guide de manipulation flottant */}
+                    {!isARMode && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.5 }}
+                            className="mt-3 flex justify-center"
+                        >
+                            <div className="manipulation-hint">
+                                <span className="manipulation-hint-item">
+                                    <span>👆</span> Glissez
+                                </span>
+                                <span className="manipulation-hint-divider">•</span>
+                                <span className="manipulation-hint-item">
+                                    <span>🤏</span> Pincez
+                                </span>
+                                <span className="manipulation-hint-divider">•</span>
+                                <span className="manipulation-hint-item">
+                                    <span>👆👆</span> Double-tap
+                                </span>
+                            </div>
                         </motion.div>
                     )}
                 </div>

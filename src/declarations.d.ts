@@ -9,13 +9,17 @@ declare namespace JSX {
             poster?: string;
             alt?: string;
             'shadow-intensity'?: string;
+            'shadow-softness'?: string;
             'camera-controls'?: boolean;
             'auto-rotate'?: boolean;
             ar?: boolean;
             'ar-modes'?: string;
             'ar-scale'?: string;
+            'ar-placement'?: string;
+            'xr-environment'?: boolean;
             'interaction-policy'?: string;
             'interaction-prompt'?: string;
+            'interaction-prompt-style'?: string;
             'touch-action'?: string;
             reveal?: string;
             scale?: string;
@@ -24,12 +28,18 @@ declare namespace JSX {
             'disable-pan'?: boolean;
             'disable-tap'?: boolean;
             'auto-rotate-delay'?: string;
+            'rotation-per-second'?: string;
             'camera-orbit'?: string;
             'min-camera-orbit'?: string;
             'max-camera-orbit'?: string;
             'min-field-of-view'?: string;
             'max-field-of-view'?: string;
+            'field-of-view'?: string;
+            'interpolation-decay'?: string;
+            'orbit-sensitivity'?: string;
             bounds?: string;
+            'environment-image'?: string;
+            exposure?: string;
         }, HTMLElement>;
     }
 }
