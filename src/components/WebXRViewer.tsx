@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, Suspense, useCallback } from 'react';
+import { useEffect, useRef, useState, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { useGLTF, OrbitControls, PresentationControls } from '@react-three/drei';
 import { useCameraStream } from '../hooks/useCameraStream';
@@ -7,7 +7,6 @@ import { PlaneDetector } from './PlaneDetector';
 import { ARMenu } from './ARMenu';
 import { logger } from '../lib/logger';
 import * as THREE from 'three';
-import { motion, AnimatePresence } from 'framer-motion';
 
 interface WebXRViewerProps {
   modelPath?: string;
@@ -18,85 +17,6 @@ interface WebXRViewerProps {
   dimensions?: string; // Ex: "Diamètre 30cm", "Hauteur 15cm"
 }
 
-// Composant de contrôles AR améliorés
-interface ARControlsOverlayProps {
-  onReset: () => void;
-  onZoomIn: () => void;
-  onZoomOut: () => void;
-  onRotateLeft: () => void;
-  onRotateRight: () => void;
-  currentScale: number;
-  isPlaced: boolean;
-  onReplace: () => void;
-}
-
-const ARControlsOverlay: React.FC<ARControlsOverlayProps> = ({
-  onReset,
-  onZoomIn,
-  onZoomOut,
-  onRotateLeft,
-  onRotateRight,
-  currentScale,
-  isPlaced,
-  onReplace
-}) => {
-  return (
-    <motion.div
-      className="webxr-controls-overlay"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 20 }}
-    >
-      {/* Instructions contextuelles */}
-      <div className="webxr-instructions">
-        {!isPlaced ? (
-          <span>👆 Tapez sur une surface pour placer le plat</span>
-        ) : (
-          <span>✨ Glissez pour déplacer • Pincez pour zoomer</span>
-        )}
-      </div>
-
-      {/* Barre de contrôles */}
-      <div className="webxr-control-bar">
-        {/* Rotation */}
-        <div className="webxr-control-group">
-          <button onClick={onRotateLeft} className="webxr-btn" aria-label="Tourner gauche">
-            <span>↶</span>
-          </button>
-          <button onClick={onRotateRight} className="webxr-btn" aria-label="Tourner droite">
-            <span>↷</span>
-          </button>
-        </div>
-
-        {/* Zoom */}
-        <div className="webxr-control-group">
-          <button onClick={onZoomOut} className="webxr-btn" aria-label="Réduire">
-            <span>−</span>
-          </button>
-          <div className="webxr-scale-display">
-            {Math.round(currentScale * 100)}%
-          </div>
-          <button onClick={onZoomIn} className="webxr-btn" aria-label="Agrandir">
-            <span>+</span>
-          </button>
-        </div>
-
-        {/* Actions */}
-        <div className="webxr-control-group">
-          {isPlaced && (
-            <button onClick={onReplace} className="webxr-btn webxr-btn-accent" aria-label="Replacer">
-              <span>📍</span>
-            </button>
-          )}
-          <button onClick={onReset} className="webxr-btn webxr-btn-warning" aria-label="Réinitialiser">
-            <span>⟲</span>
-          </button>
-        </div>
-      </div>
-    </motion.div>
-  );
-};
-
 interface ModelRendererProps {
   modelPath: string;
   position: THREE.Vector3;
@@ -105,24 +25,10 @@ interface ModelRendererProps {
   realWorldSize?: number; // Taille réelle en mètres (ex: 0.30 pour 30cm)
 }
 
-// Composant de modèle interactif amélioré
-interface InteractiveModelProps extends ModelRendererProps {
-  userScale?: number;
-  userRotation?: number;
-  userOffset?: THREE.Vector3;
-  onDrag?: (delta: THREE.Vector3) => void;
-}
-
-const InteractiveModelRenderer = ({ 
-  modelPath, 
-  position, 
-  scale, 
-  realWorldSize,
-  userScale = 1,
-  userRotation = 0,
-  userOffset
-}: InteractiveModelProps) => {
+const ModelRenderer = ({ modelPath, position, scale, realWorldSize }: ModelRendererProps) => {
   const modelRef = useRef<THREE.Group>(null);
+  
+  // Charger le modèle GLTF (useGLTF gère automatiquement le cache)
   const { scene } = useGLTF(modelPath);
   
   useEffect(() => {
@@ -131,47 +37,75 @@ const InteractiveModelRenderer = ({
 
   useEffect(() => {
     if (modelRef.current && scene) {
+      // Calculer la bounding box pour centrer le modèle
       const box = new THREE.Box3().setFromObject(scene);
       const center = box.getCenter(new THREE.Vector3());
       const size = box.getSize(new THREE.Vector3());
       
+      logger.debug('📦 Bounding box:', { center, size, min: box.min, max: box.max });
+      
+      // Calculer l'échelle pour taille réelle (1:1)
       let finalScale = scale.clone();
       
       if (realWorldSize) {
+        // Pour une taille réelle, on utilise généralement la dimension horizontale (X ou Z)
+        // Pour une pizza : diamètre = max(size.x, size.z)
+        // Pour un burger : hauteur = size.y
+        // On prend la dimension horizontale la plus grande (X ou Z) pour les plats plats
+        // ou la hauteur (Y) pour les objets verticaux
         const horizontalSize = Math.max(size.x, size.z);
         const verticalSize = size.y;
+        
+        // Utiliser la dimension appropriée selon le type d'objet
+        // Si la hauteur est significativement plus grande, c'est probablement un objet vertical
         const isVertical = verticalSize > horizontalSize * 1.5;
         const modelDimension = isVertical ? verticalSize : horizontalSize;
+        
+        // Calculer le facteur d'échelle pour que la dimension corresponde à la taille réelle
         const scaleFactor = realWorldSize / modelDimension;
+        
+        // Appliquer le facteur d'échelle uniformément pour maintenir les proportions
         finalScale.multiplyScalar(scaleFactor);
+        
+        logger.debug('📏 Échelle taille réelle calculée:', {
+          realWorldSize,
+          modelDimension: isVertical ? `hauteur: ${verticalSize}` : `diamètre: ${horizontalSize}`,
+          scaleFactor,
+          finalScale,
+          isVertical
+        });
       }
       
-      // Appliquer l'échelle utilisateur
-      finalScale.multiplyScalar(userScale);
-      
-      // Position de base
+      // Positionner le modèle : centré sur la position détectée
+      // Ajuster Y pour placer le bas du modèle sur la surface
       const adjustedY = position.y + (size.y / 2) * finalScale.y;
-      let finalX = position.x - center.x * finalScale.x;
-      let finalZ = position.z - center.z * finalScale.z;
       
-      // Appliquer l'offset utilisateur (drag)
-      if (userOffset) {
-        finalX += userOffset.x;
-        finalZ += userOffset.z;
-      }
+      modelRef.current.position.set(
+        position.x - center.x * finalScale.x,
+        adjustedY,
+        position.z - center.z * finalScale.z
+      );
       
-      modelRef.current.position.set(finalX, adjustedY, finalZ);
+      // Appliquer l'échelle finale (taille réelle + variant)
       modelRef.current.scale.copy(finalScale);
-      modelRef.current.rotation.y = userRotation;
       
-      logger.debug('📍 Modèle mis à jour:', {
+      logger.debug('📍 Modèle positionné à taille réelle:', {
+        modelPath,
         position: modelRef.current.position,
         scale: modelRef.current.scale,
-        rotation: userRotation,
-        userScale
+        originalPosition: position,
+        realWorldSize
       });
     }
-  }, [position, scale, scene, modelPath, realWorldSize, userScale, userRotation, userOffset]);
+  }, [position, scale, scene, modelPath, realWorldSize]);
+
+  // Ne pas faire de rotation automatique - laisser l'utilisateur contrôler
+  // useFrame(() => {
+  //   if (modelRef.current) {
+  //     // Animation subtile de rotation
+  //     modelRef.current.rotation.y += 0.005;
+  //   }
+  // });
 
   return (
     <primitive 
@@ -180,7 +114,6 @@ const InteractiveModelRenderer = ({
     />
   );
 };
-
 
 export const WebXRViewer = ({ 
   modelPath, 
@@ -208,44 +141,6 @@ export const WebXRViewer = ({
   const [showMenu, setShowMenu] = useState(!selectedDishId || !modelPath);
   const [glContext, setGlContext] = useState<WebGLRenderingContext | WebGL2RenderingContext | null>(null);
   const [testMode, setTestMode] = useState(false); // Mode test pour afficher le modèle sans détection
-  
-  // États de manipulation utilisateur
-  const [userScale, setUserScale] = useState(1);
-  const [userRotation, setUserRotation] = useState(0);
-  const [userOffset, setUserOffset] = useState<THREE.Vector3>(new THREE.Vector3(0, 0, 0));
-  const [isModelPlaced, setIsModelPlaced] = useState(false);
-  const [showControls, setShowControls] = useState(true);
-  
-  // Handlers de manipulation
-  const handleZoomIn = useCallback(() => {
-    setUserScale(prev => Math.min(prev + 0.1, 3));
-  }, []);
-  
-  const handleZoomOut = useCallback(() => {
-    setUserScale(prev => Math.max(prev - 0.1, 0.3));
-  }, []);
-  
-  const handleRotateLeft = useCallback(() => {
-    setUserRotation(prev => prev - Math.PI / 8);
-  }, []);
-  
-  const handleRotateRight = useCallback(() => {
-    setUserRotation(prev => prev + Math.PI / 8);
-  }, []);
-  
-  const handleReset = useCallback(() => {
-    setUserScale(1);
-    setUserRotation(0);
-    setUserOffset(new THREE.Vector3(0, 0, 0));
-    logger.debug('🔄 Manipulation réinitialisée');
-  }, []);
-  
-  const handleReplace = useCallback(() => {
-    setIsModelPlaced(false);
-    setDetectedPlane(null);
-    setUserOffset(new THREE.Vector3(0, 0, 0));
-    logger.debug('📍 Mode replacement activé');
-  }, []);
 
   // Activer la caméra au montage
   useEffect(() => {
@@ -289,7 +184,6 @@ export const WebXRViewer = ({
   const handlePlaneDetected = (position: THREE.Vector3, _normal: THREE.Vector3) => {
     logger.debug('Plan détecté à la position:', position);
     setDetectedPlane(position);
-    setIsModelPlaced(true);
   };
 
   // Mode test : afficher le modèle à une position fixe pour tester
@@ -404,7 +298,7 @@ export const WebXRViewer = ({
               <meshBasicMaterial color="#ffaa00" transparent opacity={0.5} />
             </mesh>
           }>
-            {/* Contrôles de rotation améliorés - seulement si WebXR n'est pas actif */}
+            {/* Contrôles de rotation - seulement si WebXR n'est pas actif */}
             {!session && (
               <PresentationControls
                 global
@@ -413,30 +307,23 @@ export const WebXRViewer = ({
                 polar={[-Math.PI / 3, Math.PI / 3]}
                 azimuth={[-Math.PI / 1.4, Math.PI / 2]}
               >
-                <InteractiveModelRenderer
+                <ModelRenderer
                   modelPath={modelPath}
                   position={detectedPlane || new THREE.Vector3(0, 0, -1)}
                   scale={modelScale}
                   hotspots={hotspots}
                   realWorldSize={realWorldSize}
-                  userScale={userScale}
-                  userRotation={userRotation}
-                  userOffset={userOffset}
                 />
               </PresentationControls>
             )}
             
-            {/* En mode WebXR, utiliser le modèle interactif avec contrôles utilisateur */}
+            {/* En mode WebXR, afficher sans contrôles (l'utilisateur bouge son appareil) */}
             {session && (
-              <InteractiveModelRenderer
+              <ModelRenderer
                 modelPath={modelPath}
                 position={detectedPlane || new THREE.Vector3(0, 0, -1)}
                 scale={modelScale}
                 hotspots={hotspots}
-                realWorldSize={realWorldSize}
-                userScale={userScale}
-                userRotation={userRotation}
-                userOffset={userOffset}
               />
             )}
           </Suspense>
@@ -517,7 +404,7 @@ export const WebXRViewer = ({
       )}
 
       {/* Instructions WebXR */}
-      {modelPath && detectedPlane && session && !showControls && (
+      {modelPath && detectedPlane && session && (
         <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-50 bg-black/30 backdrop-blur-xl text-white px-6 py-4 rounded-2xl border border-white/20 max-w-sm">
           <p className="text-center font-medium mb-2">
             📱 Bougez votre appareil
@@ -526,33 +413,6 @@ export const WebXRViewer = ({
             Tournez autour du plat pour le voir sous tous les angles
           </p>
         </div>
-      )}
-
-      {/* Contrôles AR améliorés */}
-      <AnimatePresence>
-        {modelPath && (detectedPlane || testMode) && showControls && (
-          <ARControlsOverlay
-            onReset={handleReset}
-            onZoomIn={handleZoomIn}
-            onZoomOut={handleZoomOut}
-            onRotateLeft={handleRotateLeft}
-            onRotateRight={handleRotateRight}
-            currentScale={userScale}
-            isPlaced={isModelPlaced}
-            onReplace={handleReplace}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Bouton pour afficher/masquer les contrôles */}
-      {modelPath && (detectedPlane || testMode) && (
-        <button
-          onClick={() => setShowControls(!showControls)}
-          className="absolute top-20 right-4 z-50 w-10 h-10 rounded-full bg-white/20 backdrop-blur-xl border border-white/30 flex items-center justify-center text-white transition-all hover:bg-white/30"
-          aria-label={showControls ? "Masquer les contrôles" : "Afficher les contrôles"}
-        >
-          {showControls ? "✕" : "⚙"}
-        </button>
       )}
     </div>
   );

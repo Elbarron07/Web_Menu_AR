@@ -246,7 +246,7 @@ const DirectARView = () => {
             {product && !showMenu && (
                 <motion.button
                     onClick={() => {
-                        window.location.href = '/';
+                        navigate('/', { replace: true });
                     }}
                     className={`fixed top-4 left-4 z-[60] rounded-full w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shadow-soft transition-all pointer-events-auto ${
                         isARMode 

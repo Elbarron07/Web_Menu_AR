@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { logger } from '../lib/logger';
 
 interface Variant {
@@ -21,88 +21,7 @@ interface HUDOverlayProps {
     onActivateAR?: () => Promise<void>;
     preparationTime?: string;
     popularity?: number;
-    onReplaceModel?: () => void;
-    showARInstructions?: boolean;
 }
-
-// Composant d'instructions de manipulation AR
-const ARInstructionsOverlay: React.FC<{ isFirstTime: boolean; onDismiss: () => void }> = ({ 
-    isFirstTime, 
-    onDismiss 
-}) => {
-    const [currentStep, setCurrentStep] = useState(0);
-    
-    const instructions = [
-        { icon: '👆', text: 'Glissez pour faire tourner le plat', subtext: 'Un doigt pour la rotation' },
-        { icon: '🤏', text: 'Pincez pour zoomer', subtext: 'Deux doigts pour agrandir/réduire' },
-        { icon: '📍', text: 'Tapez pour placer en AR', subtext: 'Pointez vers une surface plane' },
-    ];
-
-    useEffect(() => {
-        if (!isFirstTime) return;
-        
-        const timer = setInterval(() => {
-            setCurrentStep((prev) => {
-                if (prev >= instructions.length - 1) {
-                    clearInterval(timer);
-                    setTimeout(onDismiss, 2000);
-                    return prev;
-                }
-                return prev + 1;
-            });
-        }, 2500);
-
-        return () => clearInterval(timer);
-    }, [isFirstTime, onDismiss, instructions.length]);
-
-    if (!isFirstTime) return null;
-
-    return (
-        <motion.div
-            className="ar-instructions-overlay"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-        >
-            <div className="ar-instruction-card">
-                <motion.div
-                    key={currentStep}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="ar-instruction-content"
-                >
-                    <span className="ar-instruction-icon">{instructions[currentStep].icon}</span>
-                    <div className="ar-instruction-text">
-                        <p className="ar-instruction-main">{instructions[currentStep].text}</p>
-                        <p className="ar-instruction-sub">{instructions[currentStep].subtext}</p>
-                    </div>
-                </motion.div>
-                
-                {/* Indicateurs de progression */}
-                <div className="ar-instruction-dots">
-                    {instructions.map((_, index) => (
-                        <motion.div
-                            key={index}
-                            className={`ar-instruction-dot ${index === currentStep ? 'active' : ''}`}
-                            animate={{
-                                scale: index === currentStep ? 1.2 : 1,
-                                backgroundColor: index === currentStep ? '#3b82f6' : '#d1d5db',
-                            }}
-                        />
-                    ))}
-                </div>
-
-                <button 
-                    onClick={onDismiss}
-                    className="ar-instruction-skip"
-                >
-                    Passer
-                </button>
-            </div>
-        </motion.div>
-    );
-};
 
 export const HUDOverlay = ({
     productName,
@@ -117,29 +36,11 @@ export const HUDOverlay = ({
     onActivateAR,
     preparationTime,
     popularity,
-    onReplaceModel,
-    showARInstructions = true,
 }: HUDOverlayProps) => {
     const [isARLoading, setIsARLoading] = useState(false);
     const [arError, setArError] = useState<string | null>(null);
     const [isARMode, setIsARMode] = useState(false);
     const [floatingHearts, setFloatingHearts] = useState<Array<{ id: number; x: number; y: number }>>([]);
-    const [showInstructions, setShowInstructions] = useState(false);
-    const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
-    
-    // Vérifier si c'est la première visite
-    useEffect(() => {
-        const hasSeenInstructions = localStorage.getItem('ar_instructions_seen');
-        if (!hasSeenInstructions && showARInstructions) {
-            setIsFirstTimeUser(true);
-            setShowInstructions(true);
-        }
-    }, [showARInstructions]);
-    
-    const dismissInstructions = () => {
-        setShowInstructions(false);
-        localStorage.setItem('ar_instructions_seen', 'true');
-    };
 
     // Générer des cœurs flottants pour la preuve sociale
     useEffect(() => {
@@ -180,16 +81,21 @@ export const HUDOverlay = ({
     // Mock popularity si non fourni
     const displayPopularity = popularity || Math.floor(Math.random() * 50) + 10;
 
+    // Gestion de l'indicateur de gestes
+    const [showGestureHint, setShowGestureHint] = useState(true);
+
+    // Masquer l'indicateur de gestes apres 5 secondes ou a la premiere interaction
+    useEffect(() => {
+        const timer = setTimeout(() => setShowGestureHint(false), 5000);
+        return () => clearTimeout(timer);
+    }, []);
+
+    const hideGestureHint = useCallback(() => {
+        setShowGestureHint(false);
+    }, []);
+
     return (
         <AnimatePresence>
-            {/* Overlay d'instructions AR */}
-            {showInstructions && (
-                <ARInstructionsOverlay
-                    isFirstTime={isFirstTimeUser}
-                    onDismiss={dismissInstructions}
-                />
-            )}
-            
             <motion.div
                 className={`hud-overlay pointer-events-none fixed inset-0 z-50 flex flex-col ${isARMode ? 'ar-mode' : ''}`}
                 initial={false}
@@ -201,13 +107,14 @@ export const HUDOverlay = ({
                     duration: 0.8,
                     ease: [0.4, 0, 0.2, 1],
                 }}
+                onTouchStart={hideGestureHint}
             >
-                {/* Top Bar - Product Info Badge avec glassmorphism clair */}
-                <div className="pointer-events-auto p-4 sm:p-6 relative">
+                {/* Top Bar - pointer-events-none sur le conteneur, auto uniquement sur les enfants */}
+                <div className="pointer-events-none p-4 sm:p-6 relative">
                     <motion.div
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className={`backdrop-blur-2xl border rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-2xl relative overflow-hidden ${
+                        className={`pointer-events-auto backdrop-blur-2xl border rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-2xl relative overflow-hidden ${
                             isARMode 
                                 ? 'bg-white/15 border-white/20' 
                                 : 'bg-white/80 border-white/30'
@@ -327,19 +234,20 @@ export const HUDOverlay = ({
                         </div>
                     </motion.div>
                     
-                    {/* Boutons d'action AR */}
-                    <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
-                        {/* Bouton Immersion Totale */}
-                        {onActivateAR && (
+                    {/* Bouton Immersion Totale avec transition AR */}
+                    {onActivateAR && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 }}
+                            className="mt-3 sm:mt-4 flex justify-center pointer-events-none"
+                        >
                             <motion.button
                                 onClick={handleActivateAR}
                                 disabled={isARLoading}
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
-                                initial={{ opacity: 0, y: -10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.2 }}
-                                className={`w-full sm:w-auto px-6 sm:px-8 py-4 sm:py-5 rounded-3xl font-semibold text-base sm:text-lg flex items-center justify-center gap-2 sm:gap-3 transition-all ${
+                                className={`pointer-events-auto w-full sm:w-auto px-6 sm:px-8 py-4 sm:py-5 rounded-3xl font-semibold text-base sm:text-lg flex items-center justify-center gap-2 sm:gap-3 transition-all ${
                                     isARLoading
                                         ? 'bg-primary-500 text-white cursor-wait'
                                         : arError
@@ -380,68 +288,11 @@ export const HUDOverlay = ({
                                     </>
                                 )}
                             </motion.button>
-                        )}
-
-                        {/* Bouton Replacer - visible en mode AR */}
-                        {isARMode && onReplaceModel && (
-                            <motion.button
-                                onClick={onReplaceModel}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                initial={{ opacity: 0, scale: 0.8 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                className="px-4 sm:px-5 py-3 sm:py-4 rounded-2xl font-medium text-sm sm:text-base flex items-center gap-2 bg-white/20 backdrop-blur-xl text-white border border-white/30 hover:bg-white/30 transition-all"
-                            >
-                                <span>📍</span>
-                                <span>Replacer</span>
-                            </motion.button>
-                        )}
-
-                        {/* Bouton Aide */}
-                        <motion.button
-                            onClick={() => setShowInstructions(true)}
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.95 }}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.4 }}
-                            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all ${
-                                isARMode 
-                                    ? 'bg-white/20 backdrop-blur-xl text-white border border-white/30' 
-                                    : 'bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200'
-                            }`}
-                            aria-label="Aide manipulation"
-                        >
-                            <span className="text-lg">❓</span>
-                        </motion.button>
-                    </div>
-                    
-                    {/* Mini-guide de manipulation flottant */}
-                    {!isARMode && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.5 }}
-                            className="mt-3 flex justify-center"
-                        >
-                            <div className="manipulation-hint">
-                                <span className="manipulation-hint-item">
-                                    <span>👆</span> Glissez
-                                </span>
-                                <span className="manipulation-hint-divider">•</span>
-                                <span className="manipulation-hint-item">
-                                    <span>🤏</span> Pincez
-                                </span>
-                                <span className="manipulation-hint-divider">•</span>
-                                <span className="manipulation-hint-item">
-                                    <span>👆👆</span> Double-tap
-                                </span>
-                            </div>
                         </motion.div>
                     )}
                 </div>
 
-                {/* Middle Section - Side Controls avec transition AR */}
+                {/* Middle Section - Side Controls : tout pointer-events-none sauf les boutons */}
                 <motion.div
                     className="flex-1 flex items-center justify-between px-4 sm:px-6 pointer-events-none"
                     animate={{
@@ -453,9 +304,9 @@ export const HUDOverlay = ({
                         ease: 'easeInOut',
                     }}
                 >
-                    {/* Left: Size Selector */}
+                    {/* Left: Size Selector - seuls les boutons sont interactifs */}
                     <motion.div
-                        className="flex flex-col gap-3 sm:gap-4 pointer-events-auto"
+                        className="flex flex-col gap-3 sm:gap-4 pointer-events-none"
                         animate={{
                             scale: isARMode ? 0.9 : 1,
                             x: isARMode ? -10 : 0,
@@ -473,7 +324,7 @@ export const HUDOverlay = ({
                                     scale: 0.95,
                                     transition: { type: 'spring', stiffness: 600, damping: 30 }
                                 }}
-                                className={`size-selector-button w-14 h-14 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center font-semibold border-2 transition-all shadow-md ${
+                                className={`pointer-events-auto size-selector-button w-14 h-14 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center font-semibold border-2 transition-all shadow-md ${
                                     selectedVariant?.size === variant.size
                                         ? isARMode
                                             ? 'bg-white/30 text-white border-white/50 scale-110 shadow-[0_0_20px_rgba(255,255,255,0.3)]'
@@ -493,7 +344,7 @@ export const HUDOverlay = ({
                         ))}
                     </motion.div>
 
-                    {/* Center: Zone libre pour interactions avec le modèle 3D */}
+                    {/* Center: Zone libre pour interactions avec le modele 3D */}
                     <div className="flex-1 pointer-events-none" />
 
                     {/* Right: Cart Feedback */}
@@ -512,9 +363,45 @@ export const HUDOverlay = ({
                     )}
                 </motion.div>
 
-                {/* Bottom Bar - Add to Cart Button avec transition AR */}
+                {/* Gesture Hints - indicateur de gestes disponibles */}
+                <AnimatePresence>
+                    {showGestureHint && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 10 }}
+                            transition={{ duration: 0.4 }}
+                            className="pointer-events-none flex justify-center pb-2"
+                        >
+                            <div className={`flex items-center gap-4 sm:gap-6 px-5 py-2.5 rounded-full border ${
+                                isARMode
+                                    ? 'bg-black/40 backdrop-blur-xl border-white/20 text-white/90'
+                                    : 'bg-white/70 backdrop-blur-xl border-white/30 text-slate-600'
+                            }`}>
+                                <span className="flex items-center gap-1.5 text-xs sm:text-sm font-medium">
+                                    <span>1</span>
+                                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2C10.343 2 9 3.343 9 5v7l-1.293-1.293a1 1 0 00-1.414 0l-.586.586a1 1 0 000 1.414l4.586 4.586a2 2 0 002.828 0l3.172-3.172a2 2 0 00.586-1.414V9a2 2 0 00-2-2h-1V5c0-1.657-1.343-3-3-3z"/></svg>
+                                    Rotation
+                                </span>
+                                <span className={`w-px h-4 ${isARMode ? 'bg-white/30' : 'bg-slate-300'}`} />
+                                <span className="flex items-center gap-1.5 text-xs sm:text-sm font-medium">
+                                    <span>2</span>
+                                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 2C6.343 2 5 3.343 5 5v7l-1.293-1.293a1 1 0 00-1.414 0l-.586.586M16 2c1.657 0 3 1.343 3 5v7l1.293-1.293a1 1 0 011.414 0l.586.586"/></svg>
+                                    Déplacer
+                                </span>
+                                <span className={`w-px h-4 ${isARMode ? 'bg-white/30' : 'bg-slate-300'}`} />
+                                <span className="flex items-center gap-1.5 text-xs sm:text-sm font-medium">
+                                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7 4l-4 4 4 4M17 4l4 4-4 4M9 20l6-16"/></svg>
+                                    Zoom
+                                </span>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* Bottom Bar - pointer-events-none sur le conteneur, auto sur le bouton */}
                 <motion.div
-                    className="pointer-events-auto p-4 sm:p-6 pt-6 sm:pt-8"
+                    className="pointer-events-none p-4 sm:p-6 pt-2 sm:pt-4"
                     animate={{
                         y: isARMode ? [0, 20, 0] : 0,
                         opacity: isARMode ? [1, 0.7, 1] : 1,
@@ -528,7 +415,7 @@ export const HUDOverlay = ({
                         onClick={onAddToCart}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className="w-full bg-slate-900 text-white font-bold text-lg sm:text-xl py-4 sm:py-6 rounded-3xl shadow-2xl active:shadow-inner flex items-center justify-center gap-2 sm:gap-3 transition-all hover:bg-slate-800"
+                        className="pointer-events-auto w-full bg-slate-900 text-white font-bold text-lg sm:text-xl py-4 sm:py-6 rounded-3xl shadow-2xl active:shadow-inner flex items-center justify-center gap-2 sm:gap-3 transition-all hover:bg-slate-800"
                         style={{
                             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
                         }}
