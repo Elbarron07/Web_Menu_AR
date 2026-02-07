@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useMenu, useMenuItem } from '../hooks/useMenu';
 import { useRestaurantSettings } from '../hooks/useRestaurantSettings';
@@ -29,7 +29,10 @@ const DirectARView = () => {
     const [showMenu, setShowMenu] = useState(!id);
     const [selectedHotspot, setSelectedHotspot] = useState<any>(null);
     const [showCartFeedback, setShowCartFeedback] = useState(false);
-    const [isARMode, setIsARMode] = useState(false);
+    // isARRoute = on est sur une route AR (style CSS : fond noir, pas de scroll)
+    const [isARRoute, setIsARRoute] = useState(false);
+    // isARSessionActive = session WebXR/Scene Viewer reellement active (model-viewer presenting)
+    const [isARSessionActive, setIsARSessionActive] = useState(false);
     const [carouselIndex, setCarouselIndex] = useState(0);
 
     useEffect(() => {
@@ -87,17 +90,21 @@ const DirectARView = () => {
         if (arViewerRef.current && product?.id) {
             analytics.trackARSessionStart(product.id);
             await arViewerRef.current.activateAR();
-            setIsARMode(true);
         }
     };
 
-    // Détecter le mode AR via la classe html.ar-mode
+    // Callback quand model-viewer change de status AR (presenting / not-presenting)
+    const handleARStatusChange = useCallback((isPresenting: boolean) => {
+        setIsARSessionActive(isPresenting);
+    }, []);
+
+    // Detecter la route AR via la classe html.ar-mode (pour le style CSS)
     useEffect(() => {
-        const checkARMode = () => {
-            setIsARMode(document.documentElement.classList.contains('ar-mode'));
+        const checkARRoute = () => {
+            setIsARRoute(document.documentElement.classList.contains('ar-mode'));
         };
-        checkARMode();
-        const observer = new MutationObserver(checkARMode);
+        checkARRoute();
+        const observer = new MutationObserver(checkARRoute);
         observer.observe(document.documentElement, {
             attributes: true,
             attributeFilter: ['class']
@@ -207,15 +214,12 @@ const DirectARView = () => {
     const backgroundImages = settings?.background_images || [];
     const backgroundMode = settings?.background_mode || 'gradient';
 
-    // Debug temporaire - a retirer apres resolution du probleme
-    console.log('[DEBUG] Background settings:', { backgroundMode, backgroundImages, settings, isARMode });
-
-    // Calculer le style de fond - solution radicale avec backgroundImage inline
+    // Calculer le style de fond
     const backgroundStyle: React.CSSProperties = {
         backgroundColor: '#000000', // Fond noir par defaut
     };
 
-    if (!isARMode && backgroundImages.length > 0) {
+    if (!isARRoute && backgroundImages.length > 0) {
         if (backgroundMode === 'single') {
             backgroundStyle.backgroundImage = `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url(${backgroundImages[0]})`;
             backgroundStyle.backgroundSize = 'cover';
@@ -238,12 +242,13 @@ const DirectARView = () => {
                     hotspots={convertHotspots(product.hotspots || [])}
                     scale={scale}
                     onHotspotClick={handleHotspotClick}
+                    onARStatusChange={handleARStatusChange}
                     menuItemId={product.id}
                 />
             )}
 
-            {/* Bouton retour au menu - Masque en mode AR pour liberer la surface tactile */}
-            {product && !showMenu && !isARMode && (
+            {/* Bouton retour au menu - Masque en session AR pour liberer la surface tactile */}
+            {product && !showMenu && !isARSessionActive && (
                 <motion.button
                     onClick={() => {
                         navigate('/', { replace: true });
@@ -286,7 +291,7 @@ const DirectARView = () => {
                     onActivateAR={handleActivateAR}
                     preparationTime={product.nutrition?.temps}
                     popularity={(product as any).popularity || Math.floor(Math.random() * 50) + 10}
-                    isARMode={isARMode}
+                    isARMode={isARSessionActive}
                 />
             )}
 

@@ -16,6 +16,7 @@ interface ARViewerProps {
     hotspots?: Hotspot[];
     scale?: string;
     onHotspotClick?: (hotspot: Hotspot) => void;
+    onARStatusChange?: (isPresenting: boolean) => void;
     menuItemId?: string;
 }
 
@@ -29,6 +30,7 @@ export const ARViewer = forwardRef<ARViewerRef, ARViewerProps>(({
     hotspots = [], 
     scale = "1 1 1",
     onHotspotClick,
+    onARStatusChange,
     menuItemId
 }, ref) => {
     const modelViewerRef = useRef<any>(null);
@@ -99,6 +101,7 @@ export const ARViewer = forwardRef<ARViewerRef, ARViewerProps>(({
             const status = event.detail?.status;
             if (status === 'not-presenting') {
                 logger.debug('📱 Mode AR terminé');
+                onARStatusChange?.(false);
                 // Track AR session end
                 if (menuItemId && arSessionStartTime.current) {
                     const duration = Math.round((Date.now() - arSessionStartTime.current) / 1000);
@@ -107,6 +110,7 @@ export const ARViewer = forwardRef<ARViewerRef, ARViewerProps>(({
                 }
             } else if (status === 'presenting') {
                 logger.debug('🥽 Mode AR actif - Modèle ancré sur la surface');
+                onARStatusChange?.(true);
                 // Track AR session start
                 if (menuItemId) {
                     arSessionStartTime.current = Date.now();
@@ -144,7 +148,7 @@ export const ARViewer = forwardRef<ARViewerRef, ARViewerProps>(({
             modelViewer.removeEventListener('ar-status', handleARStatus);
             modelViewer.removeEventListener('ar-place', handleARPlace);
         };
-    }, [modelUrl, menuItemId]);
+    }, [modelUrl, menuItemId, onARStatusChange]);
 
     const handleHotspotClick = (hotspot: Hotspot) => {
         if (onHotspotClick) {
