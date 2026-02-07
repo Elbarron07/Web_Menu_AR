@@ -21,6 +21,7 @@ interface HUDOverlayProps {
     onActivateAR?: () => Promise<void>;
     preparationTime?: string;
     popularity?: number;
+    isARMode?: boolean;
 }
 
 export const HUDOverlay = ({
@@ -36,11 +37,15 @@ export const HUDOverlay = ({
     onActivateAR,
     preparationTime,
     popularity,
+    isARMode: isARModeProp,
 }: HUDOverlayProps) => {
     const [isARLoading, setIsARLoading] = useState(false);
     const [arError, setArError] = useState<string | null>(null);
-    const [isARMode, setIsARMode] = useState(false);
+    const [isARModeLocal, setIsARModeLocal] = useState(false);
     const [floatingHearts, setFloatingHearts] = useState<Array<{ id: number; x: number; y: number }>>([]);
+
+    // Utiliser la prop parent si fournie, sinon le state local
+    const isARMode = isARModeProp !== undefined ? isARModeProp : isARModeLocal;
 
     // Générer des cœurs flottants pour la preuve sociale
     useEffect(() => {
@@ -68,7 +73,7 @@ export const HUDOverlay = ({
         
         try {
             await onActivateAR();
-            setIsARMode(true);
+            setIsARModeLocal(true);
         } catch (error: any) {
             logger.error('Erreur activation AR:', error);
             setArError('AR non disponible');
@@ -81,48 +86,148 @@ export const HUDOverlay = ({
     // Mock popularity si non fourni
     const displayPopularity = popularity || Math.floor(Math.random() * 50) + 10;
 
-    // Gestion de l'indicateur de gestes
-    const [showGestureHint, setShowGestureHint] = useState(true);
+    // Gestion de l'indicateur de gestes / repositionnement
+    const [showHint, setShowHint] = useState(true);
 
-    // Masquer l'indicateur de gestes apres 5 secondes ou a la premiere interaction
+    // Masquer l'indicateur apres quelques secondes ou a la premiere interaction
     useEffect(() => {
-        const timer = setTimeout(() => setShowGestureHint(false), 5000);
+        const delay = isARMode ? 4000 : 5000;
+        setShowHint(true);
+        const timer = setTimeout(() => setShowHint(false), delay);
         return () => clearTimeout(timer);
+    }, [isARMode]);
+
+    const hideHint = useCallback(() => {
+        setShowHint(false);
     }, []);
 
-    const hideGestureHint = useCallback(() => {
-        setShowGestureHint(false);
-    }, []);
+    // ====================================================================
+    // MODE AR : Mini-HUD compact pour liberer la surface tactile
+    // ====================================================================
+    if (isARMode) {
+        return (
+            <AnimatePresence>
+                <motion.div
+                    className="hud-overlay pointer-events-none fixed inset-0 z-30 flex flex-col"
+                    initial={false}
+                    onTouchStart={hideHint}
+                >
+                    {/* Mini bandeau haut : nom tronque + prix */}
+                    <div className="pointer-events-none p-3 sm:p-4">
+                        <motion.div
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="pointer-events-auto inline-flex items-center gap-3 px-4 py-2.5 rounded-full backdrop-blur-2xl bg-black/40 border border-white/20 shadow-lg"
+                        >
+                            <span className="text-white font-semibold text-sm truncate max-w-[140px] sm:max-w-[200px]">
+                                {productName}
+                            </span>
+                            <span className="text-white/60">|</span>
+                            <span className="text-white font-bold text-sm whitespace-nowrap">
+                                {price.toFixed(2)}€
+                            </span>
+                        </motion.div>
+                    </div>
 
+                    {/* Zone centrale : selecteur de taille compact a gauche */}
+                    <div className="flex-1 flex items-center px-2 sm:px-3 pointer-events-none">
+                        <motion.div
+                            className="flex flex-col gap-2 pointer-events-none"
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                        >
+                            {variants.map((variant) => (
+                                <motion.button
+                                    key={variant.size}
+                                    onClick={() => onVariantChange(variant)}
+                                    whileTap={{ scale: 0.9 }}
+                                    className={`pointer-events-auto w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex flex-col items-center justify-center font-semibold border transition-all shadow-sm ${
+                                        selectedVariant?.size === variant.size
+                                            ? 'bg-white/30 text-white border-white/50 shadow-[0_0_12px_rgba(255,255,255,0.3)]'
+                                            : 'bg-black/30 text-white/80 border-white/20'
+                                    }`}
+                                >
+                                    <span className="text-base sm:text-lg leading-none">{variant.size}</span>
+                                </motion.button>
+                            ))}
+                        </motion.div>
+
+                        {/* Zone libre pour interactions AR (taps de repositionnement) */}
+                        <div className="flex-1 pointer-events-none" />
+
+                        {/* Cart Feedback (temporaire) */}
+                        {showCartFeedback && (
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.8 }}
+                                className="bg-green-500/90 backdrop-blur-xl text-white px-4 py-2 rounded-full border border-white/40 shadow-2xl pointer-events-auto"
+                            >
+                                <span className="font-bold flex items-center gap-2 text-sm">
+                                    <span>✓</span> Ajouté !
+                                </span>
+                            </motion.div>
+                        )}
+                    </div>
+
+                    {/* Indication de repositionnement AR */}
+                    <AnimatePresence>
+                        {showHint && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: 10 }}
+                                transition={{ duration: 0.4 }}
+                                className="pointer-events-none flex justify-center pb-3"
+                            >
+                                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/50 backdrop-blur-xl border border-white/20 text-white/90">
+                                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <path d="M12 2C10.343 2 9 3.343 9 5v7l-1.293-1.293a1 1 0 00-1.414 0l-.586.586a1 1 0 000 1.414l4.586 4.586a2 2 0 002.828 0l3.172-3.172a2 2 0 00.586-1.414V9a2 2 0 00-2-2h-1V5c0-1.657-1.343-3-3-3z"/>
+                                    </svg>
+                                    <span className="text-xs sm:text-sm font-medium">Touchez une surface pour repositionner</span>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    {/* Petit bouton Commander flottant en bas a droite */}
+                    <div className="pointer-events-none p-3 sm:p-4 flex justify-end">
+                        <motion.button
+                            onClick={onAddToCart}
+                            whileTap={{ scale: 0.9 }}
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="pointer-events-auto flex items-center gap-2 px-5 py-3 rounded-full bg-slate-900/80 backdrop-blur-xl text-white font-bold text-sm border border-white/20 shadow-lg"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                            <span>{price.toFixed(2)}€</span>
+                        </motion.button>
+                    </div>
+                </motion.div>
+            </AnimatePresence>
+        );
+    }
+
+    // ====================================================================
+    // MODE NORMAL : HUD complet avec toutes les informations
+    // ====================================================================
     return (
         <AnimatePresence>
             <motion.div
-                className={`hud-overlay pointer-events-none fixed inset-0 z-50 flex flex-col ${isARMode ? 'ar-mode' : ''}`}
+                className="hud-overlay pointer-events-none fixed inset-0 z-50 flex flex-col"
                 initial={false}
-                animate={{
-                    x: isARMode ? ['0%', '-10%', '0%'] : 0,
-                    opacity: isARMode ? [1, 0.7, 1] : 1,
-                }}
-                transition={{
-                    duration: 0.8,
-                    ease: [0.4, 0, 0.2, 1],
-                }}
-                onTouchStart={hideGestureHint}
+                onTouchStart={hideHint}
             >
                 {/* Top Bar - pointer-events-none sur le conteneur, auto uniquement sur les enfants */}
                 <div className="pointer-events-none p-4 sm:p-6 relative">
                     <motion.div
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className={`pointer-events-auto backdrop-blur-2xl border rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-2xl relative overflow-hidden ${
-                            isARMode 
-                                ? 'bg-white/15 border-white/20' 
-                                : 'bg-white/80 border-white/30'
-                        }`}
+                        className="pointer-events-auto backdrop-blur-2xl border rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-2xl relative overflow-hidden bg-white/80 border-white/30"
                         style={{
-                            boxShadow: isARMode 
-                                ? '0 8px 32px 0 rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.2)' 
-                                : '0 8px 32px 0 rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.3)',
+                            boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.3)',
                         }}
                     >
                         {/* Social Proof - Floating Hearts */}
@@ -170,15 +275,11 @@ export const HUDOverlay = ({
 
                         <div className="flex justify-between items-start gap-3 sm:gap-4">
                             <div className="flex-1 min-w-0">
-                                <h1 className={`text-xl sm:text-2xl lg:text-3xl font-bold truncate tracking-wide ${
-                                    isARMode ? 'text-white drop-shadow-lg' : 'text-slate-900'
-                                }`}>
+                                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold truncate tracking-wide text-slate-900">
                                     {productName}
                                 </h1>
                                 {productDesc && (
-                                    <p className={`text-xs sm:text-sm mt-1 sm:mt-1.5 font-medium line-clamp-2 ${
-                                        isARMode ? 'text-white/90 drop-shadow-md' : 'text-slate-600'
-                                    }`}>
+                                    <p className="text-xs sm:text-sm mt-1 sm:mt-1.5 font-medium line-clamp-2 text-slate-600">
                                         {productDesc}
                                     </p>
                                 )}
@@ -202,11 +303,7 @@ export const HUDOverlay = ({
                                         >
                                             ⏱️
                                         </motion.div>
-                                        <span className={`text-xs sm:text-sm font-medium px-2 sm:px-3 py-1 rounded-full border ${
-                                            isARMode 
-                                                ? 'text-white/90 bg-black/30 border-white/20' 
-                                                : 'text-slate-600 bg-slate-100 border-slate-200'
-                                        }`}>
+                                        <span className="text-xs sm:text-sm font-medium px-2 sm:px-3 py-1 rounded-full border text-slate-600 bg-slate-100 border-slate-200">
                                             Temps moyen : {preparationTime}
                                         </span>
                                     </motion.div>
@@ -222,11 +319,7 @@ export const HUDOverlay = ({
                                     {price.toFixed(2)}€
                                 </motion.span>
                                 {calories && (
-                                    <span className={`text-xs px-2 sm:px-3 py-1 rounded-full border ${
-                                        isARMode 
-                                            ? 'text-white/90 bg-black/30 border-white/20' 
-                                            : 'text-slate-600 bg-slate-100 border-slate-200'
-                                    }`}>
+                                    <span className="text-xs px-2 sm:px-3 py-1 rounded-full border text-slate-600 bg-slate-100 border-slate-200">
                                         {calories} kcal
                                     </span>
                                 )}
@@ -234,7 +327,7 @@ export const HUDOverlay = ({
                         </div>
                     </motion.div>
                     
-                    {/* Bouton Immersion Totale avec transition AR */}
+                    {/* Bouton Immersion Totale */}
                     {onActivateAR && (
                         <motion.div
                             initial={{ opacity: 0, y: -10 }}
@@ -252,14 +345,10 @@ export const HUDOverlay = ({
                                         ? 'bg-primary-500 text-white cursor-wait'
                                         : arError
                                         ? 'bg-error-500 text-white'
-                                        : isARMode
-                                        ? 'bg-success-500 text-white'
                                         : 'bg-gradient-to-r from-primary-600 to-primary-700 text-white hover:from-primary-700 hover:to-primary-800'
                                 }`}
                                 style={{
-                                    boxShadow: isARMode 
-                                        ? '0 0 30px rgba(16, 185, 129, 0.6)' 
-                                        : '0 8px 32px rgba(37, 99, 235, 0.4)',
+                                    boxShadow: '0 8px 32px rgba(37, 99, 235, 0.4)',
                                 }}
                             >
                                 {isARLoading ? (
@@ -276,11 +365,6 @@ export const HUDOverlay = ({
                                         <span className="text-lg sm:text-xl">⚠️</span>
                                         <span>{arError}</span>
                                     </>
-                                ) : isARMode ? (
-                                    <>
-                                        <span className="text-lg sm:text-xl">✨</span>
-                                        <span>Mode AR Actif</span>
-                                    </>
                                 ) : (
                                     <>
                                         <span className="text-lg sm:text-xl">🥽</span>
@@ -293,25 +377,9 @@ export const HUDOverlay = ({
                 </div>
 
                 {/* Middle Section - Side Controls : tout pointer-events-none sauf les boutons */}
-                <motion.div
-                    className="flex-1 flex items-center justify-between px-4 sm:px-6 pointer-events-none"
-                    animate={{
-                        x: isARMode ? [-20, 0] : 0,
-                        opacity: isARMode ? [1, 0.8] : 1,
-                    }}
-                    transition={{
-                        duration: 0.6,
-                        ease: 'easeInOut',
-                    }}
-                >
+                <div className="flex-1 flex items-center justify-between px-4 sm:px-6 pointer-events-none">
                     {/* Left: Size Selector - seuls les boutons sont interactifs */}
-                    <motion.div
-                        className="flex flex-col gap-3 sm:gap-4 pointer-events-none"
-                        animate={{
-                            scale: isARMode ? 0.9 : 1,
-                            x: isARMode ? -10 : 0,
-                        }}
-                    >
+                    <div className="flex flex-col gap-3 sm:gap-4 pointer-events-none">
                         {variants.map((variant) => (
                             <motion.button
                                 key={variant.size}
@@ -326,12 +394,8 @@ export const HUDOverlay = ({
                                 }}
                                 className={`pointer-events-auto size-selector-button w-14 h-14 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center font-semibold border-2 transition-all shadow-md ${
                                     selectedVariant?.size === variant.size
-                                        ? isARMode
-                                            ? 'bg-white/30 text-white border-white/50 scale-110 shadow-[0_0_20px_rgba(255,255,255,0.3)]'
-                                            : 'bg-white text-slate-900 border-primary-600 scale-110 shadow-[0_0_20px_rgba(37,99,235,0.3)]'
-                                        : isARMode
-                                            ? 'bg-black/20 text-white border-white/30 hover:bg-white/10'
-                                            : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-white hover:border-slate-300'
+                                        ? 'bg-white text-slate-900 border-primary-600 scale-110 shadow-[0_0_20px_rgba(37,99,235,0.3)]'
+                                        : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-white hover:border-slate-300'
                                 }`}
                             >
                                 <span className="text-xl sm:text-2xl">{variant.size}</span>
@@ -342,7 +406,7 @@ export const HUDOverlay = ({
                                 )}
                             </motion.button>
                         ))}
-                    </motion.div>
+                    </div>
 
                     {/* Center: Zone libre pour interactions avec le modele 3D */}
                     <div className="flex-1 pointer-events-none" />
@@ -361,11 +425,11 @@ export const HUDOverlay = ({
                             </span>
                         </motion.div>
                     )}
-                </motion.div>
+                </div>
 
-                {/* Gesture Hints - indicateur de gestes disponibles */}
+                {/* Gesture Hints - indicateur de gestes disponibles (mode normal uniquement) */}
                 <AnimatePresence>
-                    {showGestureHint && (
+                    {showHint && (
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -373,23 +437,19 @@ export const HUDOverlay = ({
                             transition={{ duration: 0.4 }}
                             className="pointer-events-none flex justify-center pb-2"
                         >
-                            <div className={`flex items-center gap-4 sm:gap-6 px-5 py-2.5 rounded-full border ${
-                                isARMode
-                                    ? 'bg-black/40 backdrop-blur-xl border-white/20 text-white/90'
-                                    : 'bg-white/70 backdrop-blur-xl border-white/30 text-slate-600'
-                            }`}>
+                            <div className="flex items-center gap-4 sm:gap-6 px-5 py-2.5 rounded-full border bg-white/70 backdrop-blur-xl border-white/30 text-slate-600">
                                 <span className="flex items-center gap-1.5 text-xs sm:text-sm font-medium">
                                     <span>1</span>
                                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2C10.343 2 9 3.343 9 5v7l-1.293-1.293a1 1 0 00-1.414 0l-.586.586a1 1 0 000 1.414l4.586 4.586a2 2 0 002.828 0l3.172-3.172a2 2 0 00.586-1.414V9a2 2 0 00-2-2h-1V5c0-1.657-1.343-3-3-3z"/></svg>
                                     Rotation
                                 </span>
-                                <span className={`w-px h-4 ${isARMode ? 'bg-white/30' : 'bg-slate-300'}`} />
+                                <span className="w-px h-4 bg-slate-300" />
                                 <span className="flex items-center gap-1.5 text-xs sm:text-sm font-medium">
                                     <span>2</span>
                                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 2C6.343 2 5 3.343 5 5v7l-1.293-1.293a1 1 0 00-1.414 0l-.586.586M16 2c1.657 0 3 1.343 3 5v7l1.293-1.293a1 1 0 011.414 0l.586.586"/></svg>
                                     Déplacer
                                 </span>
-                                <span className={`w-px h-4 ${isARMode ? 'bg-white/30' : 'bg-slate-300'}`} />
+                                <span className="w-px h-4 bg-slate-300" />
                                 <span className="flex items-center gap-1.5 text-xs sm:text-sm font-medium">
                                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7 4l-4 4 4 4M17 4l4 4-4 4M9 20l6-16"/></svg>
                                     Zoom
@@ -400,17 +460,7 @@ export const HUDOverlay = ({
                 </AnimatePresence>
 
                 {/* Bottom Bar - pointer-events-none sur le conteneur, auto sur le bouton */}
-                <motion.div
-                    className="pointer-events-none p-4 sm:p-6 pt-2 sm:pt-4"
-                    animate={{
-                        y: isARMode ? [0, 20, 0] : 0,
-                        opacity: isARMode ? [1, 0.7, 1] : 1,
-                    }}
-                    transition={{
-                        duration: 0.8,
-                        ease: 'easeInOut',
-                    }}
-                >
+                <div className="pointer-events-none p-4 sm:p-6 pt-2 sm:pt-4">
                     <motion.button
                         onClick={onAddToCart}
                         whileHover={{ scale: 1.02 }}
@@ -425,7 +475,7 @@ export const HUDOverlay = ({
                         </svg>
                         <span>Commander • {price.toFixed(2)}€</span>
                     </motion.button>
-                </motion.div>
+                </div>
             </motion.div>
         </AnimatePresence>
     );

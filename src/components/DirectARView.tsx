@@ -242,17 +242,13 @@ const DirectARView = () => {
                 />
             )}
 
-            {/* Bouton retour au menu - Pilule blanche flottante */}
-            {product && !showMenu && (
+            {/* Bouton retour au menu - Masque en mode AR pour liberer la surface tactile */}
+            {product && !showMenu && !isARMode && (
                 <motion.button
                     onClick={() => {
                         navigate('/', { replace: true });
                     }}
-                    className={`fixed top-4 left-4 z-[60] rounded-full w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shadow-soft transition-all pointer-events-auto ${
-                        isARMode 
-                            ? 'bg-white/10 backdrop-blur-xl border border-white/20 text-white' 
-                            : 'bg-white/90 backdrop-blur-xl border border-white/30 text-primary-600'
-                    }`}
+                    className="fixed top-4 left-4 z-[60] rounded-full w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shadow-soft transition-all pointer-events-auto bg-white/90 backdrop-blur-xl border border-white/30 text-primary-600"
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
@@ -290,6 +286,7 @@ const DirectARView = () => {
                     onActivateAR={handleActivateAR}
                     preparationTime={product.nutrition?.temps}
                     popularity={(product as any).popularity || Math.floor(Math.random() * 50) + 10}
+                    isARMode={isARMode}
                 />
             )}
 
