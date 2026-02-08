@@ -158,6 +158,7 @@ export const useMenuItem = (id: string | undefined) => {
 
   useEffect(() => {
     if (!id) {
+      setMenuItem(null);
       setLoading(false);
       return;
     }
