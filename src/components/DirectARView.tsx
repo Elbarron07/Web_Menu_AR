@@ -29,8 +29,6 @@ const DirectARView = () => {
     const [showMenu, setShowMenu] = useState(!id);
     const [selectedHotspot, setSelectedHotspot] = useState<any>(null);
     const [showCartFeedback, setShowCartFeedback] = useState(false);
-    // isARRoute = on est sur une route AR (style CSS : fond noir, pas de scroll)
-    const [isARRoute, setIsARRoute] = useState(false);
     // isARSessionActive = session WebXR/Scene Viewer reellement active (model-viewer presenting)
     const [isARSessionActive, setIsARSessionActive] = useState(false);
     const [carouselIndex, setCarouselIndex] = useState(0);
@@ -97,19 +95,7 @@ const DirectARView = () => {
         setIsARSessionActive(isPresenting);
     }, []);
 
-    // Detecter la route AR via la classe html.ar-mode (pour le style CSS)
-    useEffect(() => {
-        const checkARRoute = () => {
-            setIsARRoute(document.documentElement.classList.contains('ar-mode'));
-        };
-        checkARRoute();
-        const observer = new MutationObserver(checkARRoute);
-        observer.observe(document.documentElement, {
-            attributes: true,
-            attributeFilter: ['class']
-        });
-        return () => observer.disconnect();
-    }, []);
+    // Note : la classe html.ar-mode est geree par ARLayout.tsx pour le style CSS global
 
     // Track view 3D when product is loaded
     useEffect(() => {
