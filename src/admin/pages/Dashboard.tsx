@@ -1,5 +1,6 @@
 import { useMenu } from '../../hooks/useMenu';
 import { useAnalytics } from '../hooks/useAnalytics';
+import { DashboardSkeleton } from '../components/skeletons/DashboardSkeleton';
 import { Package, UtensilsCrossed, Eye, ShoppingCart, Sparkles, Clock, User, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { StatCard } from '../components/ui/StatCard';
@@ -117,7 +118,7 @@ export const Dashboard = () => {
   ];
 
   if (menuLoading || analyticsLoading) {
-    return <div className="text-center py-12 text-gray-600">Chargement...</div>;
+    return <DashboardSkeleton />;
   }
 
   return (

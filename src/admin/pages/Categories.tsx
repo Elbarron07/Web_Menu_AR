@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Plus, FolderOpen, Edit, Trash2 } from 'lucide-react';
+import { AdminPageSkeleton } from '../components/skeletons/AdminPageSkeleton';
 import { useCategories } from '../hooks/useCategories';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -75,7 +76,7 @@ export const Categories = () => {
   };
 
   if (loading) {
-    return <div className="text-center py-12 text-gray-600">Chargement...</div>;
+    return <AdminPageSkeleton variant="table" />;
   }
 
   if (error) {

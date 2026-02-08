@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Database, TrendingUp, TrendingDown, Download } from 'lucide-react';
+import { AdminPageSkeleton } from '../components/skeletons/AdminPageSkeleton';
 import { Card } from '../components/ui/Card';
 import { StatCard } from '../components/ui/StatCard';
 import { Button } from '../components/ui/Button';
@@ -154,7 +155,7 @@ export const DataAnalytics = () => {
       </div>
 
       {loading && (
-        <div className="text-center py-12 text-gray-600">Chargement...</div>
+        <AdminPageSkeleton variant="analytics" />
       )}
 
       {error && (

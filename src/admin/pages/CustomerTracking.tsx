@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Users, Search, Filter, Download } from 'lucide-react';
+import { AdminPageSkeleton } from '../components/skeletons/AdminPageSkeleton';
 import { Card } from '../components/ui/Card';
 import { Table } from '../components/ui/Table';
 import { Badge } from '../components/ui/Badge';
@@ -67,7 +68,7 @@ export const CustomerTracking = () => {
       </div>
 
       {loading && (
-        <div className="text-center py-12 text-gray-600">Chargement...</div>
+        <AdminPageSkeleton variant="table" />
       )}
 
       {error && (

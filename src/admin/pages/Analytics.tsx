@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { BarChart3 } from 'lucide-react';
+import { AdminPageSkeleton } from '../components/skeletons/AdminPageSkeleton';
 import { useAnalytics } from '../hooks/useAnalytics';
 import { MetricsCards } from '../components/analytics/MetricsCards';
 import { ARCharts } from '../components/analytics/ARCharts';
@@ -9,7 +10,7 @@ export const Analytics = () => {
   const { data, loading, error } = useAnalytics(days);
 
   if (loading) {
-    return <div className="text-center py-12 text-gray-600">Chargement des analytics...</div>;
+    return <AdminPageSkeleton variant="analytics" />;
   }
 
   if (error) {

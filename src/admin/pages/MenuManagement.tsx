@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Search, UtensilsCrossed, FolderOpen } from 'lucide-react';
+import { AdminPageSkeleton } from '../components/skeletons/AdminPageSkeleton';
 import { useMenuAdmin } from '../hooks/useMenuAdmin';
 import { useCategories } from '../hooks/useCategories';
 import { MenuItemForm } from '../components/menu/MenuItemForm';
@@ -46,7 +47,7 @@ export const MenuManagement = () => {
   };
 
   if (loading || categoriesLoading) {
-    return <div className="text-center py-12 text-gray-600">Chargement...</div>;
+    return <AdminPageSkeleton variant="table" />;
   }
 
   const canAddPlat = categories.length > 0;
