@@ -175,7 +175,7 @@ export const ARViewer = forwardRef<ARViewerRef, ARViewerProps>(({
             // Affichage
             reveal="auto"
             shadow-intensity="1"
-            shadow-softness="1"
+            shadow-softness="0.5"
             // Rotation libre 360 degres - Vue initiale de face
             camera-orbit="0deg 75deg auto"
             min-camera-orbit="-Infinity 0deg auto"

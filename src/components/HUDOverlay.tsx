@@ -117,7 +117,7 @@ export const HUDOverlay = ({
                         <motion.div
                             initial={{ opacity: 0, y: -20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="pointer-events-auto inline-flex items-center gap-3 px-4 py-2.5 rounded-full backdrop-blur-2xl bg-black/40 border border-white/20 shadow-lg"
+                            className="pointer-events-auto inline-flex items-center gap-3 px-4 py-2.5 rounded-full backdrop-blur-md bg-white/10 border border-white/20 shadow-lg"
                         >
                             <span className="text-white font-semibold text-sm truncate max-w-[140px] sm:max-w-[200px]">
                                 {productName}
@@ -141,10 +141,10 @@ export const HUDOverlay = ({
                                     key={variant.size}
                                     onClick={() => onVariantChange(variant)}
                                     whileTap={{ scale: 0.9 }}
-                                    className={`pointer-events-auto w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex flex-col items-center justify-center font-semibold border transition-all shadow-sm ${
+                                    className={`pointer-events-auto w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex flex-col items-center justify-center font-semibold border transition-all shadow-sm backdrop-blur-md ${
                                         selectedVariant?.size === variant.size
-                                            ? 'bg-white/30 text-white border-white/50 shadow-[0_0_12px_rgba(255,255,255,0.3)]'
-                                            : 'bg-black/30 text-white/80 border-white/20'
+                                            ? 'bg-white/20 text-white border-white/40 shadow-[0_0_12px_rgba(255,255,255,0.3)]'
+                                            : 'bg-white/10 text-white/80 border-white/20'
                                     }`}
                                 >
                                     <span className="text-base sm:text-lg leading-none">{variant.size}</span>
@@ -161,7 +161,7 @@ export const HUDOverlay = ({
                                 initial={{ opacity: 0, scale: 0.8 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.8 }}
-                                className="bg-green-500/90 backdrop-blur-xl text-white px-4 py-2 rounded-full border border-white/40 shadow-2xl pointer-events-auto"
+                                className="bg-green-500/80 backdrop-blur-md text-white px-4 py-2 rounded-full border border-white/20 shadow-2xl pointer-events-auto"
                             >
                                 <span className="font-bold flex items-center gap-2 text-sm">
                                     <span>✓</span> Ajouté !
@@ -180,7 +180,7 @@ export const HUDOverlay = ({
                                 transition={{ duration: 0.4 }}
                                 className="pointer-events-none flex justify-center pb-3"
                             >
-                                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/50 backdrop-blur-xl border border-white/20 text-white/90">
+                                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white/90">
                                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                         <path d="M12 2C10.343 2 9 3.343 9 5v7l-1.293-1.293a1 1 0 00-1.414 0l-.586.586a1 1 0 000 1.414l4.586 4.586a2 2 0 002.828 0l3.172-3.172a2 2 0 00.586-1.414V9a2 2 0 00-2-2h-1V5c0-1.657-1.343-3-3-3z"/>
                                     </svg>
@@ -197,7 +197,7 @@ export const HUDOverlay = ({
                             whileTap={{ scale: 0.9 }}
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            className="pointer-events-auto flex items-center gap-2 px-5 py-3 rounded-full bg-slate-900/80 backdrop-blur-xl text-white font-bold text-sm border border-white/20 shadow-lg"
+                            className="pointer-events-auto flex items-center gap-2 px-5 py-3 rounded-full bg-white/10 backdrop-blur-md text-white font-bold text-sm border border-white/20 shadow-lg"
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
