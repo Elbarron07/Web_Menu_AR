@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { logger } from '../lib/logger';
 
@@ -9,6 +9,7 @@ export interface MenuCategoryRef {
   strokeRgba: string | null;
   glowRgba: string | null;
   displayOrder: number;
+  isActive: boolean;
 }
 
 export interface MenuItem {
@@ -22,6 +23,7 @@ export interface MenuItem {
   image2D: string;
   modelUrl: string;
   dimensions: string;
+  isActive: boolean;
   nutrition: {
     calories: number;
     allergenes: string[];
@@ -46,107 +48,132 @@ export const useMenu = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchMenuItems = async () => {
-      try {
-        setLoading(true);
+  const fetchMenuItems = useCallback(async () => {
+    try {
+      setLoading(true);
 
-        const { data: categories, error: catError } = await supabase
-          .from('menu_categories')
-          .select('id, name, icon, stroke_rgba, glow_rgba, display_order')
-          .order('display_order', { ascending: true });
+      const { data: categories, error: catError } = await supabase
+        .from('menu_categories')
+        .select('id, name, icon, stroke_rgba, glow_rgba, display_order, is_active')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
 
-        if (catError) throw catError;
+      if (catError) throw catError;
 
-        const { data: items, error: itemsError } = await supabase
-          .from('menu_items')
-          .select('*')
-          .order('name', { ascending: true });
+      const { data: items, error: itemsError } = await supabase
+        .from('menu_items')
+        .select('*')
+        .eq('is_active', true)
+        .order('name', { ascending: true });
 
-        if (itemsError) throw itemsError;
+      if (itemsError) throw itemsError;
 
-        const { data: variants, error: variantsError } = await supabase
-          .from('menu_item_variants')
-          .select('*');
+      const { data: variants, error: variantsError } = await supabase
+        .from('menu_item_variants')
+        .select('*');
 
-        if (variantsError) throw variantsError;
+      if (variantsError) throw variantsError;
 
-        const { data: hotspots, error: hotspotsError } = await supabase
-          .from('menu_item_hotspots')
-          .select('*');
+      const { data: hotspots, error: hotspotsError } = await supabase
+        .from('menu_item_hotspots')
+        .select('*');
 
-        if (hotspotsError) throw hotspotsError;
+      if (hotspotsError) throw hotspotsError;
 
-        const catMap = new Map(
-          (categories || []).map((c: any) => [
-            c.id,
-            {
-              id: c.id,
-              name: c.name,
-              icon: c.icon,
-              strokeRgba: c.stroke_rgba,
-              glowRgba: c.glow_rgba,
-              displayOrder: c.display_order ?? 0,
-            },
-          ])
-        );
+      const catMap = new Map(
+        (categories || []).map((c: any) => [
+          c.id,
+          {
+            id: c.id,
+            name: c.name,
+            icon: c.icon,
+            strokeRgba: c.stroke_rgba,
+            glowRgba: c.glow_rgba,
+            displayOrder: c.display_order ?? 0,
+            isActive: c.is_active ?? true,
+          },
+        ])
+      );
 
-        const menuData: MenuItem[] = (items || []).map((item: any) => {
-          const cat = item.category_id ? catMap.get(item.category_id) ?? null : null;
-          const itemVariants = (variants || [])
-            .filter((v: any) => v.menu_item_id === item.id)
-            .map((v: any) => ({
-              size: v.size,
-              label: v.label,
-              priceModifier: parseFloat(v.price_modifier),
-              scale: v.scale,
-            }));
-          const itemHotspots = (hotspots || [])
-            .filter((h: any) => h.menu_item_id === item.id)
-            .map((h: any) => ({
-              slot: h.slot,
-              pos: h.pos,
-              label: h.label,
-              detail: h.detail,
-            }));
+      const menuData: MenuItem[] = (items || []).map((item: any) => {
+        const cat = item.category_id ? catMap.get(item.category_id) ?? null : null;
+        const itemVariants = (variants || [])
+          .filter((v: any) => v.menu_item_id === item.id)
+          .map((v: any) => ({
+            size: v.size,
+            label: v.label,
+            priceModifier: parseFloat(v.price_modifier),
+            scale: v.scale,
+          }));
+        const itemHotspots = (hotspots || [])
+          .filter((h: any) => h.menu_item_id === item.id)
+          .map((h: any) => ({
+            slot: h.slot,
+            pos: h.pos,
+            label: h.label,
+            detail: h.detail,
+          }));
 
-          return {
-            id: item.id,
-            name: item.name,
-            categoryId: item.category_id,
-            category: cat,
-            shortDesc: item.short_desc,
-            fullDesc: item.full_desc,
-            price: parseFloat(item.price),
-            image2D: item.image_2d,
-            modelUrl: item.model_url,
-            dimensions: item.dimensions,
-            nutrition: item.nutrition as { calories: number; allergenes: string[]; temps: string },
-            variants: itemVariants,
-            hotspots: itemHotspots,
-          };
-        });
-
-        const byCategory = (a: MenuItem, b: MenuItem) => {
-          const oA = a.category?.displayOrder ?? 9999;
-          const oB = b.category?.displayOrder ?? 9999;
-          if (oA !== oB) return oA - oB;
-          return (a.name || '').localeCompare(b.name || '');
+        return {
+          id: item.id,
+          name: item.name,
+          categoryId: item.category_id,
+          category: cat,
+          shortDesc: item.short_desc,
+          fullDesc: item.full_desc,
+          price: parseFloat(item.price),
+          image2D: item.image_2d,
+          modelUrl: item.model_url,
+          dimensions: item.dimensions,
+          isActive: item.is_active ?? true,
+          nutrition: item.nutrition as { calories: number; allergenes: string[]; temps: string },
+          variants: itemVariants,
+          hotspots: itemHotspots,
         };
-        menuData.sort(byCategory);
+      });
 
-        setMenuItems(menuData);
-        setError(null);
-      } catch (err: unknown) {
-        logger.error('[useMenu] Erreur');
-        setError(err instanceof Error ? err.message : 'Erreur lors du chargement du menu');
-      } finally {
-        setLoading(false);
-      }
-    };
+      const byCategory = (a: MenuItem, b: MenuItem) => {
+        const oA = a.category?.displayOrder ?? 9999;
+        const oB = b.category?.displayOrder ?? 9999;
+        if (oA !== oB) return oA - oB;
+        return (a.name || '').localeCompare(b.name || '');
+      };
+      menuData.sort(byCategory);
 
-    fetchMenuItems();
+      setMenuItems(menuData);
+      setError(null);
+    } catch (err: unknown) {
+      logger.error('[useMenu] Erreur');
+      setError(err instanceof Error ? err.message : 'Erreur lors du chargement du menu');
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchMenuItems();
+
+    // Supabase Realtime : refetch quand menu_items ou menu_categories changent
+    const channel = supabase
+      .channel('menu-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'menu_items' }, () => {
+        fetchMenuItems();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'menu_categories' }, () => {
+        fetchMenuItems();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'menu_item_variants' }, () => {
+        fetchMenuItems();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'menu_item_hotspots' }, () => {
+        fetchMenuItems();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchMenuItems]);
 
   return { menuItems, loading, error };
 };
@@ -179,7 +206,7 @@ export const useMenuItem = (id: string | undefined) => {
         if (item.category_id) {
           const { data: c } = await supabase
             .from('menu_categories')
-            .select('id, name, icon, stroke_rgba, glow_rgba, display_order')
+            .select('id, name, icon, stroke_rgba, glow_rgba, display_order, is_active')
             .eq('id', item.category_id)
             .single();
           if (c) {
@@ -190,6 +217,7 @@ export const useMenuItem = (id: string | undefined) => {
               strokeRgba: c.stroke_rgba,
               glowRgba: c.glow_rgba,
               displayOrder: c.display_order ?? 0,
+              isActive: c.is_active ?? true,
             };
           }
         }
@@ -219,6 +247,7 @@ export const useMenuItem = (id: string | undefined) => {
           image2D: item.image_2d,
           modelUrl: item.model_url,
           dimensions: item.dimensions,
+          isActive: item.is_active ?? true,
           nutrition: item.nutrition as { calories: number; allergenes: string[]; temps: string },
           variants: (variants || []).map((v: any) => ({
             size: v.size,

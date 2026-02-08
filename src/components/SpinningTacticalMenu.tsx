@@ -15,6 +15,11 @@ export interface CategoryStyles {
   glowRgba: string;
 }
 
+interface RestaurantInfo {
+  name?: string;
+  logo_url?: string;
+}
+
 interface SpinningTacticalMenuProps {
   menuData: {
     root: MenuItem[];
@@ -25,6 +30,7 @@ interface SpinningTacticalMenuProps {
   isOpen: boolean;
   onClose: () => void;
   initialCategory?: string;
+  restaurantInfo?: RestaurantInfo;
 }
 
 const DEFAULT_COLORS = {
@@ -121,6 +127,7 @@ export const SpinningTacticalMenu = ({
   onClose,
   categoryStyles = {},
   initialCategory,
+  restaurantInfo,
 }: SpinningTacticalMenuProps) => {
   const navigate = useNavigate();
   const [currentLevel, setCurrentLevel] = useState<string>(initialCategory && menuData[initialCategory] ? initialCategory : 'root');
@@ -894,23 +901,36 @@ export const SpinningTacticalMenu = ({
                       }}
                     />
                   )}
+                  {/* Logo du restaurant en arriere-plan (opacite reduite) */}
+                  {navigationPath.length === 0 && restaurantInfo?.logo_url && (
+                    <image
+                      href={restaurantInfo.logo_url}
+                      x={centerX + innerRadius / 2 - 35}
+                      y={centerY - 35}
+                      width="70"
+                      height="70"
+                      opacity="0.12"
+                      className="pointer-events-none"
+                      preserveAspectRatio="xMidYMid meet"
+                    />
+                  )}
                   <text
                     x={centerX + innerRadius / 2}
-                    y={centerY - 10}
+                    y={navigationPath.length > 0 ? centerY - 10 : (restaurantInfo?.name ? centerY - 8 : centerY - 10)}
                     textAnchor="middle"
                     dominantBaseline="middle"
                     fill={navigationPath.length > 0 ? "white" : "#1F2937"}
-                    fontSize="16"
+                    fontSize={navigationPath.length > 0 ? "16" : (restaurantInfo?.name && restaurantInfo.name.length > 10 ? "12" : "14")}
                     fontWeight="bold"
                     className="select-none pointer-events-none"
                     style={{ 
                       fontFamily: 'Inter, sans-serif',
                       textShadow: navigationPath.length > 0 ? '0 2px 8px rgba(0,0,0,0.3)' : 'none',
                       textTransform: 'uppercase',
-                      letterSpacing: '0.1em',
+                      letterSpacing: '0.05em',
                     }}
                   >
-                    {navigationPath.length > 0 ? '← RETOUR' : 'MENU'}
+                    {navigationPath.length > 0 ? '← RETOUR' : (restaurantInfo?.name || 'MENU')}
                   </text>
                   {navigationPath.length > 0 && (
                     <text
@@ -942,7 +962,7 @@ export const SpinningTacticalMenu = ({
                         fontFamily: 'Inter, sans-serif',
                       }}
                     >
-                      Bienvenue !
+                      Découvrir le menu
                     </text>
                   )}
                 </g>

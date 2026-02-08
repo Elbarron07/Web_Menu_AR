@@ -9,6 +9,7 @@ import {
   Users,
   Database,
   FolderOpen,
+  QrCode,
   ChevronLeft,
   X
 } from 'lucide-react';
@@ -29,6 +30,7 @@ const menuItems = [
   { path: adminRoute('assets'), icon: Package, label: 'Assets 3D' },
   { path: adminRoute('analytics'), icon: BarChart3, label: 'Analytics' },
   { path: adminRoute('customers'), icon: Users, label: 'Clients' },
+  { path: adminRoute('qr-codes'), icon: QrCode, label: 'QR Codes' },
   { path: adminRoute('data-analytics'), icon: Database, label: 'Données' },
   { path: adminRoute('settings'), icon: Settings, label: 'Paramètres' },
 ];
@@ -49,7 +51,7 @@ export const Sidebar = ({ isOpen, isCollapsed, onClose, onToggleCollapse }: Side
       className={`
         fixed inset-y-0 left-0 z-50 
         lg:relative lg:z-auto
-        bg-background-sidebar min-h-screen flex flex-col border-r border-gray-200
+        bg-background-sidebar dark:bg-gray-800 min-h-screen flex flex-col border-r border-gray-200 dark:border-gray-700
         transform transition-all duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0
@@ -58,13 +60,13 @@ export const Sidebar = ({ isOpen, isCollapsed, onClose, onToggleCollapse }: Side
       `}
     >
       {/* Logo/Branding */}
-      <div className="p-4 lg:p-6 border-b border-gray-200">
+      <div className="p-4 lg:p-6 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between">
           <div className={`flex items-center gap-3 ${isCollapsed ? 'lg:justify-center' : ''}`}>
             <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center shadow-soft flex-shrink-0">
               <LayoutDashboard className="w-6 h-6 text-white" />
             </div>
-            <h1 className={`text-xl font-bold text-gray-900 transition-opacity duration-200 ${isCollapsed ? 'lg:hidden' : ''}`}>
+            <h1 className={`text-xl font-bold text-gray-900 dark:text-white transition-opacity duration-200 ${isCollapsed ? 'lg:hidden' : ''}`}>
               Admin
             </h1>
           </div>
@@ -72,7 +74,7 @@ export const Sidebar = ({ isOpen, isCollapsed, onClose, onToggleCollapse }: Side
           {/* Bouton fermer mobile */}
           <button 
             onClick={onClose}
-            className="lg:hidden p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
+            className="lg:hidden p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 rounded-lg"
           >
             <X className="w-5 h-5" />
           </button>
@@ -97,7 +99,7 @@ export const Sidebar = ({ isOpen, isCollapsed, onClose, onToggleCollapse }: Side
                 ${isCollapsed ? 'lg:justify-center lg:px-2' : ''}
                 ${isActive
                   ? 'bg-primary-600 text-white shadow-soft'
-                  : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white'
                 }
               `}
             >
@@ -111,11 +113,11 @@ export const Sidebar = ({ isOpen, isCollapsed, onClose, onToggleCollapse }: Side
       </nav>
 
       {/* Footer: Collapse button + Logout */}
-      <div className="border-t border-gray-200">
+      <div className="border-t border-gray-200 dark:border-gray-700">
         {/* Bouton collapse desktop */}
         <button
           onClick={onToggleCollapse}
-          className="hidden lg:flex w-full items-center justify-center gap-2 px-4 py-3 text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+          className="hidden lg:flex w-full items-center justify-center gap-2 px-4 py-3 text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
           title={isCollapsed ? 'Expand' : 'Collapse'}
         >
           <ChevronLeft className={`w-5 h-5 transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''}`} />
@@ -132,7 +134,7 @@ export const Sidebar = ({ isOpen, isCollapsed, onClose, onToggleCollapse }: Side
             title={isCollapsed ? 'Déconnexion' : undefined}
             className={`
               w-full flex items-center gap-3 px-4 py-3 rounded-lg 
-              text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors
+              text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white transition-colors
               ${isCollapsed ? 'lg:justify-center lg:px-2' : ''}
             `}
           >

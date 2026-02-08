@@ -132,17 +132,17 @@ export const DataAnalytics = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
             <Database className="w-8 h-8" />
             Analyses de données
           </h1>
-          <p className="text-gray-600">Analyses approfondies et insights sur vos données</p>
+          <p className="text-gray-600 dark:text-gray-400">Analyses approfondies et insights sur vos données</p>
         </div>
         <div className="flex items-center gap-3">
           <select
             value={timeRange}
             onChange={(e) => setTimeRange(e.target.value)}
-            className="px-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="px-4 py-2 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           >
             <option value="7d">7 derniers jours</option>
             <option value="30d">30 derniers jours</option>
@@ -199,7 +199,7 @@ export const DataAnalytics = () => {
           {/* Conversion Analysis */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card variant="default" padding="lg">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">Taux de conversion par catégorie</h2>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Taux de conversion par catégorie</h2>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={conversionData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
@@ -219,7 +219,7 @@ export const DataAnalytics = () => {
         </Card>
 
         <Card variant="default" padding="lg">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">Distribution par catégorie</h2>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Distribution par catégorie</h2>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
@@ -244,7 +244,7 @@ export const DataAnalytics = () => {
 
           {/* Time-based Analysis */}
           <Card variant="default" padding="lg">
-        <h2 className="text-xl font-bold text-gray-900 mb-6">Analyse temporelle (par heure)</h2>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Analyse temporelle (par heure)</h2>
         <ResponsiveContainer width="100%" height={350}>
           <BarChart data={timeData}>
             <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
@@ -267,24 +267,24 @@ export const DataAnalytics = () => {
 
           {/* Conversion Table */}
           <Card variant="default" padding="lg">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">Détails des conversions</h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Détails des conversions</h2>
             {conversionData.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-200">
+                  <thead className="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Catégorie</th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Vues</th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Conversions</th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Taux</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Catégorie</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Vues</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Conversions</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Taux</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-100">
+                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-100 dark:divide-gray-700">
                     {conversionData.map((item, index) => (
-                      <tr key={index} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.category}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{item.views}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{item.conversions}</td>
+                      <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{item.category}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{item.views}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{item.conversions}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
                           <span className="inline-flex items-center gap-1">
                             {item.rate.toFixed(1)}%

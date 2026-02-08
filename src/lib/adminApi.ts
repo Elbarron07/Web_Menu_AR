@@ -11,6 +11,7 @@ export interface MenuCategory {
   stroke_rgba: string | null;
   glow_rgba: string | null;
   display_order: number;
+  is_active: boolean;
   created_at?: string;
 }
 
@@ -101,6 +102,20 @@ export const adminCategoriesApi = {
 
     return { success: true };
   },
+
+  async toggleCategory(id: string, is_active: boolean): Promise<{ success: boolean }> {
+    const { error } = await supabase
+      .from('menu_categories')
+      .update({ is_active })
+      .eq('id', id);
+
+    if (error) {
+      logger.error('[toggleCategory] Erreur:', error);
+      throw new Error(error.message);
+    }
+
+    return { success: true };
+  },
 };
 
 // ============================================================================
@@ -168,6 +183,7 @@ export const adminMenuApi = {
                 strokeRgba: cat.stroke_rgba,
                 glowRgba: cat.glow_rgba,
                 displayOrder: cat.display_order,
+                isActive: cat.is_active ?? true,
               }
             : null,
           shortDesc: item.short_desc || '',
@@ -176,6 +192,7 @@ export const adminMenuApi = {
           image2D: item.image_2d,
           modelUrl: item.model_url,
           dimensions: item.dimensions,
+          isActive: item.is_active ?? true,
           nutrition: item.nutrition,
           status: item.status,
           variants: (variants || [])
@@ -341,6 +358,20 @@ export const adminMenuApi = {
 
     return { success: true };
   },
+
+  async toggleMenuItem(id: string, is_active: boolean): Promise<{ success: boolean }> {
+    const { error } = await supabase
+      .from('menu_items')
+      .update({ is_active })
+      .eq('id', id);
+
+    if (error) {
+      logger.error('[toggleMenuItem] Erreur:', error);
+      throw new Error(error.message);
+    }
+
+    return { success: true };
+  },
 };
 
 // ============================================================================
@@ -452,6 +483,9 @@ export interface AnalyticsData {
     date: string;
     views: number;
     carts: number;
+    hotspots: number;
+    arStarts: number;
+    arEnds: number;
   }>;
   recentActivities: Array<{
     id: string;
@@ -540,18 +574,29 @@ export const adminAnalyticsApi = {
         event_type: 'hotspot_click',
         count: events?.filter((e) => e.event_type === 'hotspot_click').length || 0,
       },
+      {
+        event_type: 'ar_session_start',
+        count: events?.filter((e) => e.event_type === 'ar_session_start').length || 0,
+      },
+      {
+        event_type: 'ar_session_end',
+        count: events?.filter((e) => e.event_type === 'ar_session_end').length || 0,
+      },
     ];
 
     // Events by day
-    const eventsByDayMap = new Map<string, { views: number; carts: number }>();
+    const eventsByDayMap = new Map<string, { views: number; carts: number; hotspots: number; arStarts: number; arEnds: number }>();
     events?.forEach((event) => {
       const date = new Date(event.created_at).toISOString().split('T')[0];
       if (!eventsByDayMap.has(date)) {
-        eventsByDayMap.set(date, { views: 0, carts: 0 });
+        eventsByDayMap.set(date, { views: 0, carts: 0, hotspots: 0, arStarts: 0, arEnds: 0 });
       }
       const dayStats = eventsByDayMap.get(date)!;
       if (event.event_type === 'view_3d') dayStats.views++;
       if (event.event_type === 'add_to_cart') dayStats.carts++;
+      if (event.event_type === 'hotspot_click') dayStats.hotspots++;
+      if (event.event_type === 'ar_session_start') dayStats.arStarts++;
+      if (event.event_type === 'ar_session_end') dayStats.arEnds++;
     });
 
     const eventsByDay = Array.from(eventsByDayMap.entries())
@@ -770,6 +815,141 @@ export const adminUploadApi = {
 // Combined API export
 // ============================================================================
 
+// ============================================================================
+// QR Codes API - Direct Supabase
+// ============================================================================
+
+export interface QRCode {
+  id: string;
+  type: 'table' | 'room' | 'delivery' | 'custom';
+  label: string;
+  code: string;
+  metadata: Record<string, unknown>;
+  is_active: boolean;
+  scan_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export const adminQRCodesApi = {
+  async getQRCodes(): Promise<QRCode[]> {
+    const { data, error } = await supabase
+      .from('qr_codes')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw new Error(error.message);
+    return (data || []) as QRCode[];
+  },
+
+  async createQRCode(qrCode: {
+    type: QRCode['type'];
+    label: string;
+    code: string;
+    metadata?: Record<string, unknown>;
+  }): Promise<QRCode> {
+    const { data, error } = await supabase
+      .from('qr_codes')
+      .insert({
+        type: qrCode.type,
+        label: qrCode.label,
+        code: qrCode.code,
+        metadata: qrCode.metadata || {},
+      })
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+    return data as QRCode;
+  },
+
+  async createBatchQRCodes(
+    type: QRCode['type'],
+    prefix: string,
+    start: number,
+    end: number,
+    labelTemplate: string
+  ): Promise<QRCode[]> {
+    const items = [];
+    for (let i = start; i <= end; i++) {
+      items.push({
+        type,
+        label: labelTemplate.replace('{n}', String(i)),
+        code: `${prefix}${i}`,
+        metadata: {},
+      });
+    }
+
+    const { data, error } = await supabase
+      .from('qr_codes')
+      .insert(items)
+      .select();
+
+    if (error) throw new Error(error.message);
+    return (data || []) as QRCode[];
+  },
+
+  async updateQRCode(id: string, updates: Partial<Pick<QRCode, 'label' | 'metadata' | 'is_active'>>): Promise<QRCode> {
+    const { data, error } = await supabase
+      .from('qr_codes')
+      .update({ ...updates, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+    return data as QRCode;
+  },
+
+  async deleteQRCode(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('qr_codes')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw new Error(error.message);
+  },
+
+  async toggleQRCode(id: string, is_active: boolean): Promise<void> {
+    const { error } = await supabase
+      .from('qr_codes')
+      .update({ is_active, updated_at: new Date().toISOString() })
+      .eq('id', id);
+
+    if (error) throw new Error(error.message);
+  },
+
+  async getQRCodeByCode(code: string): Promise<QRCode | null> {
+    const { data, error } = await supabase
+      .from('qr_codes')
+      .select('*')
+      .eq('code', code)
+      .eq('is_active', true)
+      .maybeSingle();
+
+    if (error) throw new Error(error.message);
+    return data as QRCode | null;
+  },
+
+  async incrementScanCount(id: string): Promise<void> {
+    const { error } = await supabase.rpc('increment_scan_count', { qr_id: id });
+    // Fallback: if RPC doesn't exist, do manual increment
+    if (error) {
+      const { data: current } = await supabase
+        .from('qr_codes')
+        .select('scan_count')
+        .eq('id', id)
+        .single();
+      if (current) {
+        await supabase
+          .from('qr_codes')
+          .update({ scan_count: (current.scan_count || 0) + 1 })
+          .eq('id', id);
+      }
+    }
+  },
+};
+
 export const adminApi = {
   menu: adminMenuApi,
   categories: adminCategoriesApi,
@@ -777,4 +957,5 @@ export const adminApi = {
   analytics: adminAnalyticsApi,
   sessions: adminSessionsApi,
   upload: adminUploadApi,
+  qrCodes: adminQRCodesApi,
 };

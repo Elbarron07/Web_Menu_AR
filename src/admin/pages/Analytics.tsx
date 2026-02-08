@@ -61,16 +61,16 @@ export const Analytics = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
             <BarChart3 className="w-8 h-8" />
             Analytics & Insights
           </h1>
-          <p className="text-gray-600">Analysez l'impact de votre menu AR</p>
+          <p className="text-gray-600 dark:text-gray-400">Analysez l'impact de votre menu AR</p>
         </div>
         <select
           value={days}
           onChange={(e) => setDays(Number(e.target.value))}
-          className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          className="px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
         >
           <option value={7}>7 derniers jours</option>
           <option value={30}>30 derniers jours</option>
@@ -83,13 +83,13 @@ export const Analytics = () => {
 
       {/* Activités récentes détaillées */}
       <Card variant="default" padding="lg">
-        <h2 className="text-xl font-bold text-gray-900 mb-1">Activités récentes</h2>
-        <p className="text-sm text-gray-500 mb-5">Les {Math.min(data.recentActivities.length, 10)} dernières interactions utilisateurs</p>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-1">Activités récentes</h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">Les {Math.min(data.recentActivities.length, 10)} dernières interactions utilisateurs</p>
 
         {data.recentActivities.length === 0 ? (
           <p className="text-gray-400 text-sm text-center py-8">Aucune activité récente</p>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-gray-100 dark:divide-gray-700">
             {data.recentActivities.slice(0, 10).map((activity) => {
               const info = getActivityInfo(activity.type);
               const Icon = info.icon;
@@ -106,26 +106,26 @@ export const Analytics = () => {
                     <Icon className="w-4.5 h-4.5" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-900 text-sm truncate">
+                    <p className="font-semibold text-gray-900 dark:text-white text-sm truncate">
                       {activity.menu_item_name
                         ? `${info.title} : ${activity.menu_item_name}`
                         : info.title}
                     </p>
                     <div className="flex items-center gap-3 mt-1 flex-wrap">
-                      <span className="text-xs text-gray-500 flex items-center gap-1">
+                      <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
                         <Clock className="w-3 h-3" />
                         {timeAgo}
                       </span>
-                      <span className="text-xs text-gray-400">{exactTime}</span>
+                      <span className="text-xs text-gray-400 dark:text-gray-500">{exactTime}</span>
                       {activity.session_id && (
-                        <span className="text-xs text-gray-400 flex items-center gap-1 font-mono">
+                        <span className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1 font-mono">
                           <Hash className="w-3 h-3" />
                           {activity.session_id.slice(0, 8)}
                         </span>
                       )}
                     </div>
                     {metaDetail && (
-                      <p className="text-xs text-primary-600 mt-1 font-medium">{metaDetail}</p>
+                      <p className="text-xs text-primary-600 dark:text-primary-400 mt-1 font-medium">{metaDetail}</p>
                     )}
                   </div>
                 </div>

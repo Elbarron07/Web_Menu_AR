@@ -4,12 +4,13 @@ import { AdminPageSkeleton } from '../components/skeletons/AdminPageSkeleton';
 import { useCategories } from '../hooks/useCategories';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
+import { ToggleSwitch } from '../components/ui/ToggleSwitch';
 import type { MenuCategory } from '../../lib/adminApi';
 
 const ICON_OPTIONS = ['🍽️', '🍕', '🍔', '🥙', '🌮', '🍣', '🍝', '🥗', '🍰', '🥤', '🍟', '🍗'];
 
 export const Categories = () => {
-  const { categories, loading, error, createCategory, updateCategory, deleteCategory } = useCategories();
+  const { categories, loading, error, createCategory, updateCategory, deleteCategory, toggleCategory } = useCategories();
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<MenuCategory | null>(null);
   const [formData, setFormData] = useState({
@@ -91,11 +92,11 @@ export const Categories = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
             <FolderOpen className="w-8 h-8" />
             Catégories
           </h1>
-          <p className="text-gray-600">Gérez les catégories de plats avant d&apos;ajouter des articles au menu</p>
+          <p className="text-gray-600 dark:text-gray-400">Gérez les catégories de plats avant d&apos;ajouter des articles au menu</p>
         </div>
         <Button icon={<Plus className="w-5 h-5" />} onClick={openCreate}>
           Nouvelle catégorie
@@ -111,28 +112,43 @@ export const Categories = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Icône
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Nom
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Ordre
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Actif
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {categories.map((c) => (
-                  <tr key={c.id} className="hover:bg-gray-50">
+                  <tr key={c.id} className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-opacity ${!c.is_active ? 'opacity-50' : ''}`}>
                     <td className="px-6 py-4 whitespace-nowrap text-2xl">{c.icon || '🍽️'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{c.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{c.display_order}</td>
+                    <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-white">{c.name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{c.display_order}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <ToggleSwitch
+                        checked={c.is_active}
+                        onChange={async (checked) => {
+                          try {
+                            await toggleCategory(c.id, checked);
+                          } catch {
+                            alert('Erreur lors du changement de statut');
+                          }
+                        }}
+                      />
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
                       <div className="flex justify-end gap-2">
                         <button
@@ -164,18 +180,18 @@ export const Categories = () => {
 
       {showForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full p-6">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
               {editing ? 'Modifier la catégorie' : 'Nouvelle catégorie'}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nom *</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nom *</label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData((d) => ({ ...d, name: e.target.value.trim() }))}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
                   required
                 />
               </div>
@@ -199,13 +215,13 @@ export const Categories = () => {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Ordre d&apos;affichage</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ordre d&apos;affichage</label>
                 <input
                   type="number"
                   min={0}
                   value={formData.display_order}
                   onChange={(e) => setFormData((d) => ({ ...d, display_order: parseInt(e.target.value, 10) || 0 }))}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
                 />
               </div>
               <div className="flex justify-end gap-3 pt-4">

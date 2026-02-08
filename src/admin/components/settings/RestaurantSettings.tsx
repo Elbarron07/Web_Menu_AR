@@ -97,29 +97,31 @@ export const RestaurantSettings = () => {
   };
 
   if (loading) {
-    return <div className="text-center py-12 text-gray-600">Chargement...</div>;
+    return <div className="text-center py-12 text-gray-600 dark:text-gray-400">Chargement...</div>;
   }
 
   const logoUrl = watch('logo_url');
 
+  const inputClasses = "w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none";
+
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-      <h3 className="text-xl font-bold text-gray-900 mb-6">Paramètres du restaurant</h3>
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Paramètres du restaurant</h3>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Nom du restaurant *
           </label>
           <input
             {...register('name')}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+            className={inputClasses}
           />
           {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Logo
           </label>
           <div className="flex items-center gap-4">
@@ -127,7 +129,7 @@ export const RestaurantSettings = () => {
               <img
                 src={logoUrl}
                 alt="Logo"
-                className="w-20 h-20 object-contain border border-gray-200 rounded-lg"
+                className="w-20 h-20 object-contain border border-gray-200 dark:border-gray-600 rounded-lg"
               />
             )}
             <div>
@@ -140,7 +142,7 @@ export const RestaurantSettings = () => {
               />
               <label
                 htmlFor="logo-upload"
-                className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors"
               >
                 <Upload className="w-4 h-4" />
                 {uploadingLogo ? 'Upload...' : 'Upload Logo'}
@@ -150,23 +152,23 @@ export const RestaurantSettings = () => {
           <input
             {...register('logo_url')}
             placeholder="URL du logo"
-            className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+            className={`mt-2 ${inputClasses}`}
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Couleur du thème
           </label>
           <div className="flex items-center gap-4">
             <input
               type="color"
               {...register('theme_color')}
-              className="w-16 h-10 border border-gray-300 rounded-lg cursor-pointer"
+              className="w-16 h-10 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer"
             />
             <input
               {...register('theme_color')}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+              className={`flex-1 ${inputClasses.replace('w-full ', '')}`}
             />
           </div>
           {errors.theme_color && (
@@ -175,18 +177,18 @@ export const RestaurantSettings = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             URL de base pour QR Codes
           </label>
           <input
             {...register('qr_code_base_url')}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+            className={inputClasses}
             placeholder="https://votre-domaine.com"
           />
         </div>
 
         {/* Background Settings */}
-        <div className="pt-6 border-t border-gray-200">
+        <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
           <BackgroundSettings
             backgroundImages={backgroundImages}
             backgroundMode={backgroundMode}
@@ -195,7 +197,7 @@ export const RestaurantSettings = () => {
           />
         </div>
 
-        <div className="flex justify-end pt-4 border-t border-gray-200">
+        <div className="flex justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
           <button
             type="submit"
             disabled={isSubmitting}

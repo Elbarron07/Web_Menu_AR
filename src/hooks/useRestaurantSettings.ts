@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { logger } from '../lib/logger';
 
@@ -23,49 +23,66 @@ export const useRestaurantSettings = () => {
   const [loading, setLoading] = useState(!settingsCache);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchSettings = async () => {
-      // Utiliser le cache si valide
-      if (settingsCache && Date.now() - cacheTimestamp < CACHE_DURATION) {
-        setSettings(settingsCache);
-        setLoading(false);
-        return;
+  const fetchSettings = useCallback(async () => {
+    try {
+      setLoading(true);
+
+      const { data, error: fetchError } = await supabase
+        .from('restaurant_settings')
+        .select('id, name, logo_url, theme_color, background_images, background_mode')
+        .limit(1)
+        .maybeSingle();
+
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        throw fetchError;
       }
 
-      try {
-        setLoading(true);
-        console.log('[DEBUG] Fetching restaurant settings from Supabase...');
-        
-        const { data, error: fetchError } = await supabase
-          .from('restaurant_settings')
-          .select('id, name, logo_url, theme_color, background_images, background_mode')
-          .limit(1)
-          .maybeSingle();
+      const result = data || {};
 
-        console.log('[DEBUG] Supabase response:', { data, fetchError });
+      // Mettre en cache
+      settingsCache = result;
+      cacheTimestamp = Date.now();
 
-        if (fetchError && fetchError.code !== 'PGRST116') {
-          throw fetchError;
-        }
-
-        const result = data || {};
-        
-        // Mettre en cache
-        settingsCache = result;
-        cacheTimestamp = Date.now();
-        
-        setSettings(result);
-        setError(null);
-      } catch (err) {
-        logger.error('Error fetching settings:', err);
-        setError(err instanceof Error ? err.message : 'Erreur de chargement');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSettings();
+      setSettings(result);
+      setError(null);
+    } catch (err) {
+      logger.error('Error fetching settings:', err);
+      setError(err instanceof Error ? err.message : 'Erreur de chargement');
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    // Utiliser le cache si valide
+    if (settingsCache && Date.now() - cacheTimestamp < CACHE_DURATION) {
+      setSettings(settingsCache);
+      setLoading(false);
+    } else {
+      fetchSettings();
+    }
+  }, [fetchSettings]);
+
+  // Abonnement realtime sur restaurant_settings
+  useEffect(() => {
+    const channel = supabase
+      .channel('settings-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'restaurant_settings' },
+        () => {
+          // Invalider le cache et refetch
+          settingsCache = null;
+          cacheTimestamp = 0;
+          fetchSettings();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchSettings]);
 
   return { settings, loading, error };
 };

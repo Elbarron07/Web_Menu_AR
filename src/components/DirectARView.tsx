@@ -260,6 +260,7 @@ const DirectARView = () => {
                     onClose={() => setShowMenu(false)}
                     onSelectItem={(itemId, _path) => handleTacticalMenuSelect(itemId)}
                     initialCategory={categorySlug}
+                    restaurantInfo={settings ? { name: settings.name, logo_url: settings.logo_url } : undefined}
                 />
             )}
 

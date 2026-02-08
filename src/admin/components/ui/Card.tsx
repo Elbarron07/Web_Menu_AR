@@ -11,12 +11,12 @@ interface CardProps extends Omit<HTMLAttributes<HTMLDivElement>, 'onAnimationSta
 
 export const Card = forwardRef<HTMLDivElement, CardProps>(
   ({ variant = 'default', padding = 'md', hover = false, children, className = '', ...props }, ref) => {
-    const baseClasses = 'bg-white rounded-2xl transition-all';
+    const baseClasses = 'bg-white dark:bg-gray-800 rounded-2xl transition-all';
     
     const variantClasses = {
-      default: 'shadow-sm border border-gray-100',
-      elevated: 'shadow-md border border-gray-100',
-      glass: 'bg-white/70 backdrop-blur-xl border border-white/30 shadow-lg',
+      default: 'shadow-sm border border-gray-100 dark:border-gray-700',
+      elevated: 'shadow-md border border-gray-100 dark:border-gray-700',
+      glass: 'bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl border border-white/30 dark:border-gray-600/30 shadow-lg',
     };
     
     const paddingClasses = {

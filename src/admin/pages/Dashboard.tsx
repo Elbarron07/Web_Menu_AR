@@ -144,8 +144,8 @@ export const Dashboard = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
-        <p className="text-gray-600">Vue d'ensemble de votre menu AR</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Dashboard</h1>
+        <p className="text-gray-600 dark:text-gray-400">Vue d'ensemble de votre menu AR</p>
       </div>
 
       {/* KPI Cards */}
@@ -170,8 +170,8 @@ export const Dashboard = () => {
           <Card variant="default" padding="lg">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-xl font-bold text-gray-900">Revenus mensuels</h2>
-                <p className="text-sm text-gray-500 mt-1">Évolution sur 9 mois (Données indicatives - à connecter avec table orders)</p>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Revenus mensuels</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Évolution sur 9 mois (Données indicatives - à connecter avec table orders)</p>
               </div>
               <Badge variant="success" size="sm" trend="up">
                 +12%
@@ -220,11 +220,11 @@ export const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Activities */}
         <Card variant="default" padding="lg">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">Activités récentes</h2>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Activités récentes</h2>
           {activities.length === 0 ? (
-            <p className="text-gray-400 text-sm text-center py-6">Aucune activité récente</p>
+            <p className="text-gray-400 dark:text-gray-500 text-sm text-center py-6">Aucune activité récente</p>
           ) : (
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-gray-100 dark:divide-gray-700">
               {activities.map((activity, index) => {
                 const Icon = activity.icon;
                 return (
@@ -233,16 +233,16 @@ export const Dashboard = () => {
                       <Icon className="w-4 h-4" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 text-sm truncate">{activity.title}</p>
+                      <p className="font-semibold text-gray-900 dark:text-white text-sm truncate">{activity.title}</p>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-xs text-gray-500 flex items-center gap-1">
+                        <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
                           <Clock className="w-3 h-3" />
                           {activity.time}
                         </span>
-                        <span className="text-xs text-gray-400">{activity.exactTime}</span>
+                        <span className="text-xs text-gray-400 dark:text-gray-500">{activity.exactTime}</span>
                       </div>
                       {activity.metaDetail && (
-                        <p className="text-xs text-primary-600 mt-0.5 font-medium">{activity.metaDetail}</p>
+                        <p className="text-xs text-primary-600 dark:text-primary-400 mt-0.5 font-medium">{activity.metaDetail}</p>
                       )}
                     </div>
                   </div>
@@ -254,7 +254,7 @@ export const Dashboard = () => {
 
         {/* Recent Items Table */}
         <Card variant="default" padding="lg">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">Plats récents</h2>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Plats récents</h2>
           <Table
             columns={recentItemsColumns}
             data={menuItems.slice(0, 5)}

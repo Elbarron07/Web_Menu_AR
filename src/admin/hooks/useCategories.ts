@@ -55,6 +55,11 @@ export const useCategories = () => {
     await fetchCategories();
   };
 
+  const toggleCategory = async (id: string, isActive: boolean) => {
+    await adminApi.categories.toggleCategory(id, isActive);
+    await fetchCategories();
+  };
+
   return {
     categories,
     loading,
@@ -62,6 +67,7 @@ export const useCategories = () => {
     createCategory,
     updateCategory,
     deleteCategory,
+    toggleCategory,
     refetch: fetchCategories,
   };
 };

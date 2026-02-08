@@ -11,11 +11,11 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   return (
-    <div className="flex min-h-screen bg-background-main">
+    <div className="flex min-h-screen bg-background-main dark:bg-gray-900">
       {/* Overlay mobile */}
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/50 dark:bg-black/70 z-40 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}

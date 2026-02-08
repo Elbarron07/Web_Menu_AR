@@ -12,7 +12,7 @@ import { adminRoute } from '../../config/routes';
 import type { MenuItem } from '../../hooks/useMenu';
 
 export const MenuManagement = () => {
-  const { menuItems, loading, deleteMenuItem } = useMenuAdmin();
+  const { menuItems, loading, deleteMenuItem, toggleMenuItem } = useMenuAdmin();
   const { categories, loading: categoriesLoading } = useCategories();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all');
@@ -56,11 +56,11 @@ export const MenuManagement = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
             <UtensilsCrossed className="w-8 h-8" />
             Gestion du Menu
           </h1>
-          <p className="text-gray-600">Créez et gérez vos plats</p>
+          <p className="text-gray-600 dark:text-gray-400">Créez et gérez vos plats</p>
         </div>
         {canAddPlat ? (
           <Button
@@ -99,13 +99,13 @@ export const MenuManagement = () => {
               placeholder="Rechercher un plat..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-700 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
           </div>
           <select
             value={selectedCategoryId}
             onChange={(e) => setSelectedCategoryId(e.target.value)}
-            className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           >
             <option value="all">Toutes les catégories</option>
             {categories.map((cat) => (
@@ -120,6 +120,13 @@ export const MenuManagement = () => {
           items={filteredItems}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          onToggle={async (id, isActive) => {
+            try {
+              await toggleMenuItem(id, isActive);
+            } catch {
+              alert('Erreur lors du changement de statut');
+            }
+          }}
         />
       </Card>
 

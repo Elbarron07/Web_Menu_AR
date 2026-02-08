@@ -59,6 +59,15 @@ export const useMenuAdmin = () => {
     }
   };
 
+  const toggleMenuItem = async (id: string, isActive: boolean) => {
+    try {
+      await adminApi.menu.toggleMenuItem(id, isActive);
+      await fetchMenuItems();
+    } catch (err: any) {
+      throw err;
+    }
+  };
+
   return {
     menuItems,
     loading,
@@ -66,6 +75,7 @@ export const useMenuAdmin = () => {
     createMenuItem,
     updateMenuItem,
     deleteMenuItem,
+    toggleMenuItem,
     refetch: fetchMenuItems,
   };
 };

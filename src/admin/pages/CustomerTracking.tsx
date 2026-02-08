@@ -45,17 +45,17 @@ export const CustomerTracking = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
             <Users className="w-8 h-8" />
             Suivi des clients
           </h1>
-          <p className="text-gray-600">Analysez l'engagement et le comportement de vos clients</p>
+          <p className="text-gray-600 dark:text-gray-400">Analysez l'engagement et le comportement de vos clients</p>
         </div>
         <div className="flex items-center gap-3">
           <select
             value={days}
             onChange={(e) => setDays(Number(e.target.value))}
-            className="px-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="px-4 py-2 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           >
             <option value={7}>7 jours</option>
             <option value={30}>30 jours</option>
@@ -110,7 +110,7 @@ export const CustomerTracking = () => {
 
           {/* Engagement Chart */}
           <Card variant="default" padding="lg">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">Engagement hebdomadaire</h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Engagement hebdomadaire</h2>
             {engagementData.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={engagementData}>
@@ -138,7 +138,7 @@ export const CustomerTracking = () => {
           {/* Sessions Table */}
           <Card variant="default" padding="lg">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-gray-900">Liste des sessions</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Liste des sessions</h2>
               <div className="flex items-center gap-3">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -147,7 +147,7 @@ export const CustomerTracking = () => {
                     placeholder="Rechercher une session..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-700 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   />
                 </div>
                 <Button variant="secondary" icon={<Filter className="w-4 h-4" />}>

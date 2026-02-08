@@ -39,7 +39,7 @@ export const StatCard = ({ label, value, icon: Icon, iconColor, trend, onClick }
       </div>
       
       <motion.p 
-        className="text-3xl font-bold text-gray-900 mb-1"
+        className="text-3xl font-bold text-gray-900 dark:text-white mb-1"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
@@ -47,7 +47,7 @@ export const StatCard = ({ label, value, icon: Icon, iconColor, trend, onClick }
         {value}
       </motion.p>
       
-      <p className="text-sm text-gray-600 font-medium">{label}</p>
+      <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">{label}</p>
     </Card>
   );
 };

@@ -8,6 +8,7 @@ import { LocalhostChecker } from './components/LocalhostChecker';
 import { ARLayout } from './components/ARLayout';
 import { PWAInstallGate } from './components/PWAInstallGate';
 import { PWAInstallBanner } from './components/PWAInstallBanner';
+import { QRCodeResolver } from './components/QRCodeResolver';
 import { ADMIN_PATH } from './config/routes';
 
 // Lazy loading des routes admin (chunk separe)
@@ -26,6 +27,9 @@ function App() {
           {/* Route de callback pour les invitations Supabase */}
           <Route path="/auth/callback" element={<AuthCallback />} />
           
+          {/* Route QR Code - resolution et redirection */}
+          <Route path="/q/:code" element={<QRCodeResolver />} />
+
           {/* Routes client - protegees par le gate PWA */}
           <Route path="/" element={
             <PWAInstallGate>
