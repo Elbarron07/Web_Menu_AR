@@ -14,7 +14,7 @@ import { MenuSkeleton } from './skeletons/MenuSkeleton';
 import { motion } from 'framer-motion';
 
 const DirectARView = () => {
-    const { id } = useParams();
+    const { id, categorySlug } = useParams();
     const navigate = useNavigate();
     const { menuItems, loading: menuLoading } = useMenu();
     const { menuItem: product, loading: itemLoading } = useMenuItem(id);
@@ -65,9 +65,8 @@ const DirectARView = () => {
 
     const handleDishSelect = (dishId: string | number) => {
         setShowMenu(false);
-        // Utiliser replace: true pour éviter d'ajouter une entrée dans l'historique
-        // Cela évite le rechargement complet lors du retour en arrière
-        navigate(`/ar/${dishId}`, { replace: true });
+        // Push dans l'historique pour que le bouton retour ramene au sous-menu
+        navigate(`/ar/${dishId}`);
     };
 
     const handleTacticalMenuSelect = (itemId: string) => {
@@ -251,7 +250,7 @@ const DirectARView = () => {
             {product && !showMenu && !isARSessionActive && (
                 <motion.button
                     onClick={() => {
-                        navigate('/', { replace: true });
+                        navigate(-1);
                     }}
                     className="fixed top-4 left-4 z-[60] rounded-full w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shadow-soft transition-all pointer-events-auto bg-white/90 backdrop-blur-xl border border-white/30 text-primary-600"
                     initial={{ opacity: 0, x: -20 }}
@@ -273,6 +272,7 @@ const DirectARView = () => {
                     isOpen={showMenu}
                     onClose={() => setShowMenu(false)}
                     onSelectItem={(itemId, _path) => handleTacticalMenuSelect(itemId)}
+                    initialCategory={categorySlug}
                 />
             )}
 

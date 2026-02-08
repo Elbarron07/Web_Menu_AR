@@ -11,7 +11,7 @@ export const ARLayout = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     // Verifier si on est sur une route AR
-    const isARRoute = location.pathname === '/' || location.pathname.startsWith('/ar/');
+    const isARRoute = location.pathname === '/' || location.pathname.startsWith('/ar/') || location.pathname.startsWith('/menu/');
     
     // Verifier si on est sur une route admin ou autre route non-AR
     const isAdminRoute = location.pathname.startsWith(`/${ADMIN_PATH}/`) || 

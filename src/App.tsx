@@ -30,6 +30,11 @@ function App() {
               <DirectARView />
             </div>
           } />
+          <Route path="/menu/:categorySlug" element={
+            <div className="min-h-screen text-white font-sans selection:bg-amber-500 selection:text-black" style={{ background: 'transparent' }}>
+              <DirectARView />
+            </div>
+          } />
           <Route path="/ar/:id" element={
             <div className="min-h-screen text-white font-sans selection:bg-amber-500 selection:text-black" style={{ background: 'transparent' }}>
               <DirectARView />
