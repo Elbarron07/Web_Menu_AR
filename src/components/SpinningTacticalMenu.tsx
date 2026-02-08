@@ -686,6 +686,7 @@ export const SpinningTacticalMenu = ({
                             // Si c'est un clic rapide (< 200ms et pas de drag), déclencher la navigation
                             if (dragStartRef.current && Date.now() - dragStartRef.current.time < 200 && !isDragging) {
                               handleItemClick(segment.item.id, e);
+                              e.preventDefault(); // Empeche le click synthetique qui causerait un double navigate
                             }
                             setIsDragging(false);
                             dragStartRef.current = null;
