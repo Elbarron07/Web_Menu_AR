@@ -29,12 +29,15 @@ function shouldShowBanner(): boolean {
   // Deja en standalone = pas de banniere
   if (isStandalone()) return false;
 
-  // Verifier si le dismiss a expire (> 24h)
+  // Verifier si le dismiss est recent (< 24h)
   const dismissed = localStorage.getItem(DISMISS_KEY);
-  if (!dismissed) return false; // jamais dismiss = le gate devrait etre visible, pas la banniere
+  if (dismissed) {
+    const timestamp = parseInt(dismissed, 10);
+    if (Date.now() - timestamp < DISMISS_DURATION_MS) return false; // dismiss recent, ne pas afficher
+  }
 
-  const timestamp = parseInt(dismissed, 10);
-  return Date.now() - timestamp >= DISMISS_DURATION_MS;
+  // Nouveau visiteur ou dismiss expire : afficher la banniere
+  return true;
 }
 
 // ---- Composant ----
