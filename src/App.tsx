@@ -6,6 +6,8 @@ import { AuthCallback } from './pages/AuthCallback';
 import { LocalhostRedirect } from './pages/LocalhostRedirect';
 import { LocalhostChecker } from './components/LocalhostChecker';
 import { ARLayout } from './components/ARLayout';
+import { PWAInstallGate } from './components/PWAInstallGate';
+import { PWAInstallBanner } from './components/PWAInstallBanner';
 import { ADMIN_PATH } from './config/routes';
 
 // Lazy loading des routes admin (chunk separe)
@@ -24,21 +26,30 @@ function App() {
           {/* Route de callback pour les invitations Supabase */}
           <Route path="/auth/callback" element={<AuthCallback />} />
           
-          {/* Routes client */}
+          {/* Routes client - protegees par le gate PWA */}
           <Route path="/" element={
-            <div className="min-h-screen text-white font-sans selection:bg-amber-500 selection:text-black" style={{ background: 'transparent' }}>
-              <DirectARView />
-            </div>
+            <PWAInstallGate>
+              <div className="min-h-screen text-white font-sans selection:bg-amber-500 selection:text-black" style={{ background: 'transparent' }}>
+                <DirectARView />
+                <PWAInstallBanner />
+              </div>
+            </PWAInstallGate>
           } />
           <Route path="/menu/:categorySlug" element={
-            <div className="min-h-screen text-white font-sans selection:bg-amber-500 selection:text-black" style={{ background: 'transparent' }}>
-              <DirectARView />
-            </div>
+            <PWAInstallGate>
+              <div className="min-h-screen text-white font-sans selection:bg-amber-500 selection:text-black" style={{ background: 'transparent' }}>
+                <DirectARView />
+                <PWAInstallBanner />
+              </div>
+            </PWAInstallGate>
           } />
           <Route path="/ar/:id" element={
-            <div className="min-h-screen text-white font-sans selection:bg-amber-500 selection:text-black" style={{ background: 'transparent' }}>
-              <DirectARView />
-            </div>
+            <PWAInstallGate>
+              <div className="min-h-screen text-white font-sans selection:bg-amber-500 selection:text-black" style={{ background: 'transparent' }}>
+                <DirectARView />
+                <PWAInstallBanner />
+              </div>
+            </PWAInstallGate>
           } />
           
           {/* Routes admin - lazy loaded */}
