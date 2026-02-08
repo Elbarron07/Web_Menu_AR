@@ -218,7 +218,7 @@ const DirectARView = () => {
         backgroundColor: '#000000', // Fond noir par defaut
     };
 
-    if (!isARRoute && backgroundImages.length > 0) {
+    if (!id && backgroundImages.length > 0) {
         if (backgroundMode === 'single') {
             backgroundStyle.backgroundImage = `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url(${backgroundImages[0]})`;
             backgroundStyle.backgroundSize = 'cover';
