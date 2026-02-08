@@ -8,7 +8,8 @@ import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Table } from '../components/ui/Table';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 import { adminRoute } from '../../config/routes';
 
 export const Dashboard = () => {
@@ -88,20 +89,38 @@ export const Dashboard = () => {
     { month: 'Nov', revenue: 16000 },
   ];
 
+  // Helper pour extraire le détail metadata
+  const getMetadataDetail = (type: string, metadata: Record<string, unknown> | null): string | null => {
+    if (!metadata) return null;
+    switch (type) {
+      case 'hotspot_click':
+        return metadata.hotspot_slot ? `Slot : ${metadata.hotspot_slot}` : null;
+      case 'ar_session_end':
+        return metadata.duration ? `Durée : ${metadata.duration}s` : null;
+      default:
+        return null;
+    }
+  };
+
   // Activities from analytics
-  const activities = analyticsData?.recentActivities?.slice(0, 4).map((activity) => {
+  const activities = analyticsData?.recentActivities?.slice(0, 6).map((activity) => {
     const info = getActivityInfo(activity.type);
     const Icon = info.icon;
     const timeAgo = formatDistanceToNow(new Date(activity.created_at), {
       addSuffix: true,
+      locale: fr,
     });
+    const exactTime = format(new Date(activity.created_at), 'HH:mm', { locale: fr });
+    const metaDetail = getMetadataDetail(activity.type, activity.metadata);
     return {
       icon: Icon,
       title: activity.menu_item_name
         ? `${info.title}: ${activity.menu_item_name}`
         : info.title,
       time: timeAgo,
+      exactTime,
       color: info.color,
+      metaDetail,
     };
   }) || [];
 
@@ -202,25 +221,35 @@ export const Dashboard = () => {
         {/* Activities */}
         <Card variant="default" padding="lg">
           <h2 className="text-xl font-bold text-gray-900 mb-6">Activités récentes</h2>
-          <div className="space-y-4">
-            {activities.map((activity, index) => {
-              const Icon = activity.icon;
-              return (
-                <div key={index} className="flex items-center gap-4">
-                  <div className={`${activity.color} p-3 rounded-xl`}>
-                    <Icon className="w-5 h-5" />
+          {activities.length === 0 ? (
+            <p className="text-gray-400 text-sm text-center py-6">Aucune activité récente</p>
+          ) : (
+            <div className="divide-y divide-gray-100">
+              {activities.map((activity, index) => {
+                const Icon = activity.icon;
+                return (
+                  <div key={index} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+                    <div className={`${activity.color} p-2.5 rounded-xl flex-shrink-0`}>
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-gray-900 text-sm truncate">{activity.title}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-xs text-gray-500 flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {activity.time}
+                        </span>
+                        <span className="text-xs text-gray-400">{activity.exactTime}</span>
+                      </div>
+                      {activity.metaDetail && (
+                        <p className="text-xs text-primary-600 mt-0.5 font-medium">{activity.metaDetail}</p>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <p className="font-semibold text-gray-900 text-sm">{activity.title}</p>
-                    <p className="text-xs text-gray-500 flex items-center gap-1 mt-1">
-                      <Clock className="w-3 h-3" />
-                      {activity.time}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </Card>
 
         {/* Recent Items Table */}

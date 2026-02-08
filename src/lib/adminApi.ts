@@ -460,6 +460,7 @@ export interface AnalyticsData {
     menu_item_name: string | null;
     created_at: string;
     session_id: string | null;
+    metadata: Record<string, unknown> | null;
   }>;
 }
 
@@ -559,7 +560,7 @@ export const adminAnalyticsApi = {
 
     // Recent activities
     const recentActivities = (events || [])
-      .slice(0, 10)
+      .slice(0, 20)
       .map((event) => ({
         id: event.id,
         type: event.event_type,
@@ -567,6 +568,7 @@ export const adminAnalyticsApi = {
         menu_item_name: event.menu_item_id ? itemsMap.get(event.menu_item_id)?.name || null : null,
         created_at: event.created_at,
         session_id: event.session_id,
+        metadata: (event.metadata as Record<string, unknown>) || null,
       }));
 
     return {

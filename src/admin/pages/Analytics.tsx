@@ -1,9 +1,41 @@
 import { useState } from 'react';
-import { BarChart3 } from 'lucide-react';
+import { BarChart3, Eye, ShoppingCart, User, Clock, FileText, MousePointerClick, Hash } from 'lucide-react';
 import { AdminPageSkeleton } from '../components/skeletons/AdminPageSkeleton';
 import { useAnalytics } from '../hooks/useAnalytics';
 import { MetricsCards } from '../components/analytics/MetricsCards';
 import { ARCharts } from '../components/analytics/ARCharts';
+import { Card } from '../components/ui/Card';
+import { formatDistanceToNow, format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+
+const getActivityInfo = (type: string) => {
+  switch (type) {
+    case 'view_3d':
+      return { icon: Eye, color: 'text-amber-600 bg-amber-50', title: 'Vue 3D' };
+    case 'add_to_cart':
+      return { icon: ShoppingCart, color: 'text-green-600 bg-green-50', title: 'Ajout au panier' };
+    case 'ar_session_start':
+      return { icon: User, color: 'text-blue-600 bg-blue-50', title: 'Session AR démarrée' };
+    case 'ar_session_end':
+      return { icon: Clock, color: 'text-purple-600 bg-purple-50', title: 'Session AR terminée' };
+    case 'hotspot_click':
+      return { icon: MousePointerClick, color: 'text-orange-600 bg-orange-50', title: 'Hotspot cliqué' };
+    default:
+      return { icon: FileText, color: 'text-gray-600 bg-gray-50', title: 'Activité' };
+  }
+};
+
+const getMetadataDetail = (type: string, metadata: Record<string, unknown> | null): string | null => {
+  if (!metadata) return null;
+  switch (type) {
+    case 'hotspot_click':
+      return metadata.hotspot_slot ? `Slot : ${metadata.hotspot_slot}` : null;
+    case 'ar_session_end':
+      return metadata.duration ? `Durée : ${metadata.duration}s` : null;
+    default:
+      return null;
+  }
+};
 
 export const Analytics = () => {
   const [days, setDays] = useState(7);
@@ -48,6 +80,60 @@ export const Analytics = () => {
 
       <MetricsCards data={data} />
       <ARCharts data={data} />
+
+      {/* Activités récentes détaillées */}
+      <Card variant="default" padding="lg">
+        <h2 className="text-xl font-bold text-gray-900 mb-1">Activités récentes</h2>
+        <p className="text-sm text-gray-500 mb-5">Les {Math.min(data.recentActivities.length, 10)} dernières interactions utilisateurs</p>
+
+        {data.recentActivities.length === 0 ? (
+          <p className="text-gray-400 text-sm text-center py-8">Aucune activité récente</p>
+        ) : (
+          <div className="divide-y divide-gray-100">
+            {data.recentActivities.slice(0, 10).map((activity) => {
+              const info = getActivityInfo(activity.type);
+              const Icon = info.icon;
+              const metaDetail = getMetadataDetail(activity.type, activity.metadata);
+              const timeAgo = formatDistanceToNow(new Date(activity.created_at), {
+                addSuffix: true,
+                locale: fr,
+              });
+              const exactTime = format(new Date(activity.created_at), 'dd/MM/yyyy HH:mm:ss', { locale: fr });
+
+              return (
+                <div key={activity.id} className="flex items-center gap-4 py-3.5 first:pt-0 last:pb-0">
+                  <div className={`${info.color} p-2.5 rounded-xl flex-shrink-0`}>
+                    <Icon className="w-4.5 h-4.5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-gray-900 text-sm truncate">
+                      {activity.menu_item_name
+                        ? `${info.title} : ${activity.menu_item_name}`
+                        : info.title}
+                    </p>
+                    <div className="flex items-center gap-3 mt-1 flex-wrap">
+                      <span className="text-xs text-gray-500 flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {timeAgo}
+                      </span>
+                      <span className="text-xs text-gray-400">{exactTime}</span>
+                      {activity.session_id && (
+                        <span className="text-xs text-gray-400 flex items-center gap-1 font-mono">
+                          <Hash className="w-3 h-3" />
+                          {activity.session_id.slice(0, 8)}
+                        </span>
+                      )}
+                    </div>
+                    {metaDetail && (
+                      <p className="text-xs text-primary-600 mt-1 font-medium">{metaDetail}</p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </Card>
     </div>
   );
 };

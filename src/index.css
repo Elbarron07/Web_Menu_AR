@@ -193,51 +193,80 @@ model-viewer::part(interaction-prompt) {
   outline: none;
   transition: transform 0.2s ease;
   pointer-events: auto;
+  opacity: 0;
+  animation: hotspotFadeIn 0.5s ease forwards;
 }
 
 .hotspot-button:hover {
-  transform: scale(1.1);
+  transform: scale(1.15);
 }
 
 .hotspot-button:active {
-  transform: scale(0.95);
+  transform: scale(0.93);
 }
 
 .hotspot-marker {
-  width: 32px;
-  height: 32px;
-  background: linear-gradient(135deg, rgba(251, 191, 36, 0.9), rgba(249, 115, 22, 0.9));
+  width: 26px;
+  height: 26px;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 20px rgba(251, 191, 36, 0.8);
-  border: 2px solid rgba(255, 255, 255, 0.5);
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
   position: relative;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.hotspot-button:hover .hotspot-marker {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.45);
 }
 
 .hotspot-marker::before {
   content: '';
   position: absolute;
-  inset: 0;
+  inset: -2px;
   border-radius: 50%;
-  background: rgba(251, 191, 36, 0.6);
-  animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+  background: rgba(255, 255, 255, 0.1);
+  animation: hotspotPulse 2.5s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
 
 .hotspot-icon {
-  color: white;
-  font-weight: 900;
-  font-size: 20px;
-  line-height: 1;
+  color: rgba(255, 255, 255, 0.9);
   position: relative;
   z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-@keyframes ping {
+.hotspot-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+@keyframes hotspotPulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
   75%, 100% {
-    transform: scale(2);
+    transform: scale(1.8);
     opacity: 0;
+  }
+}
+
+@keyframes hotspotFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 
