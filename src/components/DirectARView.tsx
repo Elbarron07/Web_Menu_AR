@@ -238,15 +238,16 @@ const DirectARView = () => {
                     onClick={() => {
                         navigate(-1);
                     }}
-                    className="fixed top-4 left-4 z-[60] rounded-full w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shadow-soft transition-all pointer-events-auto bg-white/90 backdrop-blur-xl border border-white/30 text-primary-600"
-                    initial={{ opacity: 0, x: -20 }}
+                    className="fixed top-[10px] left-2.5 z-[60] flex items-center justify-center p-1.5 transition-all pointer-events-auto text-white"
+                    initial={{ opacity: 0, x: -12 }}
                     animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
+                    exit={{ opacity: 0, x: -12 }}
+                    whileTap={{ scale: 0.9, opacity: 0.7 }}
                     aria-label="Retour au menu précédent"
                 >
-                    <span className="text-xl sm:text-2xl">←</span>
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                    </svg>
                 </motion.button>
             )}
 
