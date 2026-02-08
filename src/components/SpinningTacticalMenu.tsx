@@ -238,25 +238,21 @@ export const SpinningTacticalMenu = ({
   }, [springRotation, centerY]);
 
   // Gérer le drag pour la rotation
-  const [isDragging, setIsDragging] = useState(false);
+  const DRAG_THRESHOLD = 10; // pixels avant de considerer comme un drag
+  const isDraggingRef = useRef(false);
+  const [isTracking, setIsTracking] = useState(false);
   const [startRotation, setStartRotation] = useState(0);
   const dragStartRef = useRef<{ x: number; y: number; time: number; startAngle?: number } | null>(null);
+  const tapStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
 
   const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
     e.stopPropagation();
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
     
-    const target = e.target as HTMLElement;
-    if (target.closest('path') || target.closest('circle') || target.closest('text')) {
-      return;
-    }
-    
     // Obtenir les coordonnées du centre de la roue à l'écran
-    // Le conteneur de drag est positionné avec left: '2px', top: '50%', transform: 'translate(-50%, -50%)'
-    // Donc le centre réel est à 2px du bord gauche et au milieu vertical
-    const centerXScreen = 2; // 2px du bord gauche (après transform -50%)
-    const centerYScreen = window.innerHeight / 2; // Milieu vertical de l'écran
+    const centerXScreen = 2;
+    const centerYScreen = window.innerHeight / 2;
     centerRef.current = { x: centerXScreen, y: centerYScreen };
     
     // Calculer l'angle initial avec Math.atan2
@@ -265,7 +261,9 @@ export const SpinningTacticalMenu = ({
       clientX - centerRef.current.x
     );
     
-    setIsDragging(true); // Démarrer le drag immédiatement
+    // Demarrer le tracking (le drag reel sera confirme apres le seuil de distance)
+    isDraggingRef.current = false;
+    setIsTracking(true);
     setStartRotation(rotation.get());
     dragStartRef.current = { 
       x: clientX, 
@@ -273,14 +271,22 @@ export const SpinningTacticalMenu = ({
       time: Date.now(),
       startAngle: startAngle
     };
+    tapStartRef.current = { x: clientX, y: clientY, time: Date.now() };
   };
 
   const handleDragMove = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!dragStartRef.current || !centerRef.current || !isDragging) return;
+    if (!dragStartRef.current || !centerRef.current || !isTracking) return;
     
     e.stopPropagation();
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    
+    // Verifier le seuil de distance avant d'activer la rotation
+    const dx = clientX - dragStartRef.current.x;
+    const dy = clientY - dragStartRef.current.y;
+    if (Math.sqrt(dx * dx + dy * dy) < DRAG_THRESHOLD) return;
+    
+    isDraggingRef.current = true;
     
     // Calculer l'angle actuel avec Math.atan2
     const currentAngle = Math.atan2(
@@ -297,7 +303,7 @@ export const SpinningTacticalMenu = ({
     if (angleDelta < -Math.PI) angleDelta += 2 * Math.PI;
     
     // Convertir en degrés et appliquer un facteur de sensibilité
-    const sensitivity = 1.3; // Facteur de sensibilité ajustable
+    const sensitivity = 1.3;
     const rotationDelta = angleDelta * (180 / Math.PI) * sensitivity;
     
     // Appliquer la rotation
@@ -305,77 +311,71 @@ export const SpinningTacticalMenu = ({
   };
 
   const handleDragEnd = () => {
-    setIsDragging(false);
+    isDraggingRef.current = false;
+    setIsTracking(false);
     dragStartRef.current = null;
+    tapStartRef.current = null;
   };
 
   useEffect(() => {
-    if (!isDragging || !dragStartRef.current || !centerRef.current) return;
+    if (!isTracking || !dragStartRef.current || !centerRef.current) return;
 
-    const sensitivity = 1.3; // Facteur de sensibilité ajustable
+    const sensitivity = 1.3;
+    const startPos = { x: dragStartRef.current.x, y: dragStartRef.current.y };
 
-    const handleMouseMove = (e: MouseEvent) => {
-      // Calculer l'angle actuel avec Math.atan2
+    const checkThreshold = (clientX: number, clientY: number): boolean => {
+      const dx = clientX - startPos.x;
+      const dy = clientY - startPos.y;
+      return Math.sqrt(dx * dx + dy * dy) >= DRAG_THRESHOLD;
+    };
+
+    const applyRotation = (clientX: number, clientY: number) => {
       const currentAngle = Math.atan2(
-        e.clientY - centerRef.current!.y,
-        e.clientX - centerRef.current!.x
+        clientY - centerRef.current!.y,
+        clientX - centerRef.current!.x
       );
       
-      // Calculer la différence d'angle
       const startAngle = dragStartRef.current!.startAngle ?? currentAngle;
       let angleDelta = currentAngle - startAngle;
       
-      // Normaliser l'angle pour gérer le passage par -π/π
       if (angleDelta > Math.PI) angleDelta -= 2 * Math.PI;
       if (angleDelta < -Math.PI) angleDelta += 2 * Math.PI;
       
-      // Convertir en degrés et appliquer le facteur de sensibilité
       const rotationDelta = angleDelta * (180 / Math.PI) * sensitivity;
-      
-      // Appliquer la rotation
       rotation.set(startRotation + rotationDelta);
     };
 
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!checkThreshold(e.clientX, e.clientY)) return;
+      isDraggingRef.current = true;
+      applyRotation(e.clientX, e.clientY);
+    };
+
     const handleMouseUp = () => {
-      setIsDragging(false);
+      isDraggingRef.current = false;
+      setIsTracking(false);
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      if (!isDragging || !dragStartRef.current || !centerRef.current) return;
-      e.preventDefault();
-      e.stopPropagation();
-      
+      if (!dragStartRef.current || !centerRef.current) return;
       if (e.touches.length > 0) {
         const touch = e.touches[0];
-        
-        // Calculer l'angle actuel avec Math.atan2
-        const currentAngle = Math.atan2(
-          touch.clientY - centerRef.current.y,
-          touch.clientX - centerRef.current.x
-        );
-        
-        // Calculer la différence d'angle
-        const startAngle = dragStartRef.current.startAngle ?? currentAngle;
-        let angleDelta = currentAngle - startAngle;
-        
-        // Normaliser l'angle pour gérer le passage par -π/π
-        if (angleDelta > Math.PI) angleDelta -= 2 * Math.PI;
-        if (angleDelta < -Math.PI) angleDelta += 2 * Math.PI;
-        
-        // Convertir en degrés et appliquer le facteur de sensibilité
-        const rotationDelta = angleDelta * (180 / Math.PI) * sensitivity;
-        
-        // Appliquer la rotation
-        rotation.set(startRotation + rotationDelta);
+        if (!checkThreshold(touch.clientX, touch.clientY)) return;
+        e.preventDefault();
+        e.stopPropagation();
+        isDraggingRef.current = true;
+        applyRotation(touch.clientX, touch.clientY);
       }
     };
 
     const handleTouchEnd = () => {
-      setIsDragging(false);
+      isDraggingRef.current = false;
+      setIsTracking(false);
     };
 
     const handleTouchCancel = () => {
-      setIsDragging(false);
+      isDraggingRef.current = false;
+      setIsTracking(false);
     };
 
     window.addEventListener('mousemove', handleMouseMove);
@@ -391,7 +391,7 @@ export const SpinningTacticalMenu = ({
       window.removeEventListener('touchend', handleTouchEnd);
       window.removeEventListener('touchcancel', handleTouchCancel);
     };
-  }, [isDragging, rotation, startRotation]);
+  }, [isTracking, rotation, startRotation]);
 
   // Parallax effect avec deviceorientation
   useEffect(() => {
@@ -669,27 +669,33 @@ export const SpinningTacticalMenu = ({
                           }}
                           onClick={(e) => {
                             e.stopPropagation();
-                            // Vérifier que ce n'est pas un drag avant de cliquer
-                            if (!isDragging) {
+                            if (!isDraggingRef.current) {
                               handleItemClick(segment.item.id, e);
                             }
                           }}
                           onTouchStart={(e) => {
-                            e.stopPropagation();
-                            // Initialiser le dragStartRef pour le touch
-                            const clientY = e.touches[0]?.clientY ?? 0;
+                            // Stocker la position pour detection de tap
                             const clientX = e.touches[0]?.clientX ?? 0;
-                            dragStartRef.current = { x: clientX, y: clientY, time: Date.now() };
+                            const clientY = e.touches[0]?.clientY ?? 0;
+                            tapStartRef.current = { x: clientX, y: clientY, time: Date.now() };
+                            // Ne pas stopper la propagation : laisser remonter au conteneur de drag
                           }}
                           onTouchEnd={(e) => {
                             e.stopPropagation();
-                            // Si c'est un clic rapide (< 200ms et pas de drag), déclencher la navigation
-                            if (dragStartRef.current && Date.now() - dragStartRef.current.time < 200 && !isDragging) {
-                              handleItemClick(segment.item.id, e);
-                              e.preventDefault(); // Empeche le click synthetique qui causerait un double navigate
+                            // Tap = distance < seuil ET temps < 300ms ET pas en drag
+                            if (tapStartRef.current && !isDraggingRef.current) {
+                              const dx = (e.changedTouches[0]?.clientX ?? 0) - tapStartRef.current.x;
+                              const dy = (e.changedTouches[0]?.clientY ?? 0) - tapStartRef.current.y;
+                              const dist = Math.sqrt(dx * dx + dy * dy);
+                              const elapsed = Date.now() - tapStartRef.current.time;
+                              if (dist < DRAG_THRESHOLD && elapsed < 300) {
+                                handleItemClick(segment.item.id, e);
+                                e.preventDefault();
+                              }
                             }
-                            setIsDragging(false);
-                            dragStartRef.current = null;
+                            isDraggingRef.current = false;
+                            setIsTracking(false);
+                            tapStartRef.current = null;
                           }}
                           onMouseEnter={() => setHoveredItem(segment.item.id)}
                           onMouseLeave={() => setHoveredItem(null)}
@@ -727,10 +733,32 @@ export const SpinningTacticalMenu = ({
                           transform={`translate(${labelPos.x}, ${labelPos.y}) rotate(${segment.midAngle + 90})`}
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleItemClick(segment.item.id, e);
+                            if (!isDraggingRef.current) {
+                              handleItemClick(segment.item.id, e);
+                            }
                           }}
                           onTouchStart={(e) => {
+                            // Stocker position pour detection de tap
+                            const clientX = e.touches[0]?.clientX ?? 0;
+                            const clientY = e.touches[0]?.clientY ?? 0;
+                            tapStartRef.current = { x: clientX, y: clientY, time: Date.now() };
+                            // Ne pas stopper la propagation
+                          }}
+                          onTouchEnd={(e) => {
                             e.stopPropagation();
+                            if (tapStartRef.current && !isDraggingRef.current) {
+                              const dx = (e.changedTouches[0]?.clientX ?? 0) - tapStartRef.current.x;
+                              const dy = (e.changedTouches[0]?.clientY ?? 0) - tapStartRef.current.y;
+                              const dist = Math.sqrt(dx * dx + dy * dy);
+                              const elapsed = Date.now() - tapStartRef.current.time;
+                              if (dist < DRAG_THRESHOLD && elapsed < 300) {
+                                handleItemClick(segment.item.id, e);
+                                e.preventDefault();
+                              }
+                            }
+                            isDraggingRef.current = false;
+                            setIsTracking(false);
+                            tapStartRef.current = null;
                           }}
                           onMouseEnter={() => setHoveredItem(segment.item.id)}
                           onMouseLeave={() => setHoveredItem(null)}
