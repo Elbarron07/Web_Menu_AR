@@ -177,14 +177,14 @@ export const adminMenuApi = {
           categoryId: item.category_id,
           category: cat
             ? {
-                id: cat.id,
-                name: cat.name,
-                icon: cat.icon,
-                strokeRgba: cat.stroke_rgba,
-                glowRgba: cat.glow_rgba,
-                displayOrder: cat.display_order,
-                isActive: cat.is_active ?? true,
-              }
+              id: cat.id,
+              name: cat.name,
+              icon: cat.icon,
+              strokeRgba: cat.stroke_rgba,
+              glowRgba: cat.glow_rgba,
+              displayOrder: cat.display_order,
+              isActive: cat.is_active ?? true,
+            }
             : null,
           shortDesc: item.short_desc || '',
           fullDesc: item.full_desc || '',
@@ -193,8 +193,9 @@ export const adminMenuApi = {
           modelUrl: item.model_url,
           dimensions: item.dimensions,
           isActive: item.is_active ?? true,
+          isFeatured: item.is_featured ?? false,
+          status: item.status ?? 'published',
           nutrition: item.nutrition,
-          status: item.status,
           variants: (variants || [])
             .filter((v: any) => v.menu_item_id === item.id)
             .map((v: any) => ({
@@ -237,6 +238,7 @@ export const adminMenuApi = {
         model_url: item.modelUrl || null,
         dimensions: item.dimensions,
         nutrition: item.nutrition,
+        is_featured: item.isFeatured ?? false,
         status: 'published',
       })
       .select()
@@ -299,6 +301,7 @@ export const adminMenuApi = {
     if (item.dimensions !== undefined) updates.dimensions = item.dimensions;
     if (item.nutrition !== undefined) updates.nutrition = item.nutrition;
     if (item.categoryId !== undefined) updates.category_id = item.categoryId;
+    if ((item as any).isFeatured !== undefined) updates.is_featured = (item as any).isFeatured;
 
     const { error: itemError } = await supabase
       .from('menu_items')

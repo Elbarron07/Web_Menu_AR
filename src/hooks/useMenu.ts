@@ -24,6 +24,8 @@ export interface MenuItem {
   modelUrl: string;
   dimensions: string;
   isActive: boolean;
+  isFeatured: boolean;
+  status: 'draft' | 'published';
   nutrition: {
     calories: number;
     allergenes: string[];
@@ -126,6 +128,8 @@ export const useMenu = () => {
           modelUrl: item.model_url,
           dimensions: item.dimensions,
           isActive: item.is_active ?? true,
+          isFeatured: item.is_featured ?? false,
+          status: item.status ?? 'published',
           nutrition: item.nutrition as { calories: number; allergenes: string[]; temps: string },
           variants: itemVariants,
           hotspots: itemHotspots,
@@ -248,6 +252,8 @@ export const useMenuItem = (id: string | undefined) => {
           modelUrl: item.model_url,
           dimensions: item.dimensions,
           isActive: item.is_active ?? true,
+          isFeatured: item.is_featured ?? false,
+          status: item.status ?? 'published',
           nutrition: item.nutrition as { calories: number; allergenes: string[]; temps: string },
           variants: (variants || []).map((v: any) => ({
             size: v.size,

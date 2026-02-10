@@ -36,17 +36,34 @@ export const authService = {
   async isAdmin(): Promise<boolean> {
     try {
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
+
       if (sessionError) {
         logger.warn('[isAdmin] Erreur session');
         return false;
       }
-      
+
       if (!session) {
         logger.debug('[isAdmin] Aucune session');
         return false;
       }
-      
+
+      // Vérifier que l'utilisateur est dans admin_users
+      const { data, error } = await supabase
+        .from('admin_users')
+        .select('id, role')
+        .eq('id', session.user.id)
+        .maybeSingle();
+
+      if (error) {
+        logger.warn('[isAdmin] Erreur vérification admin_users');
+        return false;
+      }
+
+      if (!data) {
+        logger.debug('[isAdmin] Utilisateur non admin');
+        return false;
+      }
+
       logger.debug('[isAdmin] Acces accorde');
       return true;
     } catch {
@@ -61,11 +78,23 @@ export const authService = {
       if (!user) {
         return null;
       }
-      
+
+      // Lire le rôle depuis admin_users
+      const { data, error } = await supabase
+        .from('admin_users')
+        .select('id, role')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (error || !data) {
+        logger.debug('[getAdminUser] Utilisateur non trouvé dans admin_users');
+        return null;
+      }
+
       return {
         id: user.id,
         email: user.email || '',
-        role: 'admin',
+        role: (data.role as 'admin' | 'super_admin') || 'admin',
       };
     } catch {
       logger.error('[getAdminUser] Erreur');
