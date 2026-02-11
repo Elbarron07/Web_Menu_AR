@@ -6,7 +6,7 @@ import { useCart } from './CartContext';
 import { SpinningTacticalMenu } from './SpinningTacticalMenu';
 import { VerticalMenu } from './VerticalMenu';
 import { HorizontalMenu } from './HorizontalMenu';
-import { InfiniteGridMenu } from './InfiniteGridMenu';
+
 import { ARViewer } from './ARViewer';
 import type { ARViewerRef } from './ARViewer';
 // ... existing imports ...
@@ -37,7 +37,7 @@ const DirectARView = () => {
     // isARSessionActive = session WebXR/Scene Viewer reellement active (model-viewer presenting)
     const [isARSessionActive, setIsARSessionActive] = useState(false);
     const [carouselIndex, setCarouselIndex] = useState(0);
-    const [menuViewMode, setMenuViewMode] = useState<'rotary' | 'vertical' | 'horizontal' | 'grid'>('rotary');
+    const [menuViewMode, setMenuViewMode] = useState<'rotary' | 'vertical' | 'horizontal'>('rotary');
 
     useEffect(() => {
         if (product && product.variants && product.variants.length > 0) {
@@ -293,15 +293,7 @@ const DirectARView = () => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                         </svg>
                     </button>
-                    <button
-                        onClick={() => setMenuViewMode('grid')}
-                        className={`p-2 rounded-full transition-all ${menuViewMode === 'grid' ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
-                        title="Vue Grille Infinie"
-                    >
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
-                        </svg>
-                    </button>
+
                 </div>
             )}
 
@@ -344,18 +336,7 @@ const DirectARView = () => {
                 />
             )}
 
-            {/* Menu Grille Infinie */}
-            {showMenu && !product && menuViewMode === 'grid' && (
-                <InfiniteGridMenu
-                    menuData={tacticalMenuData}
-                    categoryStyles={categoryStyles}
-                    isOpen={showMenu}
-                    onClose={() => setShowMenu(false)}
-                    onSelectItem={(itemId, _path) => handleTacticalMenuSelect(itemId)}
-                    initialCategory={categorySlug}
-                    restaurantInfo={settings ? { name: settings.name, logo_url: settings.logo_url } : undefined}
-                />
-            )}
+
 
             {/* HUD Overlay avec glassmorphism */}
             {product && (
