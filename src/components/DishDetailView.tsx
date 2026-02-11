@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useMenuItem } from '../hooks/useMenu';
 import { ARViewer } from './ARViewer';
 import { useCart } from './CartContext';
+import { analytics } from '../lib/analytics';
 import { SkeletonBox, SkeletonText, SkeletonCard, SkeletonCircle } from './Skeleton';
 
 const DishDetailView = () => {
@@ -20,6 +21,13 @@ const DishDetailView = () => {
         if (product && product.variants.length > 0) {
             setSelectedVariant(product.variants[0]);
             setCurrentPrice(product.price + product.variants[0].priceModifier);
+        }
+    }, [product]);
+
+    // Track view on mount
+    useEffect(() => {
+        if (product) {
+            analytics.trackView3D(product.id);
         }
     }, [product]);
 
@@ -59,7 +67,12 @@ const DishDetailView = () => {
 
     const handleAddToCart = () => {
         if (!selectedVariant) return;
-        addToCart(product, selectedVariant.size, currentPrice);
+        addToCart(
+            { id: product.id, nom: product.name, image: product.image2D },
+            selectedVariant.size,
+            currentPrice
+        );
+        analytics.trackAddToCart(product.id);
         // Simple visual feedback
         const btn = document.getElementById('add-btn');
         const mobileBtn = document.getElementById('mobile-add-btn');
@@ -155,10 +168,9 @@ const DishDetailView = () => {
                                 <button
                                     key={variant.size}
                                     onClick={() => handleVariantChange(variant)}
-                                    className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all ${
-                                        selectedVariant?.size === variant.size
-                                            ? 'bg-white text-slate-900 shadow-md scale-105'
-                                            : 'text-slate-700 hover:text-slate-900'
+                                    className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all ${selectedVariant?.size === variant.size
+                                        ? 'bg-white text-slate-900 shadow-md scale-105'
+                                        : 'text-slate-700 hover:text-slate-900'
                                         }`}
                                 >
                                     {variant.size}

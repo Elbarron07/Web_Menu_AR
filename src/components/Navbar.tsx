@@ -1,11 +1,40 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useCart } from './CartContext';
+import { useCart, type CartItem } from './CartContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Navbar = () => {
-    const { cart, removeFromCart, total } = useCart();
+    const { cart, removeFromCart, clearCart, total } = useCart();
     const [isCartOpen, setIsCartOpen] = useState(false);
+    const [orderStatus, setOrderStatus] = useState<'idle' | 'confirming' | 'success'>('idle');
+
+    const handleOrder = () => {
+        setOrderStatus('confirming');
+    };
+
+    const confirmOrder = () => {
+        // Générer le résumé de commande
+        const orderSummary = cart.map((item: CartItem) =>
+            `• ${item.nom} (${item.size}) — ${item.price.toFixed(2)}€`
+        ).join('\n');
+        const message = `🛒 Nouvelle commande !\n\n${orderSummary}\n\n💰 Total : ${total.toFixed(2)}€`;
+
+        // Copier dans le presse-papier
+        navigator.clipboard?.writeText(message).catch(() => { });
+
+        setOrderStatus('success');
+
+        // Reset après 3 secondes
+        setTimeout(() => {
+            clearCart();
+            setOrderStatus('idle');
+            setIsCartOpen(false);
+        }, 3000);
+    };
+
+    const cancelOrder = () => {
+        setOrderStatus('idle');
+    };
 
     return (
         <>
@@ -15,7 +44,7 @@ const Navbar = () => {
                         AR Resto
                     </Link>
                     <button
-                        onClick={() => setIsCartOpen(true)}
+                        onClick={() => { setIsCartOpen(true); setOrderStatus('idle'); }}
                         className="relative p-2 text-white hover:text-amber-400 transition-colors"
                     >
                         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
@@ -59,7 +88,29 @@ const Navbar = () => {
                             </div>
 
                             <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
-                                {cart.length === 0 ? (
+                                {orderStatus === 'success' ? (
+                                    <motion.div
+                                        initial={{ scale: 0.8, opacity: 0 }}
+                                        animate={{ scale: 1, opacity: 1 }}
+                                        className="flex flex-col items-center justify-center h-full text-center gap-4"
+                                    >
+                                        <motion.div
+                                            initial={{ scale: 0 }}
+                                            animate={{ scale: 1 }}
+                                            transition={{ type: 'spring', delay: 0.2 }}
+                                            className="text-6xl"
+                                        >
+                                            ✅
+                                        </motion.div>
+                                        <h3 className="text-2xl font-bold text-white">Commande confirmée !</h3>
+                                        <p className="text-gray-400">
+                                            Le résumé a été copié dans votre presse-papier.
+                                        </p>
+                                        <p className="text-amber-400 text-sm font-medium">
+                                            Présentez-le à votre serveur
+                                        </p>
+                                    </motion.div>
+                                ) : cart.length === 0 ? (
                                     <div className="flex flex-col items-center justify-center h-full text-gray-500 gap-4">
                                         <span className="text-4xl">🛒</span>
                                         <p>Votre panier est vide</p>
@@ -68,7 +119,7 @@ const Navbar = () => {
                                         </button>
                                     </div>
                                 ) : (
-                                    cart.map((item: any) => (
+                                    cart.map((item: CartItem) => (
                                         <motion.div
                                             key={item.cartId}
                                             initial={{ opacity: 0, x: 20 }}
@@ -95,16 +146,48 @@ const Navbar = () => {
                             </div>
 
                             <div className="p-6 border-t border-gray-800 bg-gray-900">
-                                <div className="flex justify-between items-center mb-6">
-                                    <span className="text-gray-400">Total</span>
-                                    <span className="text-2xl font-bold text-white">{total.toFixed(2)}€</span>
-                                </div>
-                                <button
-                                    className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-black font-bold py-4 rounded-xl transition-all shadow-lg hover:shadow-orange-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    disabled={cart.length === 0}
-                                >
-                                    Commander Maintenant
-                                </button>
+                                {orderStatus === 'confirming' ? (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="space-y-3"
+                                    >
+                                        <p className="text-center text-white font-semibold">
+                                            Confirmer la commande ?
+                                        </p>
+                                        <p className="text-center text-gray-400 text-sm">
+                                            {cart.length} article{cart.length > 1 ? 's' : ''} — {total.toFixed(2)}€
+                                        </p>
+                                        <div className="flex gap-3">
+                                            <button
+                                                onClick={cancelOrder}
+                                                className="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-semibold py-3 rounded-xl transition-colors"
+                                            >
+                                                Annuler
+                                            </button>
+                                            <button
+                                                onClick={confirmOrder}
+                                                className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg"
+                                            >
+                                                ✓ Confirmer
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                ) : orderStatus === 'idle' ? (
+                                    <>
+                                        <div className="flex justify-between items-center mb-6">
+                                            <span className="text-gray-400">Total</span>
+                                            <span className="text-2xl font-bold text-white">{total.toFixed(2)}€</span>
+                                        </div>
+                                        <button
+                                            onClick={handleOrder}
+                                            className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-black font-bold py-4 rounded-xl transition-all shadow-lg hover:shadow-orange-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            disabled={cart.length === 0}
+                                        >
+                                            Commander Maintenant
+                                        </button>
+                                    </>
+                                ) : null}
                             </div>
                         </motion.div>
                     </>

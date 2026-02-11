@@ -14,7 +14,7 @@ import { adminRoute } from '../../config/routes';
 
 export const Dashboard = () => {
   const { menuItems, loading: menuLoading } = useMenu();
-  const { data: analyticsData, loading: analyticsLoading } = useAnalytics(7);
+  const { data: analyticsData, trends, loading: analyticsLoading } = useAnalytics(7);
 
   // Format number with thousands separator
   const formatNumber = (num: number) => {
@@ -46,7 +46,6 @@ export const Dashboard = () => {
       value: menuItems.length,
       icon: UtensilsCrossed,
       iconColor: 'bg-primary-600',
-      trend: { value: '+12%', direction: 'up' as const },
       link: adminRoute('menu'),
     },
     {
@@ -54,7 +53,6 @@ export const Dashboard = () => {
       value: menuItems.filter((item) => item.modelUrl).length,
       icon: Package,
       iconColor: 'bg-purple-500',
-      trend: { value: '+5', direction: 'up' as const },
       link: adminRoute('assets'),
     },
     {
@@ -62,7 +60,7 @@ export const Dashboard = () => {
       value: analyticsData ? formatNumber(analyticsData.totalViews) : '...',
       icon: Eye,
       iconColor: 'bg-success-500',
-      trend: { value: '+21%', direction: 'up' as const },
+      trend: trends?.views,
       link: adminRoute('analytics'),
     },
     {
@@ -70,24 +68,12 @@ export const Dashboard = () => {
       value: analyticsData ? formatNumber(analyticsData.totalCarts) : '...',
       icon: ShoppingCart,
       iconColor: 'bg-warning-500',
-      trend: { value: '+8%', direction: 'up' as const },
+      trend: trends?.carts,
       link: adminRoute('analytics'),
     },
   ];
 
-  // Monthly Revenue Data (placeholder - no orders table yet)
-  // TODO: Connect to orders table when available
-  const monthlyRevenue = [
-    { month: 'Mar', revenue: 12000 },
-    { month: 'Avr', revenue: 13500 },
-    { month: 'Mai', revenue: 14200 },
-    { month: 'Jun', revenue: 15000 },
-    { month: 'Jul', revenue: 13800 },
-    { month: 'Aoû', revenue: 14500 },
-    { month: 'Sep', revenue: 15200 },
-    { month: 'Oct', revenue: 14800 },
-    { month: 'Nov', revenue: 16000 },
-  ];
+
 
   // Helper pour extraire le détail metadata
   const getMetadataDetail = (type: string, metadata: Record<string, unknown> | null): string | null => {
@@ -129,11 +115,13 @@ export const Dashboard = () => {
     { key: 'name', header: 'Nom', accessor: (item: any) => item.name },
     { key: 'category', header: 'Catégorie', accessor: (item: any) => item.category?.name ?? '-' },
     { key: 'price', header: 'Prix', render: (item: any) => `${item.price.toFixed(2)}€` },
-    { key: 'status', header: 'Statut', render: (item: any) => (
-      <Badge variant={item.modelUrl ? 'success' : 'warning'} size="sm">
-        {item.modelUrl ? 'Complet' : 'En attente'}
-      </Badge>
-    ) },
+    {
+      key: 'status', header: 'Statut', render: (item: any) => (
+        <Badge variant={item.modelUrl ? 'success' : 'warning'} size="sm">
+          {item.modelUrl ? 'Complet' : 'En attente'}
+        </Badge>
+      )
+    },
   ];
 
   if (menuLoading || analyticsLoading) {
@@ -170,29 +158,40 @@ export const Dashboard = () => {
           <Card variant="default" padding="lg">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Revenus mensuels</h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Évolution sur 9 mois (Données indicatives - à connecter avec table orders)</p>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Activité des 7 derniers jours</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Vues AR, ajouts panier et clics hotspot</p>
               </div>
-              <Badge variant="success" size="sm" trend="up">
-                +12%
-              </Badge>
+              {trends?.views && (
+                <Badge variant={trends.views.direction === 'up' ? 'success' : trends.views.direction === 'down' ? 'error' : 'neutral'} size="sm" trend={trends.views.direction === 'neutral' ? undefined : trends.views.direction}>
+                  {trends.views.value}
+                </Badge>
+              )}
             </div>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={monthlyRevenue}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                <XAxis dataKey="month" stroke="#6B7280" fontSize={12} />
-                <YAxis stroke="#6B7280" fontSize={12} />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#fff', 
-                    border: '1px solid #E5E7EB', 
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 10px rgba(0, 0, 0, 0.05)'
-                  }}
-                />
-                <Bar dataKey="revenue" fill="#2563EB" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {analyticsData?.eventsByDay && analyticsData.eventsByDay.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={analyticsData.eventsByDay}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                  <XAxis dataKey="date" stroke="#6B7280" fontSize={12} tickFormatter={(v) => { const d = new Date(v); return `${d.getDate()}/${d.getMonth() + 1}`; }} />
+                  <YAxis stroke="#6B7280" fontSize={12} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: '#fff',
+                      border: '1px solid #E5E7EB',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 10px rgba(0, 0, 0, 0.05)'
+                    }}
+                    labelFormatter={(v) => new Date(v).toLocaleDateString('fr-FR')}
+                  />
+                  <Bar dataKey="views" fill="#2563EB" radius={[8, 8, 0, 0]} name="Vues AR" />
+                  <Bar dataKey="carts" fill="#10B981" radius={[8, 8, 0, 0]} name="Paniers" />
+                  <Bar dataKey="hotspots" fill="#F59E0B" radius={[8, 8, 0, 0]} name="Hotspots" />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-[300px] text-gray-400 dark:text-gray-500">
+                Aucune activité enregistrée sur cette période
+              </div>
+            )}
           </Card>
         </div>
 

@@ -4,7 +4,7 @@ import { useMenu } from '../hooks/useMenu';
 
 const MenuGrid = () => {
     const { menuItems, loading } = useMenu();
-    
+
     // Extract unique category names (from BDD)
     const categories = Array.from(new Set(menuItems.map((p) => p.category?.name).filter(Boolean))) as string[];
 
@@ -68,7 +68,7 @@ const MenuGrid = () => {
                                     </div>
 
                                     <Link
-                                        to={`/item/${plat.id}`}
+                                        to={`/ar/${plat.id}`}
                                         className="w-full mt-4 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold py-3 px-6 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg"
                                     >
                                         <span>Voir en 3D</span>

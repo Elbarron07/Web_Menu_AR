@@ -8,17 +8,17 @@ interface StatCardProps {
   value: string | number;
   icon: LucideIcon;
   iconColor: string;
-  trend?: { value: string; direction: 'up' | 'down' };
+  trend?: { value: string; direction: 'up' | 'down' | 'neutral' };
   onClick?: () => void;
 }
 
 export const StatCard = ({ label, value, icon: Icon, iconColor, trend, onClick }: StatCardProps) => {
   const isClickable = !!onClick;
-  
+
   return (
-    <Card 
-      variant="default" 
-      padding="md" 
+    <Card
+      variant="default"
+      padding="md"
       hover={isClickable}
       onClick={onClick}
       className={isClickable ? 'cursor-pointer' : ''}
@@ -28,17 +28,17 @@ export const StatCard = ({ label, value, icon: Icon, iconColor, trend, onClick }
           <Icon className="w-6 h-6 text-white" />
         </div>
         {trend && (
-          <Badge 
-            variant={trend.direction === 'up' ? 'success' : 'error'} 
+          <Badge
+            variant={trend.direction === 'up' ? 'success' : trend.direction === 'down' ? 'error' : 'neutral'}
             size="sm"
-            trend={trend.direction}
+            trend={trend.direction === 'neutral' ? undefined : trend.direction}
           >
             {trend.value}
           </Badge>
         )}
       </div>
-      
-      <motion.p 
+
+      <motion.p
         className="text-3xl font-bold text-gray-900 dark:text-white mb-1"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -46,7 +46,7 @@ export const StatCard = ({ label, value, icon: Icon, iconColor, trend, onClick }
       >
         {value}
       </motion.p>
-      
+
       <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">{label}</p>
     </Card>
   );

@@ -4,14 +4,19 @@ import { useMenu, useMenuItem } from '../hooks/useMenu';
 import { useRestaurantSettings } from '../hooks/useRestaurantSettings';
 import { useCart } from './CartContext';
 import { SpinningTacticalMenu } from './SpinningTacticalMenu';
+import { VerticalMenu } from './VerticalMenu';
+import { HorizontalMenu } from './HorizontalMenu';
+import { InfiniteGridMenu } from './InfiniteGridMenu';
 import { ARViewer } from './ARViewer';
 import type { ARViewerRef } from './ARViewer';
-import { HUDOverlay } from './HUDOverlay';
+// ... existing imports ...
+
 import { HotspotAnnotation } from './HotspotAnnotation';
 import { analytics } from '../lib/analytics';
 import { ARViewerSkeleton } from './skeletons/ARViewerSkeleton';
 import { MenuSkeleton } from './skeletons/MenuSkeleton';
 import { motion } from 'framer-motion';
+import { HUDOverlay } from './HUDOverlay';
 
 const DirectARView = () => {
     const { id, categorySlug } = useParams();
@@ -32,6 +37,7 @@ const DirectARView = () => {
     // isARSessionActive = session WebXR/Scene Viewer reellement active (model-viewer presenting)
     const [isARSessionActive, setIsARSessionActive] = useState(false);
     const [carouselIndex, setCarouselIndex] = useState(0);
+    const [menuViewMode, setMenuViewMode] = useState<'rotary' | 'vertical' | 'horizontal' | 'grid'>('rotary');
 
     useEffect(() => {
         if (product && product.variants && product.variants.length > 0) {
@@ -50,15 +56,19 @@ const DirectARView = () => {
 
     const handleAddToCart = () => {
         if (!product || !selectedVariant) return;
-        addToCart(product, selectedVariant.label, currentPrice);
+        addToCart({
+            id: product.id,
+            nom: product.name,
+            image: product.image2D
+        }, selectedVariant.label, currentPrice);
         // Track add to cart event
         if (product.id) {
             analytics.trackAddToCart(product.id);
         }
         setShowCartFeedback(true);
-            setTimeout(() => {
+        setTimeout(() => {
             setShowCartFeedback(false);
-            }, 2000);
+        }, 2000);
     };
 
     const handleDishSelect = (dishId: string | number) => {
@@ -118,13 +128,13 @@ const DirectARView = () => {
         if (settings?.background_mode !== 'carousel' || !settings?.background_images?.length) {
             return;
         }
-        
+
         const interval = setInterval(() => {
-            setCarouselIndex((prev) => 
+            setCarouselIndex((prev) =>
                 (prev + 1) % (settings.background_images?.length || 1)
             );
         }, 5000); // Change toutes les 5 secondes
-        
+
         return () => clearInterval(interval);
     }, [settings?.background_mode, settings?.background_images?.length]);
 
@@ -150,7 +160,7 @@ const DirectARView = () => {
         const empty = { tacticalMenuData: { root: [] as Array<{ id: string; label: string; icon?: string; price?: string }> }, categoryStyles: {} as Record<string, { strokeRgba: string; glowRgba: string }> };
         if (!menuItems.length) return empty;
 
-        type CatEntry = { items: Array<{ id: string; label: string; icon?: string; price?: string }>; icon: string; strokeRgba: string; glowRgba: string };
+        type CatEntry = { items: Array<{ id: string; label: string; icon?: string; price?: string; description?: string; image?: string }>; icon: string; strokeRgba: string; glowRgba: string };
         const categoriesMap = new Map<string, CatEntry>();
 
         menuItems.forEach((dish) => {
@@ -164,7 +174,9 @@ const DirectARView = () => {
             categoriesMap.get(catName)!.items.push({
                 id: dish.id,
                 label: dish.name,
-                price: `${dish.price.toFixed(2)}€`
+                price: `${dish.price.toFixed(2)}€`,
+                description: dish.shortDesc,
+                image: dish.image2D
             });
         });
 
@@ -176,8 +188,8 @@ const DirectARView = () => {
         });
 
         const menuStructure: {
-            root: Array<{ id: string; label: string; icon?: string; price?: string }>;
-            [key: string]: Array<{ id: string; label: string; icon?: string; price?: string }>;
+            root: Array<{ id: string; label: string; icon?: string; price?: string; description?: string; image?: string }>;
+            [key: string]: Array<{ id: string; label: string; icon?: string; price?: string; description?: string; image?: string }>;
         } = { root: rootCategories };
         categoriesMap.forEach(({ items }, name) => {
             menuStructure[slug(name)] = items;
@@ -190,7 +202,7 @@ const DirectARView = () => {
     if (id && itemLoading) {
         return <ARViewerSkeleton />;
     }
-    
+
     if (!id && menuLoading) {
         return <MenuSkeleton />;
     }
@@ -251,9 +263,90 @@ const DirectARView = () => {
                 </motion.button>
             )}
 
+            {/* View Switcher - Only visible when menu is shown and not in AR session */}
+            {showMenu && !isARSessionActive && (
+                <div className="fixed top-6 right-6 z-[110] bg-black/40 backdrop-blur-md rounded-full p-1.5 border border-white/10 flex gap-1">
+                    <button
+                        onClick={() => setMenuViewMode('rotary')}
+                        className={`p-2 rounded-full transition-all ${menuViewMode === 'rotary' ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
+                        title="Vue Circulaire"
+                    >
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </button>
+                    <button
+                        onClick={() => setMenuViewMode('horizontal')}
+                        className={`p-2 rounded-full transition-all ${menuViewMode === 'horizontal' ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
+                        title="Vue Horizontale"
+                    >
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                    <button
+                        onClick={() => setMenuViewMode('vertical')}
+                        className={`p-2 rounded-full transition-all ${menuViewMode === 'vertical' ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
+                        title="Vue Verticale"
+                    >
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                        </svg>
+                    </button>
+                    <button
+                        onClick={() => setMenuViewMode('grid')}
+                        className={`p-2 rounded-full transition-all ${menuViewMode === 'grid' ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
+                        title="Vue Grille Infinie"
+                    >
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+                        </svg>
+                    </button>
+                </div>
+            )}
+
             {/* Menu Tactique Spinning - affiché quand aucun plat n'est sélectionné */}
-            {showMenu && !product && (
+            {showMenu && !product && menuViewMode === 'rotary' && (
                 <SpinningTacticalMenu
+                    menuData={tacticalMenuData}
+                    categoryStyles={categoryStyles}
+                    isOpen={showMenu}
+                    onClose={() => setShowMenu(false)}
+                    onSelectItem={(itemId, _path) => handleTacticalMenuSelect(itemId)}
+                    initialCategory={categorySlug}
+                    restaurantInfo={settings ? { name: settings.name, logo_url: settings.logo_url } : undefined}
+                />
+            )}
+
+            {/* Menu Vertical */}
+            {showMenu && !product && menuViewMode === 'vertical' && (
+                <VerticalMenu
+                    menuData={tacticalMenuData}
+                    categoryStyles={categoryStyles}
+                    isOpen={showMenu}
+                    onClose={() => setShowMenu(false)}
+                    onSelectItem={(itemId, _path) => handleTacticalMenuSelect(itemId)}
+                    initialCategory={categorySlug}
+                    restaurantInfo={settings ? { name: settings.name, logo_url: settings.logo_url } : undefined}
+                />
+            )}
+
+            {/* Menu Horizontal */}
+            {showMenu && !product && menuViewMode === 'horizontal' && (
+                <HorizontalMenu
+                    menuData={tacticalMenuData}
+                    categoryStyles={categoryStyles}
+                    isOpen={showMenu}
+                    onClose={() => setShowMenu(false)}
+                    onSelectItem={(itemId, _path) => handleTacticalMenuSelect(itemId)}
+                    initialCategory={categorySlug}
+                    restaurantInfo={settings ? { name: settings.name, logo_url: settings.logo_url } : undefined}
+                />
+            )}
+
+            {/* Menu Grille Infinie */}
+            {showMenu && !product && menuViewMode === 'grid' && (
+                <InfiniteGridMenu
                     menuData={tacticalMenuData}
                     categoryStyles={categoryStyles}
                     isOpen={showMenu}

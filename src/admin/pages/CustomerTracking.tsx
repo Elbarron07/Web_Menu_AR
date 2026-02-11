@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Users, Search, Filter, Download } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Users, Search, Filter, Download, ChevronLeft, ChevronRight } from 'lucide-react';
 import { AdminPageSkeleton } from '../components/skeletons/AdminPageSkeleton';
 import { Card } from '../components/ui/Card';
 import { Table } from '../components/ui/Table';
@@ -8,11 +8,18 @@ import { Button } from '../components/ui/Button';
 import { StatCard } from '../components/ui/StatCard';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useSessions } from '../hooks/useSessions';
+import { exportToCSV } from '../utils/exportUtils';
+
+const PAGE_SIZE = 20;
 
 export const CustomerTracking = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [days, setDays] = useState(30);
+  const [currentPage, setCurrentPage] = useState(1);
   const { data: sessionsData, loading, error } = useSessions(days, searchQuery);
+
+  // Reset to page 1 when search or period changes
+  useEffect(() => { setCurrentPage(1); }, [searchQuery, days]);
 
   // Format engagement data for chart (by day of week)
   const engagementData = sessionsData?.engagementByDay?.map((item) => {
@@ -31,14 +38,18 @@ export const CustomerTracking = () => {
     { key: 'carts', header: 'Panier', accessor: (item: any) => item.carts },
     { key: 'conversion_rate', header: 'Taux conversion', render: (item: any) => `${item.conversion_rate.toFixed(1)}%` },
     { key: 'last_seen', header: 'Dernière visite', accessor: (item: any) => new Date(item.last_seen).toLocaleDateString('fr-FR') },
-    { key: 'status', header: 'Statut', render: (item: any) => (
-      <Badge variant={item.status === 'active' ? 'success' : 'neutral'} size="sm">
-        {item.status === 'active' ? 'Actif' : 'Inactif'}
-      </Badge>
-    ) },
+    {
+      key: 'status', header: 'Statut', render: (item: any) => (
+        <Badge variant={item.status === 'active' ? 'success' : 'neutral'} size="sm">
+          {item.status === 'active' ? 'Actif' : 'Inactif'}
+        </Badge>
+      )
+    },
   ];
 
   const sessions = sessionsData?.sessions || [];
+  const totalPages = Math.max(1, Math.ceil(sessions.length / PAGE_SIZE));
+  const paginatedSessions = sessions.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   return (
     <div className="space-y-6">
@@ -61,14 +72,25 @@ export const CustomerTracking = () => {
             <option value={30}>30 jours</option>
             <option value={90}>90 jours</option>
           </select>
-          <Button icon={<Download className="w-4 h-4" />}>
+          <Button icon={<Download className="w-4 h-4" />} onClick={() => {
+            if (sessionsData?.sessions) {
+              exportToCSV(sessionsData.sessions, 'sessions_clients', [
+                { key: 'session_id', header: 'Session ID' },
+                { key: 'views', header: 'Vues' },
+                { key: 'carts', header: 'Panier' },
+                { key: 'conversion_rate', header: 'Taux conversion (%)' },
+                { key: 'last_seen', header: 'Dernière visite' },
+                { key: 'status', header: 'Statut' },
+              ]);
+            }
+          }}>
             Exporter
           </Button>
         </div>
       </div>
 
       {loading && (
-        <AdminPageSkeleton variant="table" />
+        <AdminPageSkeleton variant="customers" />
       )}
 
       {error && (
@@ -84,14 +106,12 @@ export const CustomerTracking = () => {
               value={sessionsData.stats.totalSessions}
               icon={Users}
               iconColor="bg-primary-600"
-              trend={{ value: '+12%', direction: 'up' as const }}
             />
             <StatCard
               label="Sessions actives"
               value={sessionsData.stats.activeSessions}
               icon={Users}
               iconColor="bg-success-500"
-              trend={{ value: '+8%', direction: 'up' as const }}
             />
             <StatCard
               label="Ajouts panier moyens"
@@ -104,7 +124,6 @@ export const CustomerTracking = () => {
               value={`${sessionsData.stats.retentionRate.toFixed(1)}%`}
               icon={Users}
               iconColor="bg-purple-500"
-              trend={{ value: '+3%', direction: 'up' as const }}
             />
           </div>
 
@@ -117,10 +136,10 @@ export const CustomerTracking = () => {
                   <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                   <XAxis dataKey="day" stroke="#6B7280" fontSize={12} />
                   <YAxis stroke="#6B7280" fontSize={12} />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: '#fff', 
-                      border: '1px solid #E5E7EB', 
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: '#fff',
+                      border: '1px solid #E5E7EB',
                       borderRadius: '8px',
                       boxShadow: '0 4px 10px rgba(0, 0, 0, 0.05)'
                     }}
@@ -157,9 +176,47 @@ export const CustomerTracking = () => {
             </div>
             <Table
               columns={customerColumns}
-              data={sessions}
+              data={paginatedSessions}
               emptyMessage="Aucune session trouvée"
             />
+
+            {/* Pagination */}
+            {sessions.length > PAGE_SIZE && (
+              <div className="flex items-center justify-between pt-5 border-t border-gray-100 dark:border-gray-700 mt-4">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, sessions.length)} sur {sessions.length} sessions
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-medium transition-all
+                      border border-gray-200 dark:border-gray-600
+                      bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200
+                      hover:bg-gray-50 dark:hover:bg-gray-600
+                      disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white dark:disabled:hover:bg-gray-700"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    Précédent
+                  </button>
+                  <span className="px-3 py-2 text-sm font-semibold text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 rounded-xl min-w-[44px] text-center">
+                    {currentPage} / {totalPages}
+                  </span>
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-medium transition-all
+                      border border-gray-200 dark:border-gray-600
+                      bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200
+                      hover:bg-gray-50 dark:hover:bg-gray-600
+                      disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white dark:disabled:hover:bg-gray-700"
+                  >
+                    Suivant
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
           </Card>
         </>
       )}

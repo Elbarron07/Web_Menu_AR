@@ -502,6 +502,56 @@ export interface AnalyticsData {
 }
 
 export const adminAnalyticsApi = {
+  /**
+   * Calculer les tendances réelles en comparant la période courante vs précédente
+   */
+  async getTrends(days: number = 7): Promise<{
+    views: { current: number; previous: number };
+    carts: { current: number; previous: number };
+    sessions: { current: number; previous: number };
+  }> {
+    const now = new Date();
+    const currentStart = new Date(now);
+    currentStart.setDate(currentStart.getDate() - days);
+    const previousStart = new Date(currentStart);
+    previousStart.setDate(previousStart.getDate() - days);
+
+    // Période courante
+    const { data: currentEvents } = await supabase
+      .from('analytics_events')
+      .select('event_type, session_id')
+      .gte('created_at', currentStart.toISOString())
+      .lte('created_at', now.toISOString());
+
+    // Période précédente
+    const { data: previousEvents } = await supabase
+      .from('analytics_events')
+      .select('event_type, session_id')
+      .gte('created_at', previousStart.toISOString())
+      .lt('created_at', currentStart.toISOString());
+
+    const count = (events: typeof currentEvents, type: string) =>
+      events?.filter(e => e.event_type === type).length || 0;
+
+    const uniqueSessions = (events: typeof currentEvents) =>
+      new Set(events?.map(e => e.session_id).filter(Boolean)).size;
+
+    return {
+      views: {
+        current: count(currentEvents, 'view_3d'),
+        previous: count(previousEvents, 'view_3d'),
+      },
+      carts: {
+        current: count(currentEvents, 'add_to_cart'),
+        previous: count(previousEvents, 'add_to_cart'),
+      },
+      sessions: {
+        current: uniqueSessions(currentEvents),
+        previous: uniqueSessions(previousEvents),
+      },
+    };
+  },
+
   async getAnalytics(days: number = 7): Promise<AnalyticsData> {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
@@ -608,7 +658,6 @@ export const adminAnalyticsApi = {
 
     // Recent activities
     const recentActivities = (events || [])
-      .slice(0, 20)
       .map((event) => ({
         id: event.id,
         type: event.event_type,
@@ -628,6 +677,14 @@ export const adminAnalyticsApi = {
       eventsByDay,
       recentActivities,
     };
+  },
+
+  // Helper: get map of menu item id → name for realtime resolution
+  async getMenuItemsMap(): Promise<Map<string, string>> {
+    const { data } = await supabase
+      .from('menu_items')
+      .select('id, name');
+    return new Map((data || []).map((item) => [item.id, item.name]));
   },
 };
 
@@ -953,11 +1010,223 @@ export const adminQRCodesApi = {
   },
 };
 
+// ============================================================================
+// Advanced Analytics API
+// ============================================================================
+
+export interface FunnelStep {
+  step: string;
+  count: number;
+  rate: number; // % par rapport à l'étape précédente
+  color: string;
+}
+
+export interface EngagementHeatmapItem {
+  id: string;
+  name: string;
+  category: string;
+  views: number;
+  carts: number;
+  hotspots: number;
+  arSessions: number;
+  avgDuration: number;
+  conversionRate: number;
+  engagementScore: number;
+}
+
+export interface PeakHourCell {
+  day: string;       // 'Lun', 'Mar', etc.
+  dayIndex: number;
+  hour: number;
+  count: number;
+  intensity: number; // 0-1 normalized
+}
+
+export interface CohortData {
+  period: string;
+  newSessions: number;
+  returningSessions: number;
+  totalSessions: number;
+  retentionRate: number;
+}
+
+export interface QRAnalyticsItem {
+  id: string;
+  label: string;
+  type: string;
+  code: string;
+  scanCount: number;
+  isActive: boolean;
+}
+
+export interface AdvancedAnalyticsData {
+  funnel: FunnelStep[];
+  engagementHeatmap: EngagementHeatmapItem[];
+  peakHours: PeakHourCell[];
+  cohorts: CohortData[];
+  qrAnalytics: QRAnalyticsItem[];
+}
+
+export const adminAdvancedAnalyticsApi = {
+  async getAdvancedAnalytics(days: number = 30): Promise<AdvancedAnalyticsData> {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    // Fetch all events
+    const { data: events } = await supabase
+      .from('analytics_events')
+      .select('*')
+      .gte('created_at', startDate.toISOString())
+      .order('created_at', { ascending: true });
+
+    // Fetch menu items for names
+    const { data: menuItems } = await supabase
+      .from('menu_items')
+      .select('id, name, category_id');
+
+    // Fetch categories
+    const { data: categories } = await supabase
+      .from('menu_categories')
+      .select('id, name');
+
+    // Fetch QR codes
+    const { data: qrCodes } = await supabase
+      .from('qr_codes')
+      .select('*')
+      .order('scan_count', { ascending: false });
+
+    const allEvents = events || [];
+    const catMap = new Map((categories || []).map((c: any) => [c.id, c.name]));
+    const itemMap = new Map((menuItems || []).map((m: any) => [m.id, { name: m.name, category: catMap.get(m.category_id) || 'Sans catégorie' }]));
+
+    // ─── 1. FUNNEL ───
+    const uniqueSessions = new Set(allEvents.filter(e => e.session_id).map(e => e.session_id));
+    const sessionsWithView = new Set(allEvents.filter(e => e.event_type === 'view_3d' && e.session_id).map(e => e.session_id));
+    const sessionsWithAR = new Set(allEvents.filter(e => e.event_type === 'ar_session_start' && e.session_id).map(e => e.session_id));
+    const sessionsWithHotspot = new Set(allEvents.filter(e => e.event_type === 'hotspot_click' && e.session_id).map(e => e.session_id));
+    const sessionsWithCart = new Set(allEvents.filter(e => e.event_type === 'add_to_cart' && e.session_id).map(e => e.session_id));
+
+    const totalSessions = uniqueSessions.size || 1;
+    const funnel: FunnelStep[] = [
+      { step: 'Sessions', count: uniqueSessions.size, rate: 100, color: '#6366F1' },
+      { step: 'Vues 3D', count: sessionsWithView.size, rate: (sessionsWithView.size / totalSessions) * 100, color: '#3B82F6' },
+      { step: 'Sessions AR', count: sessionsWithAR.size, rate: (sessionsWithAR.size / totalSessions) * 100, color: '#10B981' },
+      { step: 'Clics Hotspot', count: sessionsWithHotspot.size, rate: (sessionsWithHotspot.size / totalSessions) * 100, color: '#F59E0B' },
+      { step: 'Ajouts Panier', count: sessionsWithCart.size, rate: (sessionsWithCart.size / totalSessions) * 100, color: '#EF4444' },
+    ];
+
+    // ─── 2. ENGAGEMENT HEATMAP ───
+    const itemStats = new Map<string, { views: number; carts: number; hotspots: number; arSessions: number; durations: number[] }>();
+    allEvents.forEach((e: any) => {
+      if (!e.menu_item_id) return;
+      if (!itemStats.has(e.menu_item_id)) {
+        itemStats.set(e.menu_item_id, { views: 0, carts: 0, hotspots: 0, arSessions: 0, durations: [] });
+      }
+      const s = itemStats.get(e.menu_item_id)!;
+      if (e.event_type === 'view_3d') s.views++;
+      if (e.event_type === 'add_to_cart') s.carts++;
+      if (e.event_type === 'hotspot_click') s.hotspots++;
+      if (e.event_type === 'ar_session_start') s.arSessions++;
+      if (e.event_type === 'ar_session_end' && e.duration) s.durations.push(e.duration);
+    });
+
+    const engagementHeatmap: EngagementHeatmapItem[] = Array.from(itemStats.entries())
+      .map(([id, s]) => {
+        const info = itemMap.get(id) || { name: 'Inconnu', category: 'N/A' };
+        const avgDuration = s.durations.length > 0 ? s.durations.reduce((a, b) => a + b, 0) / s.durations.length : 0;
+        const conversionRate = s.views > 0 ? (s.carts / s.views) * 100 : 0;
+        // Score composite: vues(1x) + AR(2x) + hotspots(1.5x) + cart(3x) + durée(0.5x)
+        const engagementScore = Math.round(
+          s.views * 1 + s.arSessions * 2 + s.hotspots * 1.5 + s.carts * 3 + (avgDuration / 60) * 0.5
+        );
+        return { id, name: info.name, category: info.category, views: s.views, carts: s.carts, hotspots: s.hotspots, arSessions: s.arSessions, avgDuration: Math.round(avgDuration), conversionRate, engagementScore };
+      })
+      .sort((a, b) => b.engagementScore - a.engagementScore);
+
+    // ─── 3. PEAK HOURS ───
+    const dayNames = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+    const hourDayMap = new Map<string, number>();
+    allEvents.forEach((e: any) => {
+      const d = new Date(e.created_at);
+      const key = `${d.getDay()}-${d.getHours()}`;
+      hourDayMap.set(key, (hourDayMap.get(key) || 0) + 1);
+    });
+    const maxCount = Math.max(...Array.from(hourDayMap.values()), 1);
+    const peakHours: PeakHourCell[] = [];
+    for (let day = 0; day < 7; day++) {
+      for (let hour = 8; hour <= 23; hour++) {
+        const key = `${day}-${hour}`;
+        const count = hourDayMap.get(key) || 0;
+        peakHours.push({ day: dayNames[day], dayIndex: day, hour, count, intensity: count / maxCount });
+      }
+    }
+
+    // ─── 4. COHORTS ───
+    const sessionFirstSeen = new Map<string, string>();
+    allEvents.forEach((e: any) => {
+      if (!e.session_id) return;
+      if (!sessionFirstSeen.has(e.session_id) || e.created_at < sessionFirstSeen.get(e.session_id)!) {
+        sessionFirstSeen.set(e.session_id, e.created_at);
+      }
+    });
+
+    // Group by week
+    const weekBuckets = new Map<string, { newSessions: Set<string>; returningSessions: Set<string> }>();
+    const allSessionIds = new Set<string>();
+
+    allEvents.forEach((e: any) => {
+      if (!e.session_id) return;
+      const d = new Date(e.created_at);
+      const weekStart = new Date(d);
+      weekStart.setDate(d.getDate() - d.getDay());
+      const weekKey = weekStart.toISOString().split('T')[0];
+
+      if (!weekBuckets.has(weekKey)) {
+        weekBuckets.set(weekKey, { newSessions: new Set(), returningSessions: new Set() });
+      }
+      const bucket = weekBuckets.get(weekKey)!;
+
+      if (allSessionIds.has(e.session_id)) {
+        bucket.returningSessions.add(e.session_id);
+      } else {
+        bucket.newSessions.add(e.session_id);
+      }
+      allSessionIds.add(e.session_id);
+    });
+
+    const cohorts: CohortData[] = Array.from(weekBuckets.entries())
+      .map(([period, b]) => {
+        const total = b.newSessions.size + b.returningSessions.size;
+        return {
+          period: `Sem. ${period.slice(5)}`,
+          newSessions: b.newSessions.size,
+          returningSessions: b.returningSessions.size,
+          totalSessions: total,
+          retentionRate: total > 0 ? (b.returningSessions.size / total) * 100 : 0,
+        };
+      })
+      .sort((a, b) => a.period.localeCompare(b.period));
+
+    // ─── 5. QR ANALYTICS ───
+    const qrAnalytics: QRAnalyticsItem[] = (qrCodes || []).map((qr: any) => ({
+      id: qr.id,
+      label: qr.label,
+      type: qr.type,
+      code: qr.code,
+      scanCount: qr.scan_count || 0,
+      isActive: qr.is_active,
+    }));
+
+    return { funnel, engagementHeatmap, peakHours, cohorts, qrAnalytics };
+  },
+};
+
 export const adminApi = {
   menu: adminMenuApi,
   categories: adminCategoriesApi,
   settings: adminSettingsApi,
   analytics: adminAnalyticsApi,
+  advancedAnalytics: adminAdvancedAnalyticsApi,
   sessions: adminSessionsApi,
   upload: adminUploadApi,
   qrCodes: adminQRCodesApi,
